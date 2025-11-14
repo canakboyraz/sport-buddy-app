@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { View, FlatList, StyleSheet, RefreshControl } from 'react-native';
+import { View, FlatList, StyleSheet, RefreshControl, Platform, Linking, TouchableOpacity } from 'react-native';
 import { Card, Text, Button, Chip, ActivityIndicator } from 'react-native-paper';
 import { supabase } from '../../services/supabase';
 import { SportSession, Sport } from '../../types';
@@ -7,11 +7,26 @@ import { format } from 'date-fns';
 import { tr } from 'date-fns/locale';
 import { StackNavigationProp } from '@react-navigation/stack';
 import { RootStackParamList } from '../../navigation/AppNavigator';
+import { MaterialCommunityIcons } from '@expo/vector-icons';
 
 type HomeScreenNavigationProp = StackNavigationProp<RootStackParamList>;
 
 type Props = {
   navigation: HomeScreenNavigationProp;
+};
+
+// Spor türlerine göre simge eşleştirme
+const getSportIcon = (sportName: string): string => {
+  const iconMap: { [key: string]: string } = {
+    'Futbol': 'soccer',
+    'Basketbol': 'basketball',
+    'Tenis': 'tennis',
+    'Voleybol': 'volleyball',
+    'Yüzme': 'swim',
+    'Koşu': 'run',
+    'Bisiklet': 'bike',
+  };
+  return iconMap[sportName] || 'trophy';
 };
 
 export default function HomeScreen({ navigation }: Props) {
@@ -93,30 +108,83 @@ export default function HomeScreen({ navigation }: Props) {
     loadSessions();
   };
 
+  const handleLocationPress = (latitude?: number, longitude?: number) => {
+    if (latitude && longitude) {
+      const url = Platform.OS === 'web'
+        ? `https://www.google.com/maps/search/?api=1&query=${latitude},${longitude}`
+        : Platform.OS === 'ios'
+        ? `maps://maps.apple.com/?q=${latitude},${longitude}`
+        : `geo:${latitude},${longitude}`;
+      Linking.openURL(url);
+    }
+  };
+
   const renderSessionCard = ({ item }: { item: SportSession }) => {
     const participantCount = item.participants?.filter(p => p.status === 'approved').length || 0;
     const isFull = participantCount >= item.max_participants;
+    const sportIcon = getSportIcon(item.sport?.name || '');
 
     return (
       <Card style={styles.card} mode="elevated" onPress={() => navigation.navigate('SessionDetail', { sessionId: item.id })}>
         <Card.Content>
           <View style={styles.cardHeader}>
-            <Text style={styles.title}>{item.title}</Text>
-            <Chip icon="account-multiple" style={styles.chip}>
+            <Text style={styles.title} numberOfLines={1}>{item.title}</Text>
+            <Chip icon="account-multiple" style={styles.chip} compact>
               {participantCount}/{item.max_participants}
             </Chip>
           </View>
 
-          <Text style={styles.sport}>{item.sport?.name}</Text>
-          <Text style={styles.location}>{item.location}</Text>
-          {item.city && <Text style={styles.city}>{item.city}</Text>}
-          <Text style={styles.date}>
-            {format(new Date(item.session_date), 'dd MMMM yyyy, HH:mm', { locale: tr })}
-          </Text>
-          <Text style={styles.skillLevel}>Seviye: {item.skill_level}</Text>
-          <Text style={styles.creator}>Oluşturan: {item.creator?.full_name}</Text>
+          <View style={styles.infoRow}>
+            <MaterialCommunityIcons name={sportIcon as any} size={18} color="#6200ee" />
+            <Text style={styles.sport}>{item.sport?.name}</Text>
+          </View>
 
-          {isFull && <Text style={styles.fullText}>Dolu</Text>}
+          <TouchableOpacity
+            style={styles.infoRow}
+            onPress={(e) => {
+              e.stopPropagation();
+              handleLocationPress(item.latitude || undefined, item.longitude || undefined);
+            }}
+            disabled={!item.latitude || !item.longitude}
+          >
+            <MaterialCommunityIcons name="map-marker" size={18} color="#6200ee" />
+            <Text style={[styles.location, (item.latitude && item.longitude) && styles.linkText]} numberOfLines={1}>
+              {item.location}
+            </Text>
+            {item.latitude && item.longitude && (
+              <MaterialCommunityIcons name="open-in-new" size={14} color="#6200ee" style={styles.openIcon} />
+            )}
+          </TouchableOpacity>
+
+          {item.city && (
+            <View style={styles.infoRow}>
+              <MaterialCommunityIcons name="city" size={18} color="#6200ee" />
+              <Text style={styles.city}>{item.city}</Text>
+            </View>
+          )}
+
+          <View style={styles.infoRow}>
+            <MaterialCommunityIcons name="calendar" size={18} color="#6200ee" />
+            <Text style={styles.date}>
+              {format(new Date(item.session_date), 'dd MMM yyyy, HH:mm', { locale: tr })}
+            </Text>
+          </View>
+
+          <View style={styles.infoRow}>
+            <MaterialCommunityIcons name="star" size={18} color="#6200ee" />
+            <Text style={styles.skillLevel}>{item.skill_level}</Text>
+          </View>
+
+          <View style={styles.infoRow}>
+            <MaterialCommunityIcons name="account" size={18} color="#6200ee" />
+            <Text style={styles.creator}>{item.creator?.full_name}</Text>
+          </View>
+
+          {isFull && (
+            <Chip icon="close-circle" style={styles.fullChip} textStyle={styles.fullChipText} compact>
+              Dolu
+            </Chip>
+          )}
         </Card.Content>
       </Card>
     );
@@ -136,13 +204,14 @@ export default function HomeScreen({ navigation }: Props) {
         <Text style={styles.filterTitle}>Spor Türü:</Text>
         <FlatList
           horizontal
-          data={[{ id: null, name: 'Tümü' }, ...sports]}
+          data={[{ id: null, name: 'Tümü', icon: 'trophy' }, ...sports.map(s => ({ ...s, icon: s.icon || getSportIcon(s.name) }))]}
           keyExtractor={(item) => String(item.id)}
           renderItem={({ item }) => (
             <Chip
               selected={selectedSport === item.id}
               onPress={() => setSelectedSport(item.id)}
               style={styles.filterChip}
+              icon={item.id === null ? 'trophy' : getSportIcon(item.name)}
             >
               {item.name}
             </Chip>
@@ -229,43 +298,67 @@ const styles = StyleSheet.create({
     fontSize: 18,
     fontWeight: 'bold',
     flex: 1,
+    marginRight: 8,
   },
   chip: {
     marginLeft: 10,
   },
+  infoRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 6,
+  },
   sport: {
-    fontSize: 16,
-    color: '#6200ee',
-    marginBottom: 5,
+    fontSize: 14,
+    marginLeft: 8,
+    color: '#333',
+    flex: 1,
   },
   location: {
     fontSize: 14,
-    color: '#666',
-    marginBottom: 3,
+    marginLeft: 8,
+    color: '#333',
+    flex: 1,
   },
   city: {
     fontSize: 14,
-    color: '#999',
-    marginBottom: 3,
+    marginLeft: 8,
+    color: '#333',
+    flex: 1,
   },
   date: {
     fontSize: 14,
-    color: '#666',
-    marginBottom: 3,
+    marginLeft: 8,
+    color: '#333',
+    flex: 1,
   },
   skillLevel: {
     fontSize: 14,
-    color: '#666',
-    marginBottom: 3,
+    marginLeft: 8,
+    color: '#333',
+    flex: 1,
   },
   creator: {
     fontSize: 14,
-    color: '#666',
+    marginLeft: 8,
+    color: '#333',
+    flex: 1,
   },
-  fullText: {
-    marginTop: 10,
-    color: 'red',
-    fontWeight: 'bold',
+  linkText: {
+    color: '#6200ee',
+    textDecorationLine: 'underline',
+  },
+  openIcon: {
+    marginLeft: 5,
+  },
+  fullChip: {
+    backgroundColor: '#F44336',
+    marginTop: 8,
+    alignSelf: 'flex-start',
+  },
+  fullChipText: {
+    color: '#FFF',
+    fontSize: 12,
   },
   emptyContainer: {
     padding: 20,
