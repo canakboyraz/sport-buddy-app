@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { View, FlatList, StyleSheet, RefreshControl } from 'react-native';
-import { Card, Text, Chip, ActivityIndicator, SegmentedButtons } from 'react-native-paper';
+import { Card, Text, Chip, ActivityIndicator, SegmentedButtons, Badge } from 'react-native-paper';
 import { supabase } from '../../services/supabase';
 import { SportSession } from '../../types';
 import { format } from 'date-fns';
@@ -8,6 +8,7 @@ import { tr } from 'date-fns/locale';
 import { StackNavigationProp } from '@react-navigation/stack';
 import { RootStackParamList } from '../../navigation/AppNavigator';
 import { useAuth } from '../../hooks/useAuth';
+import { MaterialCommunityIcons } from '@expo/vector-icons';
 
 type MyEventsScreenNavigationProp = StackNavigationProp<RootStackParamList>;
 
@@ -84,31 +85,67 @@ export default function MyEventsScreen({ navigation }: Props) {
   const renderSessionCard = ({ item }: { item: SportSession }) => {
     const participantCount = item.participants?.filter(p => p.status === 'approved').length || 0;
     const isCreator = item.creator_id === user?.id;
+    const isPast = new Date(item.session_date) < new Date();
+    const isFull = participantCount >= item.max_participants;
 
     return (
       <Card style={styles.card} mode="elevated" onPress={() => navigation.navigate('SessionDetail', { sessionId: item.id })}>
         <Card.Content>
           <View style={styles.cardHeader}>
-            <Text style={styles.title}>{item.title}</Text>
-            <Chip icon="account-multiple" style={styles.chip}>
+            <Text style={styles.title} numberOfLines={1}>{item.title}</Text>
+            <Chip icon="account-multiple" style={styles.chip} compact>
               {participantCount}/{item.max_participants}
             </Chip>
           </View>
 
-          {isCreator && (
-            <Chip icon="crown" style={styles.creatorChip} textStyle={styles.creatorChipText}>
-              Oluşturduğum
-            </Chip>
-          )}
+          <View style={styles.badges}>
+            {isCreator && (
+              <Chip icon="crown" style={styles.creatorChip} textStyle={styles.creatorChipText} compact>
+                Oluşturduğum
+              </Chip>
+            )}
+            {!isCreator && (
+              <Chip icon="account-check" style={styles.participantChip} textStyle={styles.participantChipText} compact>
+                Katıldığım
+              </Chip>
+            )}
+            {isFull && !isPast && (
+              <Chip icon="close-circle" style={styles.fullChip} textStyle={styles.fullChipText} compact>
+                Dolu
+              </Chip>
+            )}
+            {isPast && (
+              <Chip icon="clock-outline" style={styles.pastChip} textStyle={styles.pastChipText} compact>
+                Geçmiş
+              </Chip>
+            )}
+          </View>
 
-          <Text style={styles.sport}>{item.sport?.name}</Text>
-          <Text style={styles.location}>{item.location}</Text>
-          {item.city && <Text style={styles.city}>{item.city}</Text>}
-          <Text style={styles.date}>
-            {format(new Date(item.session_date), 'dd MMMM yyyy, HH:mm', { locale: tr })}
-          </Text>
-          <Text style={styles.skillLevel}>Seviye: {item.skill_level}</Text>
-          <Text style={styles.status}>Durum: {item.status}</Text>
+          <View style={styles.infoRow}>
+            <MaterialCommunityIcons name="soccer" size={18} color="#6200ee" />
+            <Text style={styles.infoText}>{item.sport?.name}</Text>
+          </View>
+
+          <View style={styles.infoRow}>
+            <MaterialCommunityIcons name="calendar" size={18} color="#6200ee" />
+            <Text style={styles.infoText}>
+              {format(new Date(item.session_date), 'dd MMM yyyy, HH:mm', { locale: tr })}
+            </Text>
+          </View>
+
+          <View style={styles.infoRow}>
+            <MaterialCommunityIcons name="map-marker" size={18} color="#6200ee" />
+            <Text style={styles.infoText} numberOfLines={1}>
+              {item.city ? `${item.city} - ${item.location}` : item.location}
+            </Text>
+          </View>
+
+          <View style={styles.infoRow}>
+            <MaterialCommunityIcons name="star" size={18} color="#6200ee" />
+            <Text style={styles.infoText}>
+              {item.skill_level} • {item.status}
+            </Text>
+          </View>
         </Card.Content>
       </Card>
     );
@@ -181,53 +218,63 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    marginBottom: 10,
+    marginBottom: 8,
   },
   title: {
     fontSize: 18,
     fontWeight: 'bold',
     flex: 1,
+    marginRight: 8,
   },
   chip: {
     marginLeft: 10,
   },
-  creatorChip: {
-    alignSelf: 'flex-start',
+  badges: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
     marginBottom: 10,
+    gap: 6,
+  },
+  creatorChip: {
     backgroundColor: '#FFD700',
   },
   creatorChipText: {
     color: '#000',
     fontWeight: 'bold',
+    fontSize: 12,
   },
-  sport: {
-    fontSize: 16,
-    color: '#6200ee',
-    marginBottom: 5,
+  participantChip: {
+    backgroundColor: '#4CAF50',
   },
-  location: {
+  participantChipText: {
+    color: '#FFF',
+    fontWeight: 'bold',
+    fontSize: 12,
+  },
+  fullChip: {
+    backgroundColor: '#F44336',
+  },
+  fullChipText: {
+    color: '#FFF',
+    fontSize: 12,
+  },
+  pastChip: {
+    backgroundColor: '#9E9E9E',
+  },
+  pastChipText: {
+    color: '#FFF',
+    fontSize: 12,
+  },
+  infoRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 6,
+  },
+  infoText: {
     fontSize: 14,
-    color: '#666',
-    marginBottom: 3,
-  },
-  city: {
-    fontSize: 14,
-    color: '#999',
-    marginBottom: 3,
-  },
-  date: {
-    fontSize: 14,
-    color: '#666',
-    marginBottom: 3,
-  },
-  skillLevel: {
-    fontSize: 14,
-    color: '#666',
-    marginBottom: 3,
-  },
-  status: {
-    fontSize: 14,
-    color: '#666',
+    marginLeft: 8,
+    color: '#333',
+    flex: 1,
   },
   emptyContainer: {
     padding: 20,

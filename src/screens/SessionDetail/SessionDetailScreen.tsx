@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
-import { View, ScrollView, StyleSheet, Alert } from 'react-native';
-import { Card, Text, Button, Avatar, Chip, ActivityIndicator, Divider } from 'react-native-paper';
+import { View, ScrollView, StyleSheet, Alert, Platform, Linking, TouchableOpacity } from 'react-native';
+import { Card, Text, Button, Avatar, Chip, ActivityIndicator, Divider, Portal, Modal } from 'react-native-paper';
 import { supabase } from '../../services/supabase';
 import { SportSession, SessionParticipant } from '../../types';
 import { format } from 'date-fns';
@@ -10,6 +10,15 @@ import { RouteProp } from '@react-navigation/native';
 import { RootStackParamList } from '../../navigation/AppNavigator';
 import { useAuth } from '../../hooks/useAuth';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
+
+let MapView: any = null;
+let Marker: any = null;
+
+if (Platform.OS !== 'web') {
+  const RNMaps = require('react-native-maps');
+  MapView = RNMaps.default;
+  Marker = RNMaps.Marker;
+}
 
 type SessionDetailScreenNavigationProp = StackNavigationProp<RootStackParamList, 'SessionDetail'>;
 type SessionDetailScreenRouteProp = RouteProp<RootStackParamList, 'SessionDetail'>;
@@ -25,6 +34,7 @@ export default function SessionDetailScreen({ navigation, route }: Props) {
   const [session, setSession] = useState<SportSession | null>(null);
   const [loading, setLoading] = useState(true);
   const [actionLoading, setActionLoading] = useState(false);
+  const [mapVisible, setMapVisible] = useState(false);
 
   useEffect(() => {
     loadSession();
@@ -111,6 +121,17 @@ export default function SessionDetailScreen({ navigation, route }: Props) {
     }
   };
 
+  const handleLocationPress = () => {
+    if (session?.latitude && session?.longitude) {
+      if (Platform.OS === 'web') {
+        const url = `https://www.google.com/maps/search/?api=1&query=${session.latitude},${session.longitude}`;
+        Linking.openURL(url);
+      } else {
+        setMapVisible(true);
+      }
+    }
+  };
+
   if (loading) {
     return (
       <View style={styles.loadingContainer}>
@@ -145,10 +166,19 @@ export default function SessionDetailScreen({ navigation, route }: Props) {
             <Text style={styles.infoText}>{session.sport?.name}</Text>
           </View>
 
-          <View style={styles.infoRow}>
+          <TouchableOpacity
+            style={styles.infoRow}
+            onPress={handleLocationPress}
+            disabled={!session.latitude || !session.longitude}
+          >
             <MaterialCommunityIcons name="map-marker" size={20} color="#6200ee" />
-            <Text style={styles.infoText}>{session.location}</Text>
-          </View>
+            <Text style={[styles.infoText, (session.latitude && session.longitude) && styles.linkText]}>
+              {session.location}
+            </Text>
+            {session.latitude && session.longitude && (
+              <MaterialCommunityIcons name="open-in-new" size={16} color="#6200ee" style={styles.openIcon} />
+            )}
+          </TouchableOpacity>
 
           {session.city && (
             <View style={styles.infoRow}>
@@ -297,6 +327,41 @@ export default function SessionDetailScreen({ navigation, route }: Props) {
           </Card.Content>
         </Card>
       )}
+
+      {Platform.OS !== 'web' && session && session.latitude && session.longitude && (
+        <Portal>
+          <Modal visible={mapVisible} onDismiss={() => setMapVisible(false)} contentContainerStyle={styles.mapModal}>
+            <View style={styles.mapContainer}>
+              <Text style={styles.mapTitle}>Konum</Text>
+              {MapView && (
+                <MapView
+                  style={styles.map}
+                  initialRegion={{
+                    latitude: session.latitude,
+                    longitude: session.longitude,
+                    latitudeDelta: 0.01,
+                    longitudeDelta: 0.01,
+                  }}
+                >
+                  {Marker && (
+                    <Marker
+                      coordinate={{
+                        latitude: session.latitude,
+                        longitude: session.longitude,
+                      }}
+                      title={session.title}
+                      description={session.location}
+                    />
+                  )}
+                </MapView>
+              )}
+              <Button mode="contained" onPress={() => setMapVisible(false)} style={styles.closeMapButton}>
+                Kapat
+              </Button>
+            </View>
+          </Modal>
+        </Portal>
+      )}
     </ScrollView>
   );
 }
@@ -387,5 +452,33 @@ const styles = StyleSheet.create({
   },
   approveButton: {
     marginRight: 5,
+  },
+  linkText: {
+    color: '#6200ee',
+    textDecorationLine: 'underline',
+  },
+  openIcon: {
+    marginLeft: 5,
+  },
+  mapModal: {
+    margin: 20,
+  },
+  mapContainer: {
+    backgroundColor: 'white',
+    borderRadius: 8,
+    padding: 20,
+  },
+  mapTitle: {
+    fontSize: 20,
+    fontWeight: 'bold',
+    marginBottom: 15,
+  },
+  map: {
+    height: 300,
+    borderRadius: 8,
+    marginBottom: 15,
+  },
+  closeMapButton: {
+    marginTop: 10,
   },
 });
