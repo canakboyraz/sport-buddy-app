@@ -265,18 +265,21 @@ export default function CreateSessionScreen({ navigation }: any) {
           mode="outlined"
           style={styles.input}
           right={
-            <>
-              <TextInput.Icon
-                icon="crosshairs-gps"
-                onPress={getCurrentLocation}
-              />
-              <TextInput.Icon
-                icon="map"
-                onPress={() => setMapVisible(true)}
-              />
-            </>
+            <TextInput.Icon
+              icon="crosshairs-gps"
+              onPress={getCurrentLocation}
+            />
           }
         />
+
+        <Button
+          mode="outlined"
+          onPress={() => setMapVisible(true)}
+          style={styles.mapButton}
+          icon="map-marker"
+        >
+          Haritadan Konum Seç
+        </Button>
 
         <MapPicker
           visible={mapVisible}
@@ -415,6 +418,9 @@ const styles = StyleSheet.create({
     padding: 20,
   },
   input: {
+    marginBottom: 15,
+  },
+  mapButton: {
     marginBottom: 15,
   },
   button: {

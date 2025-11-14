@@ -1,9 +1,10 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { View, StyleSheet, Alert, KeyboardAvoidingView, Platform } from 'react-native';
-import { TextInput, Button, Text } from 'react-native-paper';
+import { TextInput, Button, Text, Checkbox } from 'react-native-paper';
 import { supabase } from '../../services/supabase';
 import { StackNavigationProp } from '@react-navigation/stack';
 import { AuthStackParamList } from '../../navigation/AuthNavigator';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 type LoginScreenNavigationProp = StackNavigationProp<AuthStackParamList, 'Login'>;
 
@@ -15,6 +16,26 @@ export default function LoginScreen({ navigation }: Props) {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
+  const [rememberMe, setRememberMe] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
+
+  useEffect(() => {
+    loadSavedCredentials();
+  }, []);
+
+  const loadSavedCredentials = async () => {
+    try {
+      const savedEmail = await AsyncStorage.getItem('rememberedEmail');
+      const savedPassword = await AsyncStorage.getItem('rememberedPassword');
+      if (savedEmail && savedPassword) {
+        setEmail(savedEmail);
+        setPassword(savedPassword);
+        setRememberMe(true);
+      }
+    } catch (error) {
+      console.error('Error loading credentials:', error);
+    }
+  };
 
   const handleLogin = async () => {
     if (!email || !password) {
@@ -33,6 +54,24 @@ export default function LoginScreen({ navigation }: Props) {
 
     if (error) {
       Alert.alert('Giriş Hatası', error.message);
+    } else {
+      // Save credentials if "Remember Me" is checked
+      if (rememberMe) {
+        try {
+          await AsyncStorage.setItem('rememberedEmail', email);
+          await AsyncStorage.setItem('rememberedPassword', password);
+        } catch (error) {
+          console.error('Error saving credentials:', error);
+        }
+      } else {
+        // Clear saved credentials if "Remember Me" is unchecked
+        try {
+          await AsyncStorage.removeItem('rememberedEmail');
+          await AsyncStorage.removeItem('rememberedPassword');
+        } catch (error) {
+          console.error('Error clearing credentials:', error);
+        }
+      }
     }
   };
 
@@ -60,9 +99,25 @@ export default function LoginScreen({ navigation }: Props) {
           value={password}
           onChangeText={setPassword}
           mode="outlined"
-          secureTextEntry
+          secureTextEntry={!showPassword}
           style={styles.input}
+          right={
+            <TextInput.Icon
+              icon={showPassword ? 'eye-off' : 'eye'}
+              onPress={() => setShowPassword(!showPassword)}
+            />
+          }
         />
+
+        <View style={styles.rememberMeContainer}>
+          <Checkbox
+            status={rememberMe ? 'checked' : 'unchecked'}
+            onPress={() => setRememberMe(!rememberMe)}
+          />
+          <Text style={styles.rememberMeText} onPress={() => setRememberMe(!rememberMe)}>
+            Beni Hatırla
+          </Text>
+        </View>
 
         <Button
           mode="contained"
@@ -110,6 +165,16 @@ const styles = StyleSheet.create({
   },
   input: {
     marginBottom: 15,
+  },
+  rememberMeContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 10,
+  },
+  rememberMeText: {
+    marginLeft: 8,
+    fontSize: 16,
+    color: '#333',
   },
   button: {
     marginTop: 10,
