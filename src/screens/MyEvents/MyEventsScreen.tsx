@@ -1,79 +1,85 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useCallback } from 'react';
 import { View, FlatList, StyleSheet, RefreshControl } from 'react-native';
-import { Card, Text, Chip, ActivityIndicator, SegmentedButtons, Badge } from 'react-native-paper';
+import { Card, Text, Chip, ActivityIndicator, SegmentedButtons } from 'react-native-paper';
 import { supabase } from '../../services/supabase';
 import { SportSession } from '../../types';
 import { format } from 'date-fns';
 import { tr } from 'date-fns/locale';
-import { StackNavigationProp } from '@react-navigation/stack';
-import { RootStackParamList } from '../../navigation/AppNavigator';
 import { useAuth } from '../../hooks/useAuth';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
+import { useFocusEffect } from '@react-navigation/native';
 
-type MyEventsScreenNavigationProp = StackNavigationProp<RootStackParamList>;
-
-type Props = {
-  navigation: MyEventsScreenNavigationProp;
-};
-
-export default function MyEventsScreen({ navigation }: Props) {
+export default function MyEventsScreen({ navigation }: any) {
   const { user } = useAuth();
   const [sessions, setSessions] = useState<SportSession[]>([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [filter, setFilter] = useState<'upcoming' | 'past'>('upcoming');
 
-  useEffect(() => {
-    loadMySessions();
-  }, [filter]);
+  useFocusEffect(
+    useCallback(() => {
+      loadMySessions();
+    }, [filter, user])
+  );
 
   const getParticipatedSessionIds = async () => {
     if (!user?.id) return '';
 
-    const { data, error } = await supabase
-      .from('session_participants')
-      .select('session_id')
-      .eq('user_id', user.id)
-      .eq('status', 'approved');
+    try {
+      const { data, error } = await supabase
+        .from('session_participants')
+        .select('session_id')
+        .eq('user_id', user.id)
+        .eq('status', 'approved');
 
-    if (!error && data && data.length > 0) {
-      return data.map(p => p.session_id).join(',');
+      if (!error && data && data.length > 0) {
+        return data.map(p => p.session_id).join(',');
+      }
+    } catch (error) {
+      console.error('Error getting participated sessions:', error);
     }
     return '0';
   };
 
   const loadMySessions = async () => {
-    if (!user?.id) return;
+    if (!user?.id) {
+      setLoading(false);
+      return;
+    }
 
     setLoading(true);
 
-    const participatedIds = await getParticipatedSessionIds();
+    try {
+      const participatedIds = await getParticipatedSessionIds();
 
-    const { data, error } = await supabase
-      .from('sport_sessions')
-      .select(`
-        *,
-        creator:profiles!sport_sessions_creator_id_fkey(*),
-        sport:sports(*),
-        participants:session_participants(*)
-      `)
-      .or(`creator_id.eq.${user.id},id.in.(${participatedIds})`)
-      .order('session_date', { ascending: filter === 'upcoming' });
+      const { data, error } = await supabase
+        .from('sport_sessions')
+        .select(`
+          *,
+          creator:profiles!sport_sessions_creator_id_fkey(*),
+          sport:sports(*),
+          participants:session_participants(*)
+        `)
+        .or(`creator_id.eq.${user.id},id.in.(${participatedIds})`)
+        .order('session_date', { ascending: filter === 'upcoming' });
 
-    setLoading(false);
-    setRefreshing(false);
+      if (!error && data) {
+        const now = new Date();
+        let filteredData = data;
 
-    if (!error && data) {
-      const now = new Date();
-      let filteredData = data;
+        if (filter === 'upcoming') {
+          filteredData = data.filter(session => new Date(session.session_date) >= now);
+        } else if (filter === 'past') {
+          filteredData = data.filter(session => new Date(session.session_date) < now);
+        }
 
-      if (filter === 'upcoming') {
-        filteredData = data.filter(session => new Date(session.session_date) >= now);
-      } else if (filter === 'past') {
-        filteredData = data.filter(session => new Date(session.session_date) < now);
+        setSessions(filteredData as any);
       }
-
-      setSessions(filteredData as any);
+    } catch (error) {
+      console.error('Error loading sessions:', error);
+    } finally {
+      setLoading(false);
+      setRefreshing(false);
     }
   };
 

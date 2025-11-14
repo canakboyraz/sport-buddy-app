@@ -1,12 +1,15 @@
 import React, { useEffect, useState } from 'react';
 import { View, ScrollView, StyleSheet, Alert, Platform } from 'react-native';
-import { TextInput, Button, Menu, Text } from 'react-native-paper';
+import { TextInput, Button, Menu, Text, Portal, Modal, Dialog } from 'react-native-paper';
 import { supabase } from '../../services/supabase';
 import { Sport } from '../../types';
 import { DateTimePickerAndroid } from '@react-native-community/datetimepicker';
+import DateTimePicker from '@react-native-community/datetimepicker';
 import * as Location from 'expo-location';
 import MapPicker from '../../components/MapPicker';
 import { useAuth } from '../../hooks/useAuth';
+import { format } from 'date-fns';
+import { tr } from 'date-fns/locale';
 
 export default function CreateSessionScreen({ navigation }: any) {
   const { user } = useAuth();
@@ -25,19 +28,29 @@ export default function CreateSessionScreen({ navigation }: any) {
   const [skillMenuVisible, setSkillMenuVisible] = useState(false);
   const [loading, setLoading] = useState(false);
   const [mapVisible, setMapVisible] = useState(false);
+  const [showDatePickerModal, setShowDatePickerModal] = useState(false);
+  const [showTimePickerModal, setShowTimePickerModal] = useState(false);
+  const [datePickerMode, setDatePickerMode] = useState<'date' | 'time'>('date');
 
   useEffect(() => {
     loadSports();
   }, []);
 
   const loadSports = async () => {
-    const { data, error } = await supabase
-      .from('sports')
-      .select('*')
-      .order('name');
+    try {
+      const { data, error } = await supabase
+        .from('sports')
+        .select('*')
+        .order('name');
 
-    if (!error && data) {
-      setSports(data);
+      if (!error && data) {
+        setSports(data);
+      } else if (error) {
+        console.error('Error loading sports:', error);
+        Alert.alert('Hata', 'Sporlar yüklenirken bir hata oluştu');
+      }
+    } catch (error) {
+      console.error('Error in loadSports:', error);
     }
   };
 
@@ -69,7 +82,7 @@ export default function CreateSessionScreen({ navigation }: any) {
       DateTimePickerAndroid.open({
         value: sessionDate,
         onChange: (event, selectedDate) => {
-          if (selectedDate) {
+          if (event.type === 'set' && selectedDate) {
             setSessionDate(selectedDate);
             showTimePicker();
           }
@@ -77,6 +90,9 @@ export default function CreateSessionScreen({ navigation }: any) {
         mode: 'date',
         is24Hour: true,
       });
+    } else {
+      setDatePickerMode('date');
+      setShowDatePickerModal(true);
     }
   };
 
@@ -85,14 +101,37 @@ export default function CreateSessionScreen({ navigation }: any) {
       DateTimePickerAndroid.open({
         value: sessionDate,
         onChange: (event, selectedDate) => {
-          if (selectedDate) {
+          if (event.type === 'set' && selectedDate) {
             setSessionDate(selectedDate);
           }
         },
         mode: 'time',
         is24Hour: true,
       });
+    } else {
+      setDatePickerMode('time');
+      setShowTimePickerModal(true);
     }
+  };
+
+  const handleDateChange = (event: any, selectedDate?: Date) => {
+    if (Platform.OS !== 'android') {
+      if (selectedDate) {
+        setSessionDate(selectedDate);
+      }
+    }
+  };
+
+  const handleDatePickerConfirm = () => {
+    setShowDatePickerModal(false);
+    if (Platform.OS !== 'android') {
+      // Auto-show time picker after date on iOS/web
+      setTimeout(() => showTimePicker(), 300);
+    }
+  };
+
+  const handleTimePickerConfirm = () => {
+    setShowTimePickerModal(false);
   };
 
   const handleCreate = async () => {
@@ -106,39 +145,68 @@ export default function CreateSessionScreen({ navigation }: any) {
       return;
     }
 
+    // Validate max participants
+    const maxParticipantsNum = parseInt(maxParticipants);
+    if (isNaN(maxParticipantsNum) || maxParticipantsNum < 2) {
+      Alert.alert('Hata', 'Maksimum katılımcı sayısı en az 2 olmalıdır');
+      return;
+    }
+
+    // Validate session date is in the future
+    if (sessionDate <= new Date()) {
+      Alert.alert('Hata', 'Etkinlik tarihi gelecekte olmalıdır');
+      return;
+    }
+
     setLoading(true);
 
-    const { data, error } = await supabase.from('sport_sessions').insert({
-      creator_id: user.id,
-      sport_id: selectedSport,
-      title,
-      description: description || null,
-      location,
-      city: city || null,
-      latitude,
-      longitude,
-      session_date: sessionDate.toISOString(),
-      max_participants: parseInt(maxParticipants),
-      skill_level: skillLevel as any,
-      status: 'open',
-    }).select();
+    try {
+      const { data, error } = await supabase.from('sport_sessions').insert({
+        creator_id: user.id,
+        sport_id: selectedSport,
+        title,
+        description: description || null,
+        location,
+        city: city || null,
+        latitude,
+        longitude,
+        session_date: sessionDate.toISOString(),
+        max_participants: maxParticipantsNum,
+        skill_level: skillLevel as any,
+        status: 'open',
+      }).select();
 
-    setLoading(false);
+      setLoading(false);
 
-    if (error) {
-      Alert.alert('Hata', error.message);
-    } else {
-      Alert.alert('Başarılı', 'Seans oluşturuldu!');
-      setTitle('');
-      setDescription('');
-      setLocation('');
-      setCity('');
-      setLatitude(null);
-      setLongitude(null);
-      setSelectedSport(null);
-      setMaxParticipants('10');
-      setSkillLevel('any');
-      setSessionDate(new Date());
+      if (error) {
+        console.error('Error creating session:', error);
+        Alert.alert('Hata', error.message);
+      } else {
+        Alert.alert('Başarılı', 'Seans oluşturuldu!', [
+          {
+            text: 'Tamam',
+            onPress: () => {
+              // Reset form
+              setTitle('');
+              setDescription('');
+              setLocation('');
+              setCity('');
+              setLatitude(null);
+              setLongitude(null);
+              setSelectedSport(null);
+              setMaxParticipants('10');
+              setSkillLevel('any');
+              setSessionDate(new Date());
+              // Navigate to My Events
+              navigation.navigate('MyEvents');
+            }
+          }
+        ]);
+      }
+    } catch (error) {
+      console.error('Error in handleCreate:', error);
+      setLoading(false);
+      Alert.alert('Hata', 'Seans oluşturulurken bir hata oluştu');
     }
   };
 
@@ -230,7 +298,7 @@ export default function CreateSessionScreen({ navigation }: any) {
           style={styles.input}
           icon="calendar"
         >
-          {sessionDate.toLocaleString('tr-TR')}
+          {format(sessionDate, 'dd MMM yyyy, HH:mm', { locale: tr })}
         </Button>
 
         <TextInput
@@ -273,6 +341,67 @@ export default function CreateSessionScreen({ navigation }: any) {
           Seans Oluştur
         </Button>
       </View>
+
+      {/* Date Picker Modal for iOS/Web */}
+      {Platform.OS !== 'android' && showDatePickerModal && (
+        <Portal>
+          <Modal
+            visible={showDatePickerModal}
+            onDismiss={() => setShowDatePickerModal(false)}
+            contentContainerStyle={styles.modalContainer}
+          >
+            <View style={styles.datePickerContainer}>
+              <Text style={styles.modalTitle}>Tarih Seç</Text>
+              <DateTimePicker
+                value={sessionDate}
+                mode="date"
+                display={Platform.OS === 'ios' ? 'spinner' : 'default'}
+                onChange={handleDateChange}
+                locale="tr-TR"
+              />
+              <View style={styles.modalButtons}>
+                <Button onPress={() => setShowDatePickerModal(false)} style={styles.modalButton}>
+                  İptal
+                </Button>
+                <Button mode="contained" onPress={handleDatePickerConfirm} style={styles.modalButton}>
+                  Tamam
+                </Button>
+              </View>
+            </View>
+          </Modal>
+        </Portal>
+      )}
+
+      {/* Time Picker Modal for iOS/Web */}
+      {Platform.OS !== 'android' && showTimePickerModal && (
+        <Portal>
+          <Modal
+            visible={showTimePickerModal}
+            onDismiss={() => setShowTimePickerModal(false)}
+            contentContainerStyle={styles.modalContainer}
+          >
+            <View style={styles.datePickerContainer}>
+              <Text style={styles.modalTitle}>Saat Seç</Text>
+              <DateTimePicker
+                value={sessionDate}
+                mode="time"
+                display={Platform.OS === 'ios' ? 'spinner' : 'default'}
+                onChange={handleDateChange}
+                locale="tr-TR"
+                is24Hour={true}
+              />
+              <View style={styles.modalButtons}>
+                <Button onPress={() => setShowTimePickerModal(false)} style={styles.modalButton}>
+                  İptal
+                </Button>
+                <Button mode="contained" onPress={handleTimePickerConfirm} style={styles.modalButton}>
+                  Tamam
+                </Button>
+              </View>
+            </View>
+          </Modal>
+        </Portal>
+      )}
     </ScrollView>
   );
 }
@@ -291,5 +420,28 @@ const styles = StyleSheet.create({
   button: {
     marginTop: 10,
     paddingVertical: 8,
+  },
+  modalContainer: {
+    margin: 20,
+  },
+  datePickerContainer: {
+    backgroundColor: 'white',
+    borderRadius: 8,
+    padding: 20,
+  },
+  modalTitle: {
+    fontSize: 20,
+    fontWeight: 'bold',
+    marginBottom: 15,
+    textAlign: 'center',
+  },
+  modalButtons: {
+    flexDirection: 'row',
+    justifyContent: 'space-around',
+    marginTop: 20,
+  },
+  modalButton: {
+    flex: 1,
+    marginHorizontal: 5,
   },
 });
