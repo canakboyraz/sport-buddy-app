@@ -4,26 +4,20 @@
     "slug": "sport-buddy-app",
     "version": "1.0.0",
     "orientation": "portrait",
-    "icon": "./assets/icon.png",
     "userInterfaceStyle": "light",
     "splash": {
-      "image": "./assets/splash.png",
       "resizeMode": "contain",
-      "backgroundColor": "#ffffff"
+      "backgroundColor": "#6200ee"
     },
-    "assetBundlePatterns": [
-      "**/*"
-    ],
     "ios": {
       "supportsTablet": true,
       "bundleIdentifier": "com.sportbuddy.app"
     },
     "android": {
-      "adaptiveIcon": {
-        "foregroundImage": "./assets/adaptive-icon.png",
-        "backgroundColor": "#ffffff"
-      },
       "package": "com.sportbuddy.app",
+      "adaptiveIcon": {
+        "backgroundColor": "#6200ee"
+      },
       "config": {
         "googleMaps": {
           "apiKey": "YOUR_GOOGLE_MAPS_API_KEY"
@@ -31,7 +25,7 @@
       }
     },
     "web": {
-      "favicon": "./assets/favicon.png"
+      "bundler": "metro"
     },
     "plugins": [
       [
