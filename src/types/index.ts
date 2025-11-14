@@ -1,0 +1,65 @@
+export interface Profile {
+  id: string;
+  email: string;
+  full_name: string;
+  phone?: string;
+  bio?: string;
+  avatar_url?: string;
+  created_at: string;
+}
+
+export interface Sport {
+  id: number;
+  name: string;
+  icon?: string;
+  created_at: string;
+}
+
+export interface SportSession {
+  id: number;
+  creator_id: string;
+  sport_id: number;
+  title: string;
+  description?: string;
+  location: string;
+  city?: string;
+  latitude?: number;
+  longitude?: number;
+  session_date: string;
+  max_participants: number;
+  skill_level: 'beginner' | 'intermediate' | 'advanced' | 'any';
+  status: 'open' | 'full' | 'completed' | 'cancelled';
+  created_at: string;
+  creator?: Profile;
+  sport?: Sport;
+  participants?: SessionParticipant[];
+}
+
+export interface SessionParticipant {
+  id: number;
+  session_id: number;
+  user_id: string;
+  status: 'pending' | 'approved' | 'rejected';
+  joined_at: string;
+  user?: Profile;
+}
+
+export interface Message {
+  id: number;
+  session_id: number;
+  user_id: string;
+  content: string;
+  created_at: string;
+  user?: Profile;
+}
+
+export interface Rating {
+  id: number;
+  session_id: number;
+  rated_user_id: string;
+  rater_user_id: string;
+  rating: number;
+  comment?: string;
+  created_at: string;
+  rater?: Profile;
+}
