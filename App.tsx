@@ -13,12 +13,14 @@ import {
   addNotificationResponseListener,
   addNotificationReceivedListener,
 } from './src/services/notificationService';
+import { ThemeProvider, useTheme } from './src/contexts/ThemeContext';
 
-export default function App() {
+function AppContent() {
   const [session, setSession] = useState<Session | null>(null);
   const [loading, setLoading] = useState(true);
   const notificationListener = useRef<any>();
   const responseListener = useRef<any>();
+  const { theme } = useTheme();
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data: { session } }) => {
@@ -71,12 +73,20 @@ export default function App() {
   }
 
   return (
+    <PaperProvider theme={theme}>
+      <NavigationContainer theme={theme}>
+        {session ? <AppNavigator /> : <AuthNavigator />}
+      </NavigationContainer>
+    </PaperProvider>
+  );
+}
+
+export default function App() {
+  return (
     <SafeAreaProvider>
-      <PaperProvider>
-        <NavigationContainer>
-          {session ? <AppNavigator /> : <AuthNavigator />}
-        </NavigationContainer>
-      </PaperProvider>
+      <ThemeProvider>
+        <AppContent />
+      </ThemeProvider>
     </SafeAreaProvider>
   );
 }
