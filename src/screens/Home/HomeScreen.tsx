@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { View, FlatList, StyleSheet, RefreshControl, Platform, Linking, TouchableOpacity } from 'react-native';
-import { Card, Text, Button, Chip, ActivityIndicator } from 'react-native-paper';
+import { Card, Text, Button, Chip, ActivityIndicator, FAB, Badge } from 'react-native-paper';
 import { supabase } from '../../services/supabase';
 import { SportSession, Sport } from '../../types';
 import { format } from 'date-fns';
@@ -8,6 +8,9 @@ import { tr } from 'date-fns/locale';
 import { StackNavigationProp } from '@react-navigation/stack';
 import { RootStackParamList } from '../../navigation/AppNavigator';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
+import * as Location from 'expo-location';
+import { calculateDistance, formatDistance } from '../../utils/distanceCalculator';
+import AdvancedFiltersModal, { AdvancedFilters } from '../../components/AdvancedFiltersModal';
 
 type HomeScreenNavigationProp = StackNavigationProp<RootStackParamList>;
 
@@ -31,18 +34,112 @@ const getSportIcon = (sportName: string): string => {
 
 export default function HomeScreen({ navigation }: Props) {
   const [sessions, setSessions] = useState<SportSession[]>([]);
+  const [filteredSessions, setFilteredSessions] = useState<SportSession[]>([]);
   const [sports, setSports] = useState<Sport[]>([]);
   const [cities, setCities] = useState<string[]>([]);
   const [selectedSport, setSelectedSport] = useState<number | null>(null);
   const [selectedCity, setSelectedCity] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
+  const [showAdvancedFilters, setShowAdvancedFilters] = useState(false);
+  const [userLocation, setUserLocation] = useState<{ latitude: number; longitude: number } | null>(null);
+  const [advancedFilters, setAdvancedFilters] = useState<AdvancedFilters>({
+    maxDistance: null,
+    dateFrom: null,
+    dateTo: null,
+    onlyAvailable: false,
+    skillLevel: null,
+  });
 
   useEffect(() => {
     loadSports();
     loadCities();
     loadSessions();
+    getUserLocation();
   }, [selectedSport, selectedCity]);
+
+  useEffect(() => {
+    applyAdvancedFilters();
+  }, [sessions, advancedFilters, userLocation]);
+
+  const getUserLocation = async () => {
+    try {
+      const { status } = await Location.requestForegroundPermissionsAsync();
+      if (status === 'granted') {
+        const location = await Location.getCurrentPositionAsync({});
+        setUserLocation({
+          latitude: location.coords.latitude,
+          longitude: location.coords.longitude,
+        });
+      }
+    } catch (error) {
+      console.log('Error getting location:', error);
+    }
+  };
+
+  const applyAdvancedFilters = () => {
+    let filtered = [...sessions];
+
+    // Distance filter
+    if (advancedFilters.maxDistance && userLocation) {
+      filtered = filtered.filter((session) => {
+        if (!session.latitude || !session.longitude) return false;
+        const distance = calculateDistance(
+          userLocation.latitude,
+          userLocation.longitude,
+          session.latitude,
+          session.longitude
+        );
+        return distance <= advancedFilters.maxDistance!;
+      });
+    }
+
+    // Date range filter
+    if (advancedFilters.dateFrom) {
+      const fromDate = new Date(advancedFilters.dateFrom);
+      fromDate.setHours(0, 0, 0, 0);
+      filtered = filtered.filter((session) => {
+        const sessionDate = new Date(session.session_date);
+        return sessionDate >= fromDate;
+      });
+    }
+
+    if (advancedFilters.dateTo) {
+      const toDate = new Date(advancedFilters.dateTo);
+      toDate.setHours(23, 59, 59, 999);
+      filtered = filtered.filter((session) => {
+        const sessionDate = new Date(session.session_date);
+        return sessionDate <= toDate;
+      });
+    }
+
+    // Skill level filter
+    if (advancedFilters.skillLevel) {
+      filtered = filtered.filter(
+        (session) => session.skill_level === advancedFilters.skillLevel
+      );
+    }
+
+    // Only available sessions filter
+    if (advancedFilters.onlyAvailable) {
+      filtered = filtered.filter((session) => {
+        const participantCount =
+          session.participants?.filter((p) => p.status === 'approved').length || 0;
+        return participantCount < session.max_participants;
+      });
+    }
+
+    setFilteredSessions(filtered);
+  };
+
+  const countActiveFilters = (): number => {
+    let count = 0;
+    if (advancedFilters.maxDistance) count++;
+    if (advancedFilters.dateFrom || advancedFilters.dateTo) count++;
+    if (advancedFilters.skillLevel) count++;
+    if (advancedFilters.onlyAvailable) count++;
+    return count;
+  };
 
   const loadSports = async () => {
     const { data, error } = await supabase
@@ -124,14 +221,32 @@ export default function HomeScreen({ navigation }: Props) {
     const isFull = participantCount >= item.max_participants;
     const sportIcon = getSportIcon(item.sport?.name || '');
 
+    // Calculate distance if user location is available
+    let distance: number | null = null;
+    if (userLocation && item.latitude && item.longitude) {
+      distance = calculateDistance(
+        userLocation.latitude,
+        userLocation.longitude,
+        item.latitude,
+        item.longitude
+      );
+    }
+
     return (
       <Card style={styles.card} mode="elevated" onPress={() => navigation.navigate('SessionDetail', { sessionId: item.id })}>
         <Card.Content>
           <View style={styles.cardHeader}>
             <Text style={styles.title} numberOfLines={1}>{item.title}</Text>
-            <Chip icon="account-multiple" style={styles.chip} compact>
-              {participantCount}/{item.max_participants}
-            </Chip>
+            <View style={styles.cardHeaderRight}>
+              {distance !== null && (
+                <Chip icon="map-marker-distance" style={styles.distanceChip} compact textStyle={styles.distanceText}>
+                  {formatDistance(distance)}
+                </Chip>
+              )}
+              <Chip icon="account-multiple" style={styles.chip} compact>
+                {participantCount}/{item.max_participants}
+              </Chip>
+            </View>
           </View>
 
           <View style={styles.infoRow}>
@@ -198,6 +313,8 @@ export default function HomeScreen({ navigation }: Props) {
     );
   }
 
+  const activeFilterCount = countActiveFilters();
+
   return (
     <View style={styles.container}>
       <View style={styles.filtersContainer}>
@@ -238,7 +355,7 @@ export default function HomeScreen({ navigation }: Props) {
       </View>
 
       <FlatList
-        data={sessions}
+        data={filteredSessions}
         renderItem={renderSessionCard}
         keyExtractor={(item) => String(item.id)}
         contentContainerStyle={styles.list}
@@ -247,9 +364,35 @@ export default function HomeScreen({ navigation }: Props) {
         }
         ListEmptyComponent={
           <View style={styles.emptyContainer}>
-            <Text style={styles.emptyText}>Henüz seans yok</Text>
+            <MaterialCommunityIcons name="filter-off" size={48} color="#ccc" />
+            <Text style={styles.emptyText}>
+              {activeFilterCount > 0 ? 'Filtrelerinize uygun seans bulunamadı' : 'Henüz seans yok'}
+            </Text>
+            {activeFilterCount > 0 && (
+              <Text style={styles.emptySubtext}>Filtreleri sıfırlayıp tekrar deneyin</Text>
+            )}
           </View>
         }
+      />
+
+      <FAB
+        icon={activeFilterCount > 0 ? 'filter-check' : 'filter-variant'}
+        style={styles.fab}
+        onPress={() => setShowAdvancedFilters(true)}
+        label="Filtreler"
+        color="#fff"
+      />
+
+      {activeFilterCount > 0 && (
+        <Badge style={styles.filterBadge}>{activeFilterCount}</Badge>
+      )}
+
+      <AdvancedFiltersModal
+        visible={showAdvancedFilters}
+        onDismiss={() => setShowAdvancedFilters(false)}
+        filters={advancedFilters}
+        onApply={setAdvancedFilters}
+        hasLocation={userLocation !== null}
       />
     </View>
   );
@@ -294,6 +437,11 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     marginBottom: 10,
   },
+  cardHeaderRight: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+  },
   title: {
     fontSize: 18,
     fontWeight: 'bold',
@@ -301,7 +449,14 @@ const styles = StyleSheet.create({
     marginRight: 8,
   },
   chip: {
-    marginLeft: 10,
+    marginLeft: 0,
+  },
+  distanceChip: {
+    backgroundColor: '#e3f2fd',
+  },
+  distanceText: {
+    color: '#1976d2',
+    fontSize: 11,
   },
   infoRow: {
     flexDirection: 'row',
@@ -361,11 +516,31 @@ const styles = StyleSheet.create({
     fontSize: 12,
   },
   emptyContainer: {
-    padding: 20,
+    padding: 40,
     alignItems: 'center',
   },
   emptyText: {
     fontSize: 16,
     color: '#999',
+    marginTop: 16,
+    fontWeight: 'bold',
+  },
+  emptySubtext: {
+    fontSize: 14,
+    color: '#bbb',
+    marginTop: 8,
+    textAlign: 'center',
+  },
+  fab: {
+    position: 'absolute',
+    bottom: 20,
+    right: 20,
+    backgroundColor: '#6200ee',
+  },
+  filterBadge: {
+    position: 'absolute',
+    bottom: 70,
+    right: 30,
+    backgroundColor: '#F44336',
   },
 });
