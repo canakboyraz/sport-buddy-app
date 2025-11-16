@@ -11,6 +11,8 @@ import SessionDetailScreen from '../screens/SessionDetail/SessionDetailScreen';
 import ChatScreen from '../screens/Chat/ChatScreen';
 import ProfileScreen from '../screens/Profile/ProfileScreen';
 import RateUserScreen from '../screens/RateUser/RateUserScreen';
+import EditProfileScreen from '../screens/Profile/EditProfileScreen';
+import ProfileStatsScreen from '../screens/Profile/ProfileStatsScreen';
 
 export type MainTabParamList = {
   Home: undefined;
@@ -26,6 +28,8 @@ export type RootStackParamList = {
   RateUser: { sessionId: number; userId: string; userName: string };
   MyEvents: undefined;
   CreateSession: undefined;
+  EditProfile: undefined;
+  ProfileStats: undefined;
 };
 
 const MainTab = createBottomTabNavigator<MainTabParamList>();
@@ -130,6 +134,16 @@ export default function AppNavigator() {
         name="CreateSession"
         component={CreateSessionScreen}
         options={{ title: 'Seans Oluştur' }}
+      />
+      <RootStack.Screen
+        name="EditProfile"
+        component={EditProfileScreen}
+        options={{ title: 'Profili Düzenle' }}
+      />
+      <RootStack.Screen
+        name="ProfileStats"
+        component={ProfileStatsScreen}
+        options={{ title: 'İstatistiklerim' }}
       />
     </RootStack.Navigator>
   );

@@ -210,6 +210,24 @@ export default function ProfileScreen() {
 
           <Button
             mode="outlined"
+            icon="pencil"
+            onPress={() => navigation.navigate('EditProfile')}
+            style={styles.actionButton}
+          >
+            Profili Düzenle
+          </Button>
+
+          <Button
+            mode="outlined"
+            icon="chart-box"
+            onPress={() => navigation.navigate('ProfileStats')}
+            style={styles.actionButton}
+          >
+            İstatistiklerim
+          </Button>
+
+          <Button
+            mode="outlined"
             icon="calendar-check"
             onPress={() => navigation.navigate('MyEvents')}
             style={styles.actionButton}
