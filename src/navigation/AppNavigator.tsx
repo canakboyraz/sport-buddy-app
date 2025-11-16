@@ -3,6 +3,8 @@ import { createStackNavigator } from '@react-navigation/stack';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import HomeScreen from '../screens/Home/HomeScreen';
+import MapViewScreen from '../screens/Map/MapViewScreen';
+import FavoritesScreen from '../screens/Favorites/FavoritesScreen';
 import MyEventsScreen from '../screens/MyEvents/MyEventsScreen';
 import CreateSessionScreen from '../screens/CreateSession/CreateSessionScreen';
 import SessionDetailScreen from '../screens/SessionDetail/SessionDetailScreen';
@@ -12,8 +14,8 @@ import RateUserScreen from '../screens/RateUser/RateUserScreen';
 
 export type MainTabParamList = {
   Home: undefined;
-  MyEvents: undefined;
-  Create: undefined;
+  MapView: undefined;
+  Favorites: undefined;
   Profile: undefined;
 };
 
@@ -22,6 +24,8 @@ export type RootStackParamList = {
   SessionDetail: { sessionId: number };
   Chat: { sessionId: number };
   RateUser: { sessionId: number; userId: string; userName: string };
+  MyEvents: undefined;
+  CreateSession: undefined;
 };
 
 const MainTab = createBottomTabNavigator<MainTabParamList>();
@@ -53,27 +57,27 @@ function MainTabNavigator() {
         options={{
           title: 'Seanslar',
           tabBarIcon: ({ color, size }) => (
-            <MaterialCommunityIcons name="home" size={28} color={color} />
+            <MaterialCommunityIcons name="view-list" size={28} color={color} />
           ),
         }}
       />
       <MainTab.Screen
-        name="MyEvents"
-        component={MyEventsScreen}
+        name="MapView"
+        component={MapViewScreen}
         options={{
-          title: 'Etkinliklerim',
+          title: 'Harita',
           tabBarIcon: ({ color, size }) => (
-            <MaterialCommunityIcons name="calendar-check" size={28} color={color} />
+            <MaterialCommunityIcons name="map" size={28} color={color} />
           ),
         }}
       />
       <MainTab.Screen
-        name="Create"
-        component={CreateSessionScreen}
+        name="Favorites"
+        component={FavoritesScreen}
         options={{
-          title: 'Oluştur',
+          title: 'Favoriler',
           tabBarIcon: ({ color, size }) => (
-            <MaterialCommunityIcons name="plus-circle" size={32} color={color} />
+            <MaterialCommunityIcons name="heart" size={28} color={color} />
           ),
         }}
       />
@@ -116,6 +120,16 @@ export default function AppNavigator() {
         name="RateUser"
         component={RateUserScreen}
         options={{ title: 'Kullanıcıyı Değerlendir' }}
+      />
+      <RootStack.Screen
+        name="MyEvents"
+        component={MyEventsScreen}
+        options={{ title: 'Etkinliklerim' }}
+      />
+      <RootStack.Screen
+        name="CreateSession"
+        component={CreateSessionScreen}
+        options={{ title: 'Seans Oluştur' }}
       />
     </RootStack.Navigator>
   );

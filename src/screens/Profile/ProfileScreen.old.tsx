@@ -1,22 +1,17 @@
 import React, { useEffect, useState } from 'react';
-import { View, ScrollView, StyleSheet, Alert, TouchableOpacity, ActionSheetIOS, Platform } from 'react-native';
-import { Card, Text, Button, Avatar, Divider, ActivityIndicator, Switch, Menu } from 'react-native-paper';
+import { View, ScrollView, StyleSheet, Alert } from 'react-native';
+import { Card, Text, Button, Avatar, Divider, ActivityIndicator } from 'react-native-paper';
 import { supabase } from '../../services/supabase';
 import { Profile, Rating } from '../../types';
 import { useAuth } from '../../hooks/useAuth';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
-import { useTheme } from '../../contexts/ThemeContext';
-import { pickImageFromGallery, takePhotoWithCamera, uploadProfilePhoto } from '../../services/imageService';
 
 export default function ProfileScreen() {
   const { user } = useAuth();
-  const { isDarkMode, toggleTheme } = useTheme();
   const [profile, setProfile] = useState<Profile | null>(null);
   const [ratings, setRatings] = useState<Rating[]>([]);
   const [averageRating, setAverageRating] = useState(0);
   const [loading, setLoading] = useState(true);
-  const [uploadingPhoto, setUploadingPhoto] = useState(false);
-  const [photoMenuVisible, setPhotoMenuVisible] = useState(false);
 
   useEffect(() => {
     if (user) {
@@ -66,60 +61,6 @@ export default function ProfileScreen() {
     }
   };
 
-  const handlePhotoSelection = () => {
-    if (Platform.OS === 'ios') {
-      ActionSheetIOS.showActionSheetWithOptions(
-        {
-          options: ['İptal', 'Fotoğraf Çek', 'Galeriden Seç'],
-          cancelButtonIndex: 0,
-        },
-        (buttonIndex) => {
-          if (buttonIndex === 1) {
-            takePhoto();
-          } else if (buttonIndex === 2) {
-            pickPhoto();
-          }
-        }
-      );
-    } else {
-      setPhotoMenuVisible(true);
-    }
-  };
-
-  const takePhoto = async () => {
-    setPhotoMenuVisible(false);
-    const result = await takePhotoWithCamera();
-    if (result && user) {
-      setUploadingPhoto(true);
-      const url = await uploadProfilePhoto(user.id, result.uri);
-      setUploadingPhoto(false);
-
-      if (url) {
-        Alert.alert('Başarılı', 'Profil fotoğrafı güncellendi');
-        loadProfile();
-      } else {
-        Alert.alert('Hata', 'Fotoğraf yüklenirken bir hata oluştu');
-      }
-    }
-  };
-
-  const pickPhoto = async () => {
-    setPhotoMenuVisible(false);
-    const result = await pickImageFromGallery();
-    if (result && user) {
-      setUploadingPhoto(true);
-      const url = await uploadProfilePhoto(user.id, result.uri);
-      setUploadingPhoto(false);
-
-      if (url) {
-        Alert.alert('Başarılı', 'Profil fotoğrafı güncellendi');
-        loadProfile();
-      } else {
-        Alert.alert('Hata', 'Fotoğraf yüklenirken bir hata oluştu');
-      }
-    }
-  };
-
   const handleLogout = async () => {
     Alert.alert('Çıkış', 'Çıkmak istediğinizden emin misiniz?', [
       { text: 'İptal', style: 'cancel' },
@@ -154,28 +95,7 @@ export default function ProfileScreen() {
       <Card style={styles.card}>
         <Card.Content>
           <View style={styles.header}>
-            <View>
-              <TouchableOpacity onPress={handlePhotoSelection} disabled={uploadingPhoto}>
-                {profile.avatar_url ? (
-                  <Avatar.Image size={80} source={{ uri: profile.avatar_url }} />
-                ) : (
-                  <Avatar.Text size={80} label={profile.full_name?.charAt(0) || 'U'} />
-                )}
-                {uploadingPhoto && (
-                  <View style={styles.uploadingOverlay}>
-                    <ActivityIndicator size="small" color="#fff" />
-                  </View>
-                )}
-              </TouchableOpacity>
-              <TouchableOpacity
-                style={styles.cameraButton}
-                onPress={handlePhotoSelection}
-                disabled={uploadingPhoto}
-              >
-                <MaterialCommunityIcons name="camera" size={20} color="#fff" />
-              </TouchableOpacity>
-            </View>
-
+            <Avatar.Text size={80} label={profile.full_name?.charAt(0) || 'U'} />
             <View style={styles.headerInfo}>
               <Text style={styles.name}>{profile.full_name}</Text>
               <Text style={styles.email}>{profile.email}</Text>
@@ -199,20 +119,6 @@ export default function ProfileScreen() {
               <Text style={styles.bio}>{profile.bio}</Text>
             </>
           )}
-
-          <Divider style={styles.divider} />
-
-          <View style={styles.settingsRow}>
-            <View style={styles.settingItem}>
-              <MaterialCommunityIcons
-                name={isDarkMode ? "weather-night" : "weather-sunny"}
-                size={24}
-                color={isDarkMode ? "#bb86fc" : "#6200ee"}
-              />
-              <Text style={styles.settingLabel}>Koyu Tema</Text>
-            </View>
-            <Switch value={isDarkMode} onValueChange={toggleTheme} />
-          </View>
         </Card.Content>
       </Card>
 
@@ -265,18 +171,6 @@ export default function ProfileScreen() {
       >
         Çıkış Yap
       </Button>
-
-      {/* Android Photo Menu */}
-      {Platform.OS !== 'ios' && (
-        <Menu
-          visible={photoMenuVisible}
-          onDismiss={() => setPhotoMenuVisible(false)}
-          anchor={<View />}
-        >
-          <Menu.Item onPress={takePhoto} title="Fotoğraf Çek" leadingIcon="camera" />
-          <Menu.Item onPress={pickPhoto} title="Galeriden Seç" leadingIcon="image" />
-        </Menu>
-      )}
     </ScrollView>
   );
 }
@@ -317,28 +211,6 @@ const styles = StyleSheet.create({
     fontSize: 16,
     color: '#666',
   },
-  cameraButton: {
-    position: 'absolute',
-    bottom: 0,
-    right: 0,
-    backgroundColor: '#6200ee',
-    borderRadius: 15,
-    width: 30,
-    height: 30,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  uploadingOverlay: {
-    position: 'absolute',
-    top: 0,
-    left: 0,
-    right: 0,
-    bottom: 0,
-    backgroundColor: 'rgba(0,0,0,0.5)',
-    borderRadius: 40,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
   ratingContainer: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -364,21 +236,6 @@ const styles = StyleSheet.create({
   bio: {
     fontSize: 16,
     color: '#666',
-  },
-  settingsRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    paddingVertical: 10,
-  },
-  settingItem: {
-    flexDirection: 'row',
-    alignItems: 'center',
-  },
-  settingLabel: {
-    fontSize: 16,
-    marginLeft: 12,
-    fontWeight: '500',
   },
   sectionTitle: {
     fontSize: 18,
