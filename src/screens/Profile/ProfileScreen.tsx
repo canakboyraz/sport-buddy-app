@@ -237,6 +237,15 @@ export default function ProfileScreen() {
 
           <Button
             mode="outlined"
+            icon="account-multiple"
+            onPress={() => navigation.navigate('Friends')}
+            style={styles.actionButton}
+          >
+            Arkadaşlarım
+          </Button>
+
+          <Button
+            mode="outlined"
             icon="calendar-check"
             onPress={() => navigation.navigate('MyEvents')}
             style={styles.actionButton}
