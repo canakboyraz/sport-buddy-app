@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { View, ScrollView, StyleSheet, Alert, Platform } from 'react-native';
-import { TextInput, Button, Menu, Text, Portal, Modal, Dialog } from 'react-native-paper';
+import { TextInput, Button, Menu, Text, Portal, Modal, Dialog, Switch, Chip } from 'react-native-paper';
 import { supabase } from '../../services/supabase';
 import { Sport } from '../../types';
 import { DateTimePickerAndroid } from '@react-native-community/datetimepicker';
@@ -31,6 +31,14 @@ export default function CreateSessionScreen({ navigation }: any) {
   const [showDatePickerModal, setShowDatePickerModal] = useState(false);
   const [showTimePickerModal, setShowTimePickerModal] = useState(false);
   const [datePickerMode, setDatePickerMode] = useState<'date' | 'time'>('date');
+
+  // Recurring session states
+  const [isRecurring, setIsRecurring] = useState(false);
+  const [recurrenceType, setRecurrenceType] = useState<'daily' | 'weekly' | 'biweekly' | 'monthly'>('weekly');
+  const [recurrenceMenuVisible, setRecurrenceMenuVisible] = useState(false);
+  const [recurrenceDay, setRecurrenceDay] = useState<number>(0); // 0-6 for days of week, 1-31 for day of month
+  const [endDate, setEndDate] = useState<Date | null>(null);
+  const [showEndDatePicker, setShowEndDatePicker] = useState(false);
 
   useEffect(() => {
     loadSports();
@@ -161,53 +169,120 @@ export default function CreateSessionScreen({ navigation }: any) {
     setLoading(true);
 
     try {
-      const { data, error } = await supabase.from('sport_sessions').insert({
-        creator_id: user.id,
-        sport_id: selectedSport,
-        title,
-        description: description || null,
-        location,
-        city: city || null,
-        latitude,
-        longitude,
-        session_date: sessionDate.toISOString(),
-        max_participants: maxParticipantsNum,
-        skill_level: skillLevel as any,
-        status: 'open',
-      }).select();
+      if (isRecurring) {
+        // Create recurring session template
+        const { data: recurringData, error: recurringError } = await supabase
+          .from('recurring_sessions')
+          .insert({
+            creator_id: user.id,
+            sport_id: selectedSport,
+            title,
+            description: description || null,
+            location,
+            city: city || null,
+            latitude,
+            longitude,
+            start_time: format(sessionDate, 'HH:mm:ss'),
+            duration_minutes: 60,
+            max_participants: maxParticipantsNum,
+            skill_level: skillLevel as any,
+            recurrence_type: recurrenceType,
+            recurrence_day: recurrenceDay,
+            start_date: format(sessionDate, 'yyyy-MM-dd'),
+            end_date: endDate ? format(endDate, 'yyyy-MM-dd') : null,
+            is_active: true,
+          })
+          .select()
+          .single();
 
-      setLoading(false);
+        if (recurringError) {
+          console.error('Error creating recurring session:', recurringError);
+          Alert.alert('Hata', recurringError.message);
+          setLoading(false);
+          return;
+        }
 
-      if (error) {
-        console.error('Error creating session:', error);
-        Alert.alert('Hata', error.message);
-      } else {
-        Alert.alert('Başarılı', 'Seans oluşturuldu!', [
+        // Generate sessions for the next 30 days
+        const { data: generatedSessions, error: generateError } = await supabase.rpc(
+          'generate_recurring_sessions',
           {
-            text: 'Tamam',
-            onPress: () => {
-              // Reset form
-              setTitle('');
-              setDescription('');
-              setLocation('');
-              setCity('');
-              setLatitude(null);
-              setLongitude(null);
-              setSelectedSport(null);
-              setMaxParticipants('10');
-              setSkillLevel('any');
-              setSessionDate(new Date());
-              // Navigate to My Events
-              navigation.navigate('MyEvents');
-            }
+            p_recurring_id: recurringData.id,
+            p_days_ahead: 30,
           }
-        ]);
+        );
+
+        setLoading(false);
+
+        if (generateError) {
+          console.error('Error generating sessions:', generateError);
+          Alert.alert('Uyarı', 'Tekrarlayan seans şablonu oluşturuldu ancak otomatik seanslar oluşturulamadı.');
+        } else {
+          const sessionCount = generatedSessions?.length || 0;
+          Alert.alert(
+            'Başarılı',
+            `Tekrarlayan seans oluşturuldu! ${sessionCount} adet seans otomatik olarak oluşturuldu.`,
+            [
+              {
+                text: 'Tamam',
+                onPress: resetForm,
+              },
+            ]
+          );
+        }
+      } else {
+        // Create single session
+        const { data, error } = await supabase.from('sport_sessions').insert({
+          creator_id: user.id,
+          sport_id: selectedSport,
+          title,
+          description: description || null,
+          location,
+          city: city || null,
+          latitude,
+          longitude,
+          session_date: sessionDate.toISOString(),
+          max_participants: maxParticipantsNum,
+          skill_level: skillLevel as any,
+          status: 'open',
+        }).select();
+
+        setLoading(false);
+
+        if (error) {
+          console.error('Error creating session:', error);
+          Alert.alert('Hata', error.message);
+        } else {
+          Alert.alert('Başarılı', 'Seans oluşturuldu!', [
+            {
+              text: 'Tamam',
+              onPress: resetForm,
+            },
+          ]);
+        }
       }
     } catch (error) {
       console.error('Error in handleCreate:', error);
       setLoading(false);
       Alert.alert('Hata', 'Seans oluşturulurken bir hata oluştu');
     }
+  };
+
+  const resetForm = () => {
+    setTitle('');
+    setDescription('');
+    setLocation('');
+    setCity('');
+    setLatitude(null);
+    setLongitude(null);
+    setSelectedSport(null);
+    setMaxParticipants('10');
+    setSkillLevel('any');
+    setSessionDate(new Date());
+    setIsRecurring(false);
+    setRecurrenceType('weekly');
+    setRecurrenceDay(0);
+    setEndDate(null);
+    navigation.navigate('MyEvents');
   };
 
   return (
@@ -334,6 +409,91 @@ export default function CreateSessionScreen({ navigation }: any) {
           <Menu.Item onPress={() => { setSkillLevel('advanced'); setSkillMenuVisible(false); }} title="advanced" />
         </Menu>
 
+        {/* Recurring Session Options */}
+        <View style={styles.recurringContainer}>
+          <View style={styles.recurringHeader}>
+            <Text style={styles.recurringLabel}>Tekrarlayan Etkinlik</Text>
+            <Switch value={isRecurring} onValueChange={setIsRecurring} />
+          </View>
+        </View>
+
+        {isRecurring && (
+          <View style={styles.recurringOptions}>
+            <Menu
+              visible={recurrenceMenuVisible}
+              onDismiss={() => setRecurrenceMenuVisible(false)}
+              anchor={
+                <TextInput
+                  label="Tekrarlama Sıklığı"
+                  value={
+                    recurrenceType === 'daily' ? 'Her Gün' :
+                    recurrenceType === 'weekly' ? 'Her Hafta' :
+                    recurrenceType === 'biweekly' ? 'İki Haftada Bir' :
+                    'Her Ay'
+                  }
+                  mode="outlined"
+                  style={styles.input}
+                  editable={false}
+                  right={<TextInput.Icon icon="chevron-down" onPress={() => setRecurrenceMenuVisible(true)} />}
+                  onPressIn={() => setRecurrenceMenuVisible(true)}
+                />
+              }
+            >
+              <Menu.Item onPress={() => { setRecurrenceType('daily'); setRecurrenceMenuVisible(false); }} title="Her Gün" />
+              <Menu.Item onPress={() => { setRecurrenceType('weekly'); setRecurrenceMenuVisible(false); }} title="Her Hafta" />
+              <Menu.Item onPress={() => { setRecurrenceType('biweekly'); setRecurrenceMenuVisible(false); }} title="İki Haftada Bir" />
+              <Menu.Item onPress={() => { setRecurrenceType('monthly'); setRecurrenceMenuVisible(false); }} title="Her Ay" />
+            </Menu>
+
+            {(recurrenceType === 'weekly' || recurrenceType === 'biweekly') && (
+              <View style={styles.dayChipsContainer}>
+                <Text style={styles.dayChipsLabel}>Gün Seçin:</Text>
+                <View style={styles.dayChips}>
+                  {['Pazar', 'Pazartesi', 'Salı', 'Çarşamba', 'Perşembe', 'Cuma', 'Cumartesi'].map((day, index) => (
+                    <Chip
+                      key={index}
+                      selected={recurrenceDay === index}
+                      onPress={() => setRecurrenceDay(index)}
+                      style={styles.dayChip}
+                    >
+                      {day}
+                    </Chip>
+                  ))}
+                </View>
+              </View>
+            )}
+
+            {recurrenceType === 'monthly' && (
+              <TextInput
+                label="Ayın Hangi Günü (1-31)"
+                value={recurrenceDay.toString()}
+                onChangeText={(text) => {
+                  const day = parseInt(text);
+                  if (!isNaN(day) && day >= 1 && day <= 31) {
+                    setRecurrenceDay(day);
+                  }
+                }}
+                mode="outlined"
+                keyboardType="numeric"
+                style={styles.input}
+              />
+            )}
+
+            <Button
+              mode="outlined"
+              onPress={() => setShowEndDatePicker(true)}
+              style={styles.input}
+              icon="calendar-end"
+            >
+              {endDate ? `Bitiş: ${format(endDate, 'dd MMM yyyy', { locale: tr })}` : 'Bitiş Tarihi (İsteğe Bağlı)'}
+            </Button>
+
+            <Text style={styles.recurringInfo}>
+              💡 Tekrarlayan etkinlik aktif olduğu sürece önümüzdeki 30 gün için otomatik seanslar oluşturulur.
+            </Text>
+          </View>
+        )}
+
         <Button
           mode="contained"
           onPress={handleCreate}
@@ -341,7 +501,7 @@ export default function CreateSessionScreen({ navigation }: any) {
           disabled={loading}
           style={styles.button}
         >
-          Seans Oluştur
+          {isRecurring ? 'Tekrarlayan Seans Oluştur' : 'Seans Oluştur'}
         </Button>
       </View>
 
@@ -405,6 +565,44 @@ export default function CreateSessionScreen({ navigation }: any) {
           </Modal>
         </Portal>
       )}
+
+      {/* End Date Picker Modal */}
+      {showEndDatePicker && (
+        <Portal>
+          <Modal
+            visible={showEndDatePicker}
+            onDismiss={() => setShowEndDatePicker(false)}
+            contentContainerStyle={styles.modalContainer}
+          >
+            <View style={styles.datePickerContainer}>
+              <Text style={styles.modalTitle}>Bitiş Tarihi Seç</Text>
+              <DateTimePicker
+                value={endDate || new Date()}
+                mode="date"
+                display={Platform.OS === 'ios' ? 'spinner' : 'default'}
+                onChange={(event, selectedDate) => {
+                  if (selectedDate) {
+                    setEndDate(selectedDate);
+                  }
+                }}
+                locale="tr-TR"
+                minimumDate={sessionDate}
+              />
+              <View style={styles.modalButtons}>
+                <Button onPress={() => {
+                  setEndDate(null);
+                  setShowEndDatePicker(false);
+                }} style={styles.modalButton}>
+                  Temizle
+                </Button>
+                <Button mode="contained" onPress={() => setShowEndDatePicker(false)} style={styles.modalButton}>
+                  Tamam
+                </Button>
+              </View>
+            </View>
+          </Modal>
+        </Portal>
+      )}
     </ScrollView>
   );
 }
@@ -449,5 +647,50 @@ const styles = StyleSheet.create({
   modalButton: {
     flex: 1,
     marginHorizontal: 5,
+  },
+  recurringContainer: {
+    marginBottom: 10,
+  },
+  recurringHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    paddingVertical: 10,
+  },
+  recurringLabel: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: '#333',
+  },
+  recurringOptions: {
+    backgroundColor: '#f5f5f5',
+    padding: 15,
+    borderRadius: 8,
+    marginBottom: 15,
+  },
+  dayChipsContainer: {
+    marginVertical: 10,
+  },
+  dayChipsLabel: {
+    fontSize: 14,
+    fontWeight: '600',
+    marginBottom: 8,
+    color: '#666',
+  },
+  dayChips: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 8,
+  },
+  dayChip: {
+    marginRight: 8,
+    marginBottom: 8,
+  },
+  recurringInfo: {
+    fontSize: 12,
+    color: '#666',
+    fontStyle: 'italic',
+    marginTop: 10,
+    lineHeight: 18,
   },
 });
