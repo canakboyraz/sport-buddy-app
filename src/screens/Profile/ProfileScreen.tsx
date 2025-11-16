@@ -228,6 +228,15 @@ export default function ProfileScreen() {
 
           <Button
             mode="outlined"
+            icon="trophy"
+            onPress={() => navigation.navigate('Achievements')}
+            style={styles.actionButton}
+          >
+            Başarılarım
+          </Button>
+
+          <Button
+            mode="outlined"
             icon="calendar-check"
             onPress={() => navigation.navigate('MyEvents')}
             style={styles.actionButton}

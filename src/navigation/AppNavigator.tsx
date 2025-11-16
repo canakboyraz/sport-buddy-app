@@ -13,6 +13,7 @@ import ProfileScreen from '../screens/Profile/ProfileScreen';
 import RateUserScreen from '../screens/RateUser/RateUserScreen';
 import EditProfileScreen from '../screens/Profile/EditProfileScreen';
 import ProfileStatsScreen from '../screens/Profile/ProfileStatsScreen';
+import AchievementsScreen from '../screens/Achievements/AchievementsScreen';
 
 export type MainTabParamList = {
   Home: undefined;
@@ -30,6 +31,7 @@ export type RootStackParamList = {
   CreateSession: undefined;
   EditProfile: undefined;
   ProfileStats: undefined;
+  Achievements: undefined;
 };
 
 const MainTab = createBottomTabNavigator<MainTabParamList>();
@@ -144,6 +146,11 @@ export default function AppNavigator() {
         name="ProfileStats"
         component={ProfileStatsScreen}
         options={{ title: 'İstatistiklerim' }}
+      />
+      <RootStack.Screen
+        name="Achievements"
+        component={AchievementsScreen}
+        options={{ title: 'Başarılarım' }}
       />
     </RootStack.Navigator>
   );
