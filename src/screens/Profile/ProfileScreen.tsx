@@ -246,6 +246,15 @@ export default function ProfileScreen() {
 
           <Button
             mode="outlined"
+            icon="account-off"
+            onPress={() => navigation.navigate('BlockedUsers')}
+            style={styles.actionButton}
+          >
+            Engellenenler
+          </Button>
+
+          <Button
+            mode="outlined"
             icon="calendar-check"
             onPress={() => navigation.navigate('MyEvents')}
             style={styles.actionButton}
