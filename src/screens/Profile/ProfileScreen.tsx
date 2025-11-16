@@ -7,8 +7,14 @@ import { useAuth } from '../../hooks/useAuth';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { useTheme } from '../../contexts/ThemeContext';
 import { pickImageFromGallery, takePhotoWithCamera, uploadProfilePhoto } from '../../services/imageService';
+import { useNavigation } from '@react-navigation/native';
+import { StackNavigationProp } from '@react-navigation/stack';
+import { RootStackParamList } from '../../navigation/AppNavigator';
+
+type ProfileScreenNavigationProp = StackNavigationProp<RootStackParamList>;
 
 export default function ProfileScreen() {
+  const navigation = useNavigation<ProfileScreenNavigationProp>();
   const { user } = useAuth();
   const { isDarkMode, toggleTheme } = useTheme();
   const [profile, setProfile] = useState<Profile | null>(null);
@@ -199,6 +205,26 @@ export default function ProfileScreen() {
               <Text style={styles.bio}>{profile.bio}</Text>
             </>
           )}
+
+          <Divider style={styles.divider} />
+
+          <Button
+            mode="outlined"
+            icon="calendar-check"
+            onPress={() => navigation.navigate('MyEvents')}
+            style={styles.actionButton}
+          >
+            Etkinliklerim
+          </Button>
+
+          <Button
+            mode="contained"
+            icon="plus-circle"
+            onPress={() => navigation.navigate('CreateSession')}
+            style={styles.actionButton}
+          >
+            Yeni Seans Oluştur
+          </Button>
 
           <Divider style={styles.divider} />
 
@@ -418,5 +444,8 @@ const styles = StyleSheet.create({
   logoutButton: {
     margin: 15,
     marginTop: 5,
+  },
+  actionButton: {
+    marginTop: 10,
   },
 });
