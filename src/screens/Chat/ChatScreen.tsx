@@ -1,6 +1,6 @@
 import React, { useEffect, useState, useRef } from 'react';
-import { View, FlatList, StyleSheet, KeyboardAvoidingView, Platform } from 'react-native';
-import { TextInput, Button, Text, Avatar } from 'react-native-paper';
+import { View, FlatList, StyleSheet, KeyboardAvoidingView, Platform, Image, TouchableOpacity, Alert } from 'react-native';
+import { TextInput, Button, Text, Avatar, IconButton, ActivityIndicator } from 'react-native-paper';
 import { supabase } from '../../services/supabase';
 import { Message } from '../../types';
 import { format } from 'date-fns';
@@ -9,6 +9,8 @@ import { StackNavigationProp } from '@react-navigation/stack';
 import { RouteProp } from '@react-navigation/native';
 import { RootStackParamList } from '../../navigation/AppNavigator';
 import { useAuth } from '../../hooks/useAuth';
+import { pickImageFromGallery, takePhotoWithCamera } from '../../services/imageService';
+import { MaterialCommunityIcons } from '@expo/vector-icons';
 
 type ChatScreenNavigationProp = StackNavigationProp<RootStackParamList, 'Chat'>;
 type ChatScreenRouteProp = RouteProp<RootStackParamList, 'Chat'>;
@@ -24,7 +26,10 @@ export default function ChatScreen({ navigation, route }: Props) {
   const [messages, setMessages] = useState<Message[]>([]);
   const [newMessage, setNewMessage] = useState('');
   const [sending, setSending] = useState(false);
+  const [uploadingImage, setUploadingImage] = useState(false);
+  const [typingUsers, setTypingUsers] = useState<string[]>([]);
   const flatListRef = useRef<FlatList>(null);
+  const typingTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
   useEffect(() => {
     loadMessages();

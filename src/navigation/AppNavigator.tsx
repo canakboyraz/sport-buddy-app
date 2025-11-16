@@ -8,7 +8,7 @@ import FavoritesScreen from '../screens/Favorites/FavoritesScreen';
 import MyEventsScreen from '../screens/MyEvents/MyEventsScreen';
 import CreateSessionScreen from '../screens/CreateSession/CreateSessionScreen';
 import SessionDetailScreen from '../screens/SessionDetail/SessionDetailScreen';
-import ChatScreen from '../screens/Chat/ChatScreen';
+import EnhancedChatScreen from '../screens/Chat/EnhancedChatScreen';
 import ProfileScreen from '../screens/Profile/ProfileScreen';
 import RateUserScreen from '../screens/RateUser/RateUserScreen';
 import EditProfileScreen from '../screens/Profile/EditProfileScreen';
@@ -117,7 +117,7 @@ export default function AppNavigator() {
       />
       <RootStack.Screen
         name="Chat"
-        component={ChatScreen}
+        component={EnhancedChatScreen}
         options={{ title: 'Sohbet' }}
       />
       <RootStack.Screen
