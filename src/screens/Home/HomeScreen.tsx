@@ -1,16 +1,20 @@
-import React, { useEffect, useState } from 'react';
-import { View, FlatList, StyleSheet, RefreshControl, Platform, Linking, TouchableOpacity } from 'react-native';
-import { Card, Text, Button, Chip, ActivityIndicator, FAB, Badge } from 'react-native-paper';
+import React, { useEffect, useState, useMemo } from 'react';
+import { View, FlatList, StyleSheet, RefreshControl, Platform, Linking } from 'react-native';
+import { Text, Button, Chip, ActivityIndicator, FAB, Badge } from 'react-native-paper';
 import { supabase } from '../../services/supabase';
 import { SportSession, Sport } from '../../types';
-import { format } from 'date-fns';
-import { tr } from 'date-fns/locale';
 import { StackNavigationProp } from '@react-navigation/stack';
 import { RootStackParamList } from '../../navigation/AppNavigator';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import * as Location from 'expo-location';
 import { calculateDistance, formatDistance } from '../../utils/distanceCalculator';
 import AdvancedFiltersModal, { AdvancedFilters } from '../../components/AdvancedFiltersModal';
+import SessionCard from '../../components/SessionCard';
+import { performanceMonitor } from '../../utils/performanceMonitor';
+import { SkeletonList } from '../../components/SkeletonLoader';
+import { cacheService, CACHE_KEYS, CACHE_TTL } from '../../services/cacheService';
+import { OfflineIndicator } from '../../components/OfflineIndicator';
+import { errorLogger } from '../../services/errorLogger';
 
 type HomeScreenNavigationProp = StackNavigationProp<RootStackParamList>;
 
@@ -32,15 +36,19 @@ const getSportIcon = (sportName: string): string => {
   return iconMap[sportName] || 'trophy';
 };
 
+const PAGE_SIZE = 20;
+
 export default function HomeScreen({ navigation }: Props) {
   const [sessions, setSessions] = useState<SportSession[]>([]);
-  const [filteredSessions, setFilteredSessions] = useState<SportSession[]>([]);
   const [sports, setSports] = useState<Sport[]>([]);
   const [cities, setCities] = useState<string[]>([]);
   const [selectedSport, setSelectedSport] = useState<number | null>(null);
   const [selectedCity, setSelectedCity] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
+  const [loadingMore, setLoadingMore] = useState(false);
+  const [hasMore, setHasMore] = useState(true);
+  const [page, setPage] = useState(0);
   const [showAdvancedFilters, setShowAdvancedFilters] = useState(false);
   const [userLocation, setUserLocation] = useState<{ latitude: number; longitude: number } | null>(null);
   const [advancedFilters, setAdvancedFilters] = useState<AdvancedFilters>({
@@ -58,10 +66,6 @@ export default function HomeScreen({ navigation }: Props) {
     getUserLocation();
   }, [selectedSport, selectedCity]);
 
-  useEffect(() => {
-    applyAdvancedFilters();
-  }, [sessions, advancedFilters, userLocation]);
-
   const getUserLocation = async () => {
     try {
       const { status } = await Location.requestForegroundPermissionsAsync();
@@ -73,12 +77,21 @@ export default function HomeScreen({ navigation }: Props) {
         });
       }
     } catch (error) {
-      console.log('Error getting location:', error);
+      console.error('[HomeScreen] getUserLocation error:', error);
     }
   };
 
-  const applyAdvancedFilters = () => {
+  // Memoized filtering logic for better performance
+  const filteredSessions = useMemo(() => {
     let filtered = [...sessions];
+
+    // Filter out sessions that started more than 1 hour ago
+    const oneHourAgo = new Date();
+    oneHourAgo.setHours(oneHourAgo.getHours() - 1);
+    filtered = filtered.filter((session) => {
+      const sessionDate = new Date(session.session_date);
+      return sessionDate >= oneHourAgo;
+    });
 
     // Distance filter
     if (advancedFilters.maxDistance && userLocation) {
@@ -129,46 +142,113 @@ export default function HomeScreen({ navigation }: Props) {
       });
     }
 
-    setFilteredSessions(filtered);
-  };
+    return filtered;
+  }, [sessions, advancedFilters, userLocation]);
 
-  const countActiveFilters = (): number => {
+  // Memoized active filter count
+  const activeFilterCount = useMemo(() => {
     let count = 0;
     if (advancedFilters.maxDistance) count++;
     if (advancedFilters.dateFrom || advancedFilters.dateTo) count++;
     if (advancedFilters.skillLevel) count++;
     if (advancedFilters.onlyAvailable) count++;
     return count;
-  };
+  }, [advancedFilters]);
 
   const loadSports = async () => {
-    const { data, error } = await supabase
-      .from('sports')
-      .select('*')
-      .order('name');
+    try {
+      // Try cache first
+      const cachedSports = await cacheService.get<Sport[]>(CACHE_KEYS.SPORTS);
+      if (cachedSports) {
+        setSports(cachedSports);
+        return;
+      }
 
-    if (!error && data) {
-      setSports(data);
+      // Fetch from database
+      const { data, error } = await supabase
+        .from('sports')
+        .select('*')
+        .order('name');
+
+      if (error) {
+        console.error('[HomeScreen] loadSports error:', error);
+        setSports([]);
+      } else if (data) {
+        setSports(data);
+        // Cache for 1 hour (sports don't change often)
+        await cacheService.set(CACHE_KEYS.SPORTS, data, CACHE_TTL.VERY_LONG);
+      }
+    } catch (error) {
+      console.error('[HomeScreen] loadSports catch error:', error);
+      setSports([]);
     }
   };
 
   const loadCities = async () => {
-    const { data, error } = await supabase
-      .from('sport_sessions')
-      .select('city')
-      .not('city', 'is', null);
+    try {
+      // Try cache first
+      const cachedCities = await cacheService.get<string[]>(CACHE_KEYS.CITIES);
+      if (cachedCities) {
+        setCities(cachedCities);
+        return;
+      }
 
-    if (!error && data) {
-      const uniqueCities = [...new Set(data.map(s => s.city).filter(Boolean))] as string[];
-      setCities(uniqueCities.sort());
+      // Fetch from database
+      const { data, error } = await supabase
+        .from('sport_sessions')
+        .select('city')
+        .not('city', 'is', null);
+
+      if (error) {
+        console.error('[HomeScreen] loadCities error:', error);
+        setCities([]);
+      } else if (data) {
+        const uniqueCities = [...new Set(data.map(s => s.city).filter(Boolean))] as string[];
+        setCities(uniqueCities.sort());
+        // Cache for 15 minutes
+        await cacheService.set(CACHE_KEYS.CITIES, uniqueCities, CACHE_TTL.LONG);
+      }
+    } catch (error) {
+      console.error('[HomeScreen] loadCities catch error:', error);
+      setCities([]);
     }
   };
 
-  const loadSessions = async () => {
-    setLoading(true);
+  const loadSessions = async (pageNum: number = 0, append: boolean = false) => {
+    performanceMonitor.start('loadSessions', { pageNum, append });
+
+    // Stale-while-revalidate: Only cache first page for simplicity
+    if (pageNum === 0 && !append) {
+      const cacheKey = `${CACHE_KEYS.SESSIONS}_${selectedSport || 'all'}_${selectedCity || 'all'}`;
+      const { data: cachedData, isStale } = await cacheService.getStale<SportSession[]>(cacheKey);
+
+      if (cachedData) {
+        // Show cached data immediately
+        setSessions(cachedData);
+        setLoading(false);
+
+        // If not stale, we're done
+        if (!isStale) {
+          performanceMonitor.end('loadSessions');
+          return;
+        }
+        // If stale, continue to fetch fresh data in background
+      }
+    }
+
+    if (append) {
+      setLoadingMore(true);
+    } else {
+      setLoading(true);
+      setPage(0);
+      setHasMore(true);
+    }
 
     const oneHourAgo = new Date();
     oneHourAgo.setHours(oneHourAgo.getHours() - 1);
+
+    const from = pageNum * PAGE_SIZE;
+    const to = from + PAGE_SIZE - 1;
 
     let query = supabase
       .from('sport_sessions')
@@ -177,10 +257,11 @@ export default function HomeScreen({ navigation }: Props) {
         creator:profiles!sport_sessions_creator_id_fkey(*),
         sport:sports(*),
         participants:session_participants(*)
-      `)
+      `, { count: 'exact' })
       .eq('status', 'open')
       .gte('session_date', oneHourAgo.toISOString())
-      .order('session_date', { ascending: true });
+      .order('session_date', { ascending: true })
+      .range(from, to);
 
     if (selectedSport) {
       query = query.eq('sport_id', selectedSport);
@@ -190,19 +271,52 @@ export default function HomeScreen({ navigation }: Props) {
       query = query.eq('city', selectedCity);
     }
 
-    const { data, error } = await query;
+    const { data, error, count } = await query;
 
     setLoading(false);
+    setLoadingMore(false);
     setRefreshing(false);
 
-    if (!error && data) {
-      setSessions(data as any);
+    if (error) {
+      console.error('[HomeScreen] loadSessions error (page ' + pageNum + '):', error);
+      // Don't spam logs for pagination errors - just stop loading more
+      if (append) {
+        // Pagination error - just stop, don't clear existing sessions
+        setHasMore(false);
+      } else {
+        // Initial load error - show empty state
+        setSessions([]);
+      }
+    } else if (data) {
+      const newSessions = data as SportSession[];
+      if (append) {
+        setSessions(prev => [...prev, ...newSessions]);
+      } else {
+        setSessions(newSessions);
+      }
+      setHasMore(newSessions.length === PAGE_SIZE && (count ? from + newSessions.length < count : true));
+
+      // Cache the first page results
+      if (pageNum === 0 && !append) {
+        const cacheKey = `${CACHE_KEYS.SESSIONS}_${selectedSport || 'all'}_${selectedCity || 'all'}`;
+        await cacheService.set(cacheKey, newSessions, CACHE_TTL.MEDIUM);
+      }
     }
+
+    performanceMonitor.end('loadSessions');
   };
 
   const onRefresh = () => {
     setRefreshing(true);
-    loadSessions();
+    loadSessions(0, false);
+  };
+
+  const loadMore = () => {
+    if (!loadingMore && hasMore && !loading) {
+      const nextPage = page + 1;
+      setPage(nextPage);
+      loadSessions(nextPage, true);
+    }
   };
 
   const handleLocationPress = (latitude?: number, longitude?: number) => {
@@ -217,106 +331,41 @@ export default function HomeScreen({ navigation }: Props) {
   };
 
   const renderSessionCard = ({ item }: { item: SportSession }) => {
-    const participantCount = item.participants?.filter(p => p.status === 'approved').length || 0;
-    const isFull = participantCount >= item.max_participants;
-    const sportIcon = getSportIcon(item.sport?.name || '');
-
-    // Calculate distance if user location is available
-    let distance: number | null = null;
-    if (userLocation && item.latitude && item.longitude) {
-      distance = calculateDistance(
-        userLocation.latitude,
-        userLocation.longitude,
-        item.latitude,
-        item.longitude
-      );
-    }
+    const distance = userLocation && item.latitude && item.longitude
+      ? formatDistance(calculateDistance(
+          userLocation.latitude,
+          userLocation.longitude,
+          item.latitude,
+          item.longitude
+        ))
+      : null;
 
     return (
-      <Card style={styles.card} mode="elevated" onPress={() => navigation.navigate('SessionDetail', { sessionId: item.id })}>
-        <Card.Content>
-          <View style={styles.cardHeader}>
-            <Text style={styles.title} numberOfLines={1}>{item.title}</Text>
-            <View style={styles.cardHeaderRight}>
-              {distance !== null && (
-                <Chip icon="map-marker-distance" style={styles.distanceChip} compact textStyle={styles.distanceText}>
-                  {formatDistance(distance)}
-                </Chip>
-              )}
-              <Chip icon="account-multiple" style={styles.chip} compact>
-                {participantCount}/{item.max_participants}
-              </Chip>
-            </View>
-          </View>
-
-          <View style={styles.infoRow}>
-            <MaterialCommunityIcons name={sportIcon as any} size={18} color="#6200ee" />
-            <Text style={styles.sport}>{item.sport?.name}</Text>
-          </View>
-
-          <TouchableOpacity
-            style={styles.infoRow}
-            onPress={(e) => {
-              e.stopPropagation();
-              handleLocationPress(item.latitude || undefined, item.longitude || undefined);
-            }}
-            disabled={!item.latitude || !item.longitude}
-          >
-            <MaterialCommunityIcons name="map-marker" size={18} color="#6200ee" />
-            <Text style={[styles.location, (item.latitude && item.longitude) && styles.linkText]} numberOfLines={1}>
-              {item.location}
-            </Text>
-            {item.latitude && item.longitude && (
-              <MaterialCommunityIcons name="open-in-new" size={14} color="#6200ee" style={styles.openIcon} />
-            )}
-          </TouchableOpacity>
-
-          {item.city && (
-            <View style={styles.infoRow}>
-              <MaterialCommunityIcons name="city" size={18} color="#6200ee" />
-              <Text style={styles.city}>{item.city}</Text>
-            </View>
-          )}
-
-          <View style={styles.infoRow}>
-            <MaterialCommunityIcons name="calendar" size={18} color="#6200ee" />
-            <Text style={styles.date}>
-              {format(new Date(item.session_date), 'dd MMM yyyy, HH:mm', { locale: tr })}
-            </Text>
-          </View>
-
-          <View style={styles.infoRow}>
-            <MaterialCommunityIcons name="star" size={18} color="#6200ee" />
-            <Text style={styles.skillLevel}>{item.skill_level}</Text>
-          </View>
-
-          <View style={styles.infoRow}>
-            <MaterialCommunityIcons name="account" size={18} color="#6200ee" />
-            <Text style={styles.creator}>{item.creator?.full_name}</Text>
-          </View>
-
-          {isFull && (
-            <Chip icon="close-circle" style={styles.fullChip} textStyle={styles.fullChipText} compact>
-              Dolu
-            </Chip>
-          )}
-        </Card.Content>
-      </Card>
+      <SessionCard
+        item={item}
+        sportIcon={getSportIcon(item.sport?.name || '')}
+        distance={distance}
+        onPress={() => navigation.navigate('SessionDetail', { sessionId: item.id })}
+        onLocationPress={handleLocationPress}
+      />
     );
   };
 
-  if (loading) {
+  if (loading && sessions.length === 0) {
     return (
-      <View style={styles.loadingContainer}>
-        <ActivityIndicator size="large" />
+      <View style={styles.container}>
+        <View style={styles.filtersContainer}>
+          <Text style={styles.filterTitle}>Spor Türü:</Text>
+          <Text style={styles.filterTitle}>Şehir:</Text>
+        </View>
+        <SkeletonList count={5} type="session" />
       </View>
     );
-  }
-
-  const activeFilterCount = countActiveFilters();
+  };
 
   return (
     <View style={styles.container}>
+      <OfflineIndicator />
       <View style={styles.filtersContainer}>
         <Text style={styles.filterTitle}>Spor Türü:</Text>
         <FlatList
@@ -362,16 +411,40 @@ export default function HomeScreen({ navigation }: Props) {
         refreshControl={
           <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
         }
+        onEndReached={loadMore}
+        onEndReachedThreshold={0.3}
+        // Performance optimizations
+        removeClippedSubviews={true}
+        maxToRenderPerBatch={10}
+        updateCellsBatchingPeriod={50}
+        initialNumToRender={10}
+        windowSize={21}
+        // Improve scroll performance
+        getItemLayout={(data, index) => ({
+          length: 280, // Approximate card height
+          offset: 280 * index,
+          index,
+        })}
+        ListFooterComponent={
+          loadingMore ? (
+            <View style={styles.footerLoader}>
+              <ActivityIndicator size="small" color="#6200ee" />
+              <Text style={styles.footerText}>Yükleniyor...</Text>
+            </View>
+          ) : null
+        }
         ListEmptyComponent={
-          <View style={styles.emptyContainer}>
-            <MaterialCommunityIcons name="filter-off" size={48} color="#ccc" />
-            <Text style={styles.emptyText}>
-              {activeFilterCount > 0 ? 'Filtrelerinize uygun seans bulunamadı' : 'Henüz seans yok'}
-            </Text>
-            {activeFilterCount > 0 && (
-              <Text style={styles.emptySubtext}>Filtreleri sıfırlayıp tekrar deneyin</Text>
-            )}
-          </View>
+          !loading ? (
+            <View style={styles.emptyContainer}>
+              <MaterialCommunityIcons name="filter-off" size={48} color="#ccc" />
+              <Text style={styles.emptyText}>
+                {activeFilterCount > 0 ? 'Filtrelerinize uygun seans bulunamadı' : 'Henüz seans yok'}
+              </Text>
+              {activeFilterCount > 0 && (
+                <Text style={styles.emptySubtext}>Filtreleri sıfırlayıp tekrar deneyin</Text>
+              )}
+            </View>
+          ) : null
         }
       />
 
@@ -428,93 +501,6 @@ const styles = StyleSheet.create({
   list: {
     padding: 10,
   },
-  card: {
-    marginBottom: 15,
-  },
-  cardHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    marginBottom: 10,
-  },
-  cardHeaderRight: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 8,
-  },
-  title: {
-    fontSize: 18,
-    fontWeight: 'bold',
-    flex: 1,
-    marginRight: 8,
-  },
-  chip: {
-    marginLeft: 0,
-  },
-  distanceChip: {
-    backgroundColor: '#e3f2fd',
-  },
-  distanceText: {
-    color: '#1976d2',
-    fontSize: 11,
-  },
-  infoRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginBottom: 6,
-  },
-  sport: {
-    fontSize: 14,
-    marginLeft: 8,
-    color: '#333',
-    flex: 1,
-  },
-  location: {
-    fontSize: 14,
-    marginLeft: 8,
-    color: '#333',
-    flex: 1,
-  },
-  city: {
-    fontSize: 14,
-    marginLeft: 8,
-    color: '#333',
-    flex: 1,
-  },
-  date: {
-    fontSize: 14,
-    marginLeft: 8,
-    color: '#333',
-    flex: 1,
-  },
-  skillLevel: {
-    fontSize: 14,
-    marginLeft: 8,
-    color: '#333',
-    flex: 1,
-  },
-  creator: {
-    fontSize: 14,
-    marginLeft: 8,
-    color: '#333',
-    flex: 1,
-  },
-  linkText: {
-    color: '#6200ee',
-    textDecorationLine: 'underline',
-  },
-  openIcon: {
-    marginLeft: 5,
-  },
-  fullChip: {
-    backgroundColor: '#F44336',
-    marginTop: 8,
-    alignSelf: 'flex-start',
-  },
-  fullChipText: {
-    color: '#FFF',
-    fontSize: 12,
-  },
   emptyContainer: {
     padding: 40,
     alignItems: 'center',
@@ -530,6 +516,16 @@ const styles = StyleSheet.create({
     color: '#bbb',
     marginTop: 8,
     textAlign: 'center',
+  },
+  footerLoader: {
+    padding: 20,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  footerText: {
+    marginTop: 8,
+    fontSize: 14,
+    color: '#6200ee',
   },
   fab: {
     position: 'absolute',

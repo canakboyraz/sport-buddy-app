@@ -14,6 +14,27 @@ import {
   addNotificationReceivedListener,
 } from './src/services/notificationService';
 import { ThemeProvider, useTheme } from './src/contexts/ThemeContext';
+import ErrorBoundary from './src/components/ErrorBoundary';
+import './src/i18n'; // Initialize i18n
+import * as Sentry from '@sentry/react-native';
+
+// Initialize Sentry (only if DSN is configured)
+const sentryDsn = process.env.EXPO_PUBLIC_SENTRY_DSN;
+if (sentryDsn && !sentryDsn.includes('your-sentry-dsn')) {
+  Sentry.init({
+    dsn: sentryDsn,
+    enableInExpoDevelopment: false, // Disable in development
+    debug: __DEV__, // Enable debug in development
+    tracesSampleRate: 1.0, // Capture 100% of transactions for performance monitoring
+    environment: __DEV__ ? 'development' : 'production',
+    integrations: [
+      new Sentry.ReactNativeTracing({
+        // Set `tracePropagationTargets` to control for which URLs distributed tracing should be enabled
+        tracePropagationTargets: ['localhost', /^https:\/\/.*\.supabase\.co/],
+      }),
+    ],
+  });
+}
 
 function AppContent() {
   const [session, setSession] = useState<Session | null>(null);
@@ -49,12 +70,11 @@ function AppContent() {
 
       // Bildirim dinleyicilerini ekle
       notificationListener.current = addNotificationReceivedListener(notification => {
-        console.log('Bildirim alındı:', notification);
+        // TODO: Handle notification received (e.g., update badge count)
       });
 
       responseListener.current = addNotificationResponseListener(response => {
-        console.log('Bildirim tıklandı:', response);
-        // Burada navigation yapılabilir
+        // TODO: Handle notification tap - navigate to relevant screen
       });
 
       return () => {
@@ -73,20 +93,27 @@ function AppContent() {
   }
 
   return (
-    <PaperProvider theme={theme}>
-      <NavigationContainer theme={theme}>
-        {session ? <AppNavigator /> : <AuthNavigator />}
-      </NavigationContainer>
-    </PaperProvider>
+    <ErrorBoundary>
+      <PaperProvider theme={theme}>
+        <NavigationContainer theme={theme}>
+          {session ? <AppNavigator /> : <AuthNavigator />}
+        </NavigationContainer>
+      </PaperProvider>
+    </ErrorBoundary>
   );
 }
 
-export default function App() {
+function App() {
   return (
-    <SafeAreaProvider>
-      <ThemeProvider>
-        <AppContent />
-      </ThemeProvider>
-    </SafeAreaProvider>
+    <ErrorBoundary>
+      <SafeAreaProvider>
+        <ThemeProvider>
+          <AppContent />
+        </ThemeProvider>
+      </SafeAreaProvider>
+    </ErrorBoundary>
   );
 }
+
+// Wrap with Sentry for error tracking (only if Sentry is initialized)
+export default sentryDsn && !sentryDsn.includes('your-sentry-dsn') ? Sentry.wrap(App) : App;
