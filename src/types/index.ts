@@ -63,3 +63,46 @@ export interface Rating {
   created_at: string;
   rater?: Profile;
 }
+
+export interface ExtendedMessage extends Message {
+  image_url?: string;
+  is_read?: boolean;
+  read_at?: string;
+}
+
+export interface Friendship {
+  id: number;
+  user_id: string;
+  friend_id: string;
+  status: 'pending' | 'accepted' | 'rejected';
+  created_at: string;
+  user?: Profile;
+  friend?: Profile;
+}
+
+export type MaterialIconName = string;
+export type SkillLevel = 'Başlangıç' | 'Orta' | 'İleri' | 'Profesyonel' | 'beginner' | 'intermediate' | 'advanced' | 'any';
+
+export type AchievementCategory = 'participation' | 'social' | 'creation' | 'special';
+export type AchievementRarity = 'common' | 'rare' | 'epic' | 'legendary';
+
+export interface Achievement {
+  id: string;
+  code: string;
+  name: string;
+  description: string;
+  icon: string;
+  category: AchievementCategory;
+  points: number;
+  rarity: AchievementRarity;
+  created_at: string;
+}
+
+export interface UserAchievement {
+  id: string;
+  user_id: string;
+  achievement_id: string;
+  unlocked_at: string;
+  progress: number;
+  achievement?: Achievement;
+}

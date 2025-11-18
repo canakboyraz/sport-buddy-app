@@ -15,6 +15,7 @@ import { SkeletonList } from '../../components/SkeletonLoader';
 import { cacheService, CACHE_KEYS, CACHE_TTL } from '../../services/cacheService';
 import { OfflineIndicator } from '../../components/OfflineIndicator';
 import { errorLogger } from '../../services/errorLogger';
+import EmptyState from '../../components/EmptyState';
 
 type HomeScreenNavigationProp = StackNavigationProp<RootStackParamList>;
 
@@ -435,15 +436,36 @@ export default function HomeScreen({ navigation }: Props) {
         }
         ListEmptyComponent={
           !loading ? (
-            <View style={styles.emptyContainer}>
-              <MaterialCommunityIcons name="filter-off" size={48} color="#ccc" />
-              <Text style={styles.emptyText}>
-                {activeFilterCount > 0 ? 'Filtrelerinize uygun seans bulunamadı' : 'Henüz seans yok'}
-              </Text>
-              {activeFilterCount > 0 && (
-                <Text style={styles.emptySubtext}>Filtreleri sıfırlayıp tekrar deneyin</Text>
-              )}
-            </View>
+            activeFilterCount > 0 ? (
+              <EmptyState
+                icon="filter-off"
+                title="Filtrelerinize uygun seans bulunamadı"
+                description="Farklı filtreler deneyerek daha fazla seans bulabilirsiniz."
+                actionLabel="Filtreleri Sıfırla"
+                onAction={() => {
+                  setSelectedSport(null);
+                  setSelectedCity(null);
+                  setAdvancedFilters({
+                    minDistance: 0,
+                    maxDistance: 100,
+                    minParticipants: 2,
+                    maxParticipants: 20,
+                    startDate: null,
+                    endDate: null,
+                  });
+                }}
+                secondaryActionLabel="Filtre Ayarları"
+                onSecondaryAction={() => setShowAdvancedFilters(true)}
+              />
+            ) : (
+              <EmptyState
+                icon="calendar-plus"
+                title="Henüz seans yok"
+                description="İlk spor seansını sen oluştur ve spor arkadaşlarını bul!"
+                actionLabel="Yeni Seans Oluştur"
+                onAction={() => navigation.navigate('CreateSession')}
+              />
+            )
           ) : null
         }
       />
