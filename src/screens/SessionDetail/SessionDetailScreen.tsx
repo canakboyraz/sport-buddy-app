@@ -10,6 +10,8 @@ import { RouteProp } from '@react-navigation/native';
 import { RootStackParamList } from '../../navigation/AppNavigator';
 import { useAuth } from '../../hooks/useAuth';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
+import UserQuickActionsModal from '../../components/UserQuickActionsModal';
+import { scheduleSessionReminders, cancelSessionReminders, sendParticipantJoinedNotification } from '../../services/notificationService';
 
 let MapView: any = null;
 let Marker: any = null;
@@ -35,6 +37,8 @@ export default function SessionDetailScreen({ navigation, route }: Props) {
   const [loading, setLoading] = useState(true);
   const [actionLoading, setActionLoading] = useState(false);
   const [mapVisible, setMapVisible] = useState(false);
+  const [quickActionsVisible, setQuickActionsVisible] = useState(false);
+  const [selectedUser, setSelectedUser] = useState<{ id: string; name: string } | null>(null);
 
   useEffect(() => {
     loadSession();
@@ -50,7 +54,10 @@ export default function SessionDetailScreen({ navigation, route }: Props) {
         creator:profiles!sport_sessions_creator_id_fkey(*),
         sport:sports(*),
         participants:session_participants(
-          *,
+          id,
+          session_id,
+          user_id,
+          status,
           user:profiles(*)
         )
       `)
@@ -59,8 +66,11 @@ export default function SessionDetailScreen({ navigation, route }: Props) {
 
     setLoading(false);
 
-    if (!error && data) {
-      setSession(data as any);
+    if (error) {
+      // TODO: Implement proper error logging service (e.g., Sentry)
+      setSession(null);
+    } else if (data) {
+      setSession(data as SportSession);
     }
   };
 
@@ -88,6 +98,12 @@ export default function SessionDetailScreen({ navigation, route }: Props) {
   const handleApprove = async (participantId: number) => {
     setActionLoading(true);
 
+    const { data: participant, error: fetchError } = await supabase
+      .from('session_participants')
+      .select('user_id, user:profiles(full_name)')
+      .eq('id', participantId)
+      .single();
+
     const { error } = await supabase
       .from('session_participants')
       .update({ status: 'approved' })
@@ -99,6 +115,36 @@ export default function SessionDetailScreen({ navigation, route }: Props) {
       Alert.alert('Hata', error.message);
     } else {
       Alert.alert('Başarılı', 'Katılımcı onaylandı!');
+
+      // Schedule reminders for the approved participant if they are the current user
+      if (session && participant && participant.user_id === user?.id) {
+        try {
+          await scheduleSessionReminders(
+            session.id,
+            session.title,
+            session.session_date,
+            session.location
+          );
+          console.log('[SessionDetail] Scheduled reminders for approved session');
+        } catch (err) {
+          console.error('[SessionDetail] Failed to schedule reminders:', err);
+        }
+      }
+
+      // Notify session creator about new participant
+      if (session && participant && participant.user_id !== user?.id) {
+        try {
+          const participantName = (participant as any).user?.full_name || 'Bir kullanıcı';
+          await sendParticipantJoinedNotification(
+            session.title,
+            participantName,
+            session.id
+          );
+        } catch (err) {
+          console.error('[SessionDetail] Failed to send participant notification:', err);
+        }
+      }
+
       loadSession();
     }
   };
@@ -130,6 +176,18 @@ export default function SessionDetailScreen({ navigation, route }: Props) {
         setMapVisible(true);
       }
     }
+  };
+
+  const handleUserClick = (userId: string, userName: string) => {
+    if (userId === user?.id) return; // Don't show modal for current user
+
+    if (!userName || userName === 'Kullanıcı') {
+      Alert.alert('Hata', 'Kullanıcı bilgileri yüklenemedi');
+      return;
+    }
+
+    setSelectedUser({ id: userId, name: userName });
+    setQuickActionsVisible(true);
   };
 
   if (loading) {
@@ -216,10 +274,13 @@ export default function SessionDetailScreen({ navigation, route }: Props) {
 
           <Divider style={styles.divider} />
           <Text style={styles.creatorLabel}>Oluşturan:</Text>
-          <View style={styles.creatorRow}>
+          <TouchableOpacity
+            style={styles.creatorRow}
+            onPress={() => handleUserClick(session.creator_id, session.creator?.full_name || 'Kullanıcı')}
+          >
             <Avatar.Text size={40} label={session.creator?.full_name?.charAt(0) || 'U'} />
             <Text style={styles.creatorName}>{session.creator?.full_name}</Text>
-          </View>
+          </TouchableOpacity>
         </Card.Content>
       </Card>
 
@@ -273,8 +334,13 @@ export default function SessionDetailScreen({ navigation, route }: Props) {
           <Text style={styles.sectionTitle}>Katılımcılar ({approvedParticipants.length})</Text>
           {approvedParticipants.map((participant) => (
             <View key={participant.id} style={styles.participantRow}>
-              <Avatar.Text size={36} label={participant.user?.full_name?.charAt(0) || 'U'} />
-              <Text style={styles.participantName}>{participant.user?.full_name}</Text>
+              <TouchableOpacity
+                style={styles.participantInfo}
+                onPress={() => handleUserClick(participant.user_id, participant.user?.full_name || 'Kullanıcı')}
+              >
+                <Avatar.Text size={36} label={participant.user?.full_name?.charAt(0) || 'U'} />
+                <Text style={styles.participantName}>{participant.user?.full_name}</Text>
+              </TouchableOpacity>
               {isPast && participant.user_id !== user?.id && userParticipant?.status === 'approved' && (
                 <Button
                   mode="outlined"
@@ -299,31 +365,44 @@ export default function SessionDetailScreen({ navigation, route }: Props) {
         <Card style={styles.card}>
           <Card.Content>
             <Text style={styles.sectionTitle}>Bekleyen Talepler ({pendingParticipants.length})</Text>
-            {pendingParticipants.map((participant) => (
-              <View key={participant.id} style={styles.participantRow}>
-                <Avatar.Text size={36} label={participant.user?.full_name?.charAt(0) || 'U'} />
-                <Text style={styles.participantName}>{participant.user?.full_name}</Text>
-                <View style={styles.actionButtons}>
-                  <Button
-                    mode="contained"
-                    compact
-                    onPress={() => handleApprove(participant.id)}
-                    disabled={actionLoading || isFull}
-                    style={styles.approveButton}
+            {pendingParticipants.map((participant) => {
+              const userName = participant.user?.full_name || 'Kullanıcı';
+              const userInitial = userName.charAt(0).toUpperCase();
+
+              console.log('Pending participant:', participant);
+              console.log('User data:', participant.user);
+
+              return (
+                <View key={participant.id} style={styles.participantRow}>
+                  <TouchableOpacity
+                    style={styles.participantInfo}
+                    onPress={() => handleUserClick(participant.user_id, userName)}
                   >
-                    Onayla
-                  </Button>
-                  <Button
-                    mode="outlined"
-                    compact
-                    onPress={() => handleReject(participant.id)}
-                    disabled={actionLoading}
-                  >
-                    Reddet
-                  </Button>
+                    <Avatar.Text size={36} label={userInitial} />
+                    <Text style={styles.participantName}>{userName}</Text>
+                  </TouchableOpacity>
+                  <View style={styles.actionButtons}>
+                    <Button
+                      mode="contained"
+                      compact
+                      onPress={() => handleApprove(participant.id)}
+                      disabled={actionLoading || isFull}
+                      style={styles.approveButton}
+                    >
+                      Onayla
+                    </Button>
+                    <Button
+                      mode="outlined"
+                      compact
+                      onPress={() => handleReject(participant.id)}
+                      disabled={actionLoading}
+                    >
+                      Reddet
+                    </Button>
+                  </View>
                 </View>
-              </View>
-            ))}
+              );
+            })}
           </Card.Content>
         </Card>
       )}
@@ -361,6 +440,26 @@ export default function SessionDetailScreen({ navigation, route }: Props) {
             </View>
           </Modal>
         </Portal>
+      )}
+
+      {selectedUser && (
+        <UserQuickActionsModal
+          visible={quickActionsVisible}
+          onDismiss={() => {
+            setQuickActionsVisible(false);
+            setSelectedUser(null);
+          }}
+          userId={selectedUser.id}
+          userName={selectedUser.name}
+          onNavigateToProfile={() => {
+            // TODO: Navigate to user profile screen when implemented
+            Alert.alert('Profil', `${selectedUser.name} profili görüntüleniyor...`);
+          }}
+          onNavigateToReport={() => {
+            // TODO: Navigate to report screen when implemented
+            Alert.alert('Şikayet', `${selectedUser.name} kullanıcısı şikayet ediliyor...`);
+          }}
+        />
       )}
     </ScrollView>
   );
@@ -440,6 +539,11 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     marginBottom: 10,
+  },
+  participantInfo: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    flex: 1,
   },
   participantName: {
     fontSize: 16,

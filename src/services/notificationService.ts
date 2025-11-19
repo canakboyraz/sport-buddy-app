@@ -42,10 +42,10 @@ export async function registerForPushNotificationsAsync() {
     }
 
     token = (await Notifications.getExpoPushTokenAsync()).data;
-    console.log('Push token:', token);
+    // TODO: Implement proper logging service for production
   } else {
-    // Emulator/Simulator için uyarı
-    console.log('Push notifications sadece fiziksel cihazda çalışır');
+    // Push notifications only work on physical devices
+    // TODO: Show user-friendly message in development mode
   }
 
   return token;
@@ -62,12 +62,12 @@ export async function savePushTokenToDatabase(userId: string, token: string) {
       .eq('id', userId);
 
     if (error) {
-      console.error('Push token kaydetme hatası:', error);
-    } else {
-      console.log('Push token başarıyla kaydedildi');
+      // TODO: Implement proper error logging service (e.g., Sentry)
+      throw error;
     }
   } catch (error) {
-    console.error('Push token kaydetme hatası:', error);
+    // TODO: Implement proper error logging service (e.g., Sentry)
+    // Silent fail - token will be registered on next app launch
   }
 }
 
@@ -117,13 +117,8 @@ export async function sendParticipationRequestNotification(
   participantName: string,
   sessionTitle: string
 ) {
-  // Burada Supabase Edge Function veya backend servisi kullanılmalı
-  // Expo Push Notification API'si ile bildirim gönderilir
-  console.log('Katılım isteği bildirimi:', {
-    to: creatorPushToken,
-    title: 'Yeni Katılım İsteği',
-    body: `${participantName}, "${sessionTitle}" etkinliğine katılmak istiyor`,
-  });
+  // TODO: Implement with Supabase Edge Function or backend service
+  // TODO: Send notification via Expo Push Notification API
 }
 
 /**
@@ -134,11 +129,8 @@ export async function sendChatMessageNotification(
   senderName: string,
   message: string
 ) {
-  console.log('Sohbet bildirimi:', {
-    to: recipientPushToken,
-    title: `Yeni mesaj: ${senderName}`,
-    body: message,
-  });
+  // TODO: Implement with Supabase Edge Function or backend service
+  // TODO: Send notification via Expo Push Notification API
 }
 
 /**
@@ -149,9 +141,144 @@ export async function sendEventReminderNotification(
   sessionTitle: string,
   timeUntilStart: string
 ) {
-  console.log('Etkinlik hatırlatması:', {
-    to: userPushToken,
-    title: 'Etkinlik Hatırlatması',
-    body: `"${sessionTitle}" ${timeUntilStart} sonra başlıyor`,
-  });
+  // TODO: Implement with Supabase Edge Function or backend service
+  // TODO: Send notification via Expo Push Notification API
+}
+
+/**
+ * Schedule smart session reminders
+ * Schedules notifications at 2 hours, 1 hour, and 30 minutes before session
+ */
+export async function scheduleSessionReminders(
+  sessionId: number,
+  sessionTitle: string,
+  sessionDate: string,
+  location: string
+) {
+  const sessionTime = new Date(sessionDate);
+  const now = new Date();
+
+  // Calculate time differences
+  const twoHoursBefore = new Date(sessionTime.getTime() - 2 * 60 * 60 * 1000);
+  const oneHourBefore = new Date(sessionTime.getTime() - 60 * 60 * 1000);
+  const thirtyMinsBefore = new Date(sessionTime.getTime() - 30 * 60 * 1000);
+
+  // Schedule 2 hours before reminder
+  if (twoHoursBefore > now) {
+    await Notifications.scheduleNotificationAsync({
+      content: {
+        title: '⏰ Seansın 2 saat sonra!',
+        body: `${sessionTitle} - ${location}`,
+        data: { sessionId, type: 'session_reminder', timeUntil: '2 hours' },
+        sound: true,
+      },
+      trigger: twoHoursBefore,
+    });
+  }
+
+  // Schedule 1 hour before reminder
+  if (oneHourBefore > now) {
+    await Notifications.scheduleNotificationAsync({
+      content: {
+        title: '⏰ Seansın 1 saat sonra!',
+        body: `${sessionTitle} - ${location}`,
+        data: { sessionId, type: 'session_reminder', timeUntil: '1 hour' },
+        sound: true,
+      },
+      trigger: oneHourBefore,
+    });
+  }
+
+  // Schedule 30 minutes before reminder
+  if (thirtyMinsBefore > now) {
+    await Notifications.scheduleNotificationAsync({
+      content: {
+        title: '🏃 Seansın 30 dakika sonra!',
+        body: `${sessionTitle} - Hazırlanma zamanı!`,
+        data: { sessionId, type: 'session_reminder', timeUntil: '30 minutes' },
+        sound: true,
+        priority: Notifications.AndroidNotificationPriority.HIGH,
+      },
+      trigger: thirtyMinsBefore,
+    });
+  }
+}
+
+/**
+ * Cancel all scheduled reminders for a session
+ */
+export async function cancelSessionReminders(sessionId: number) {
+  const scheduledNotifications = await Notifications.getAllScheduledNotificationsAsync();
+
+  for (const notification of scheduledNotifications) {
+    if (notification.content.data?.sessionId === sessionId) {
+      await Notifications.cancelScheduledNotificationAsync(notification.identifier);
+    }
+  }
+}
+
+/**
+ * Get all scheduled session reminders
+ */
+export async function getScheduledSessionReminders(): Promise<
+  Array<{ sessionId: number; identifier: string; trigger: Date }>
+> {
+  const scheduledNotifications = await Notifications.getAllScheduledNotificationsAsync();
+
+  return scheduledNotifications
+    .filter((n) => n.content.data?.type === 'session_reminder')
+    .map((n) => ({
+      sessionId: n.content.data.sessionId,
+      identifier: n.identifier,
+      trigger: n.trigger as any as Date,
+    }));
+}
+
+/**
+ * Send achievement unlocked notification
+ */
+export async function sendAchievementNotification(
+  achievementName: string,
+  achievementDescription: string,
+  points: number
+) {
+  await scheduleLocalNotification(
+    `🏆 Yeni Başarı: ${achievementName}`,
+    `${achievementDescription} (+${points} puan)`,
+    { type: 'achievement_unlocked' },
+    0
+  );
+}
+
+/**
+ * Send new message notification
+ */
+export async function sendNewMessageNotification(
+  sessionTitle: string,
+  senderName: string,
+  messagePreview: string,
+  sessionId: number
+) {
+  await scheduleLocalNotification(
+    `💬 ${senderName}`,
+    `${sessionTitle}: ${messagePreview}`,
+    { type: 'new_message', sessionId },
+    0
+  );
+}
+
+/**
+ * Send session participant joined notification
+ */
+export async function sendParticipantJoinedNotification(
+  sessionTitle: string,
+  participantName: string,
+  sessionId: number
+) {
+  await scheduleLocalNotification(
+    '🎉 Yeni Katılımcı',
+    `${participantName}, "${sessionTitle}" seansına katıldı!`,
+    { type: 'participant_joined', sessionId },
+    0
+  );
 }
