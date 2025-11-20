@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { View, ScrollView, StyleSheet, Dimensions } from 'react-native';
+import { View, ScrollView, StyleSheet, Dimensions, Platform, StatusBar } from 'react-native';
 import { Card, Text, ActivityIndicator, ProgressBar, Chip, Divider } from 'react-native-paper';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { supabase } from '../../services/supabase';
@@ -289,36 +289,32 @@ export default function AchievementsScreen() {
   }, {} as Record<string, AchievementProgress[]>);
 
   return (
-    <ScrollView style={styles.container}>
-      {/* Level Card */}
-      <Card style={styles.levelCard} mode="elevated">
-        <LinearGradient
-          colors={['#6200ee', '#9C27B0']}
-          start={{ x: 0, y: 0 }}
-          end={{ x: 1, y: 1 }}
-          style={styles.gradient}
-        >
-          <Card.Content>
-            <View style={styles.levelHeader}>
-              <View>
-                <Text style={styles.levelText}>Seviye {userPoints.level}</Text>
-                <Text style={styles.pointsText}>{userPoints.total_points} Puan</Text>
-              </View>
-              <MaterialCommunityIcons name="trophy" size={64} color="#FFD700" />
-            </View>
-            <View style={styles.levelProgressContainer}>
-              <ProgressBar
-                progress={getLevelProgress()}
-                color="#FFD700"
-                style={styles.levelProgressBar}
-              />
-              <Text style={styles.levelProgressText}>
-                Bir sonraki seviyeye {getPointsToNextLevel()} puan kaldı
-              </Text>
-            </View>
-          </Card.Content>
-        </LinearGradient>
-      </Card>
+    <View style={styles.container}>
+      <LinearGradient
+        colors={['#6200ee', '#9c27b0']}
+        start={{ x: 0, y: 0 }}
+        end={{ x: 1, y: 1 }}
+        style={styles.headerGradient}
+      >
+        <View style={styles.headerContent}>
+          <MaterialCommunityIcons name="trophy" size={64} color="#FFD700" />
+          <Text style={styles.levelText}>Seviye {userPoints.level}</Text>
+          <Text style={styles.pointsText}>{userPoints.total_points} Puan</Text>
+
+          <View style={styles.levelProgressContainer}>
+            <ProgressBar
+              progress={getLevelProgress()}
+              color="#FFD700"
+              style={styles.levelProgressBar}
+            />
+            <Text style={styles.levelProgressText}>
+              Bir sonraki seviyeye {getPointsToNextLevel()} puan kaldı
+            </Text>
+          </View>
+        </View>
+      </LinearGradient>
+
+      <ScrollView style={styles.scrollView} contentContainerStyle={styles.scrollContent}>
 
       {/* Stats Card */}
       <Card style={styles.statsCard} mode="elevated">
@@ -355,7 +351,8 @@ export default function AchievementsScreen() {
           {items.map(renderAchievement)}
         </View>
       ))}
-    </ScrollView>
+      </ScrollView>
+    </View>
   );
 }
 
@@ -369,24 +366,27 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
   },
-  levelCard: {
-    margin: 15,
-    marginBottom: 10,
-    overflow: 'hidden',
+  headerGradient: {
+    paddingBottom: 32,
+    borderBottomLeftRadius: 24,
+    borderBottomRightRadius: 24,
+    elevation: 8,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.3,
+    shadowRadius: 4,
   },
-  gradient: {
-    borderRadius: 12,
-  },
-  levelHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
+  headerContent: {
+    paddingTop: Platform.OS === 'android' ? (StatusBar.currentHeight || 24) + 16 : 60,
+    paddingHorizontal: 20,
+    paddingBottom: 16,
     alignItems: 'center',
-    marginBottom: 15,
   },
   levelText: {
     fontSize: 28,
     fontWeight: 'bold',
     color: '#fff',
+    marginTop: 12,
   },
   pointsText: {
     fontSize: 16,
@@ -394,7 +394,8 @@ const styles = StyleSheet.create({
     marginTop: 4,
   },
   levelProgressContainer: {
-    marginTop: 10,
+    width: '100%',
+    marginTop: 16,
   },
   levelProgressBar: {
     height: 8,
@@ -407,10 +408,16 @@ const styles = StyleSheet.create({
     marginTop: 8,
     textAlign: 'center',
   },
+  scrollView: {
+    flex: 1,
+  },
+  scrollContent: {
+    paddingBottom: 24,
+  },
   statsCard: {
-    margin: 15,
-    marginTop: 0,
-    marginBottom: 10,
+    margin: 16,
+    marginTop: 16,
+    elevation: 2,
   },
   sectionTitle: {
     fontSize: 18,
@@ -436,16 +443,18 @@ const styles = StyleSheet.create({
     marginTop: 4,
   },
   categorySection: {
-    marginBottom: 15,
+    marginBottom: 16,
   },
   categoryHeader: {
     flexDirection: 'row',
     alignItems: 'center',
-    paddingHorizontal: 15,
-    paddingVertical: 10,
+    paddingHorizontal: 16,
+    paddingVertical: 12,
     backgroundColor: '#fff',
-    borderBottomWidth: 1,
-    borderBottomColor: '#e0e0e0',
+    marginHorizontal: 16,
+    marginTop: 8,
+    borderRadius: 8,
+    elevation: 1,
   },
   categoryTitle: {
     fontSize: 16,
@@ -454,8 +463,9 @@ const styles = StyleSheet.create({
     marginLeft: 8,
   },
   achievementCard: {
-    marginHorizontal: 15,
-    marginVertical: 5,
+    marginHorizontal: 16,
+    marginTop: 8,
+    elevation: 2,
   },
   earnedCard: {
     backgroundColor: '#f0f7ff',

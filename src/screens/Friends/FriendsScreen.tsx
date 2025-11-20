@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
-import { View, FlatList, StyleSheet, RefreshControl, Alert } from 'react-native';
-import { Card, Text, Button, Avatar, ActivityIndicator, Searchbar, Chip, Divider, IconButton } from 'react-native-paper';
+import { View, FlatList, StyleSheet, RefreshControl, Alert, Platform, StatusBar } from 'react-native';
+import { Card, Text, Button, Avatar, ActivityIndicator, Searchbar, Chip, Divider, IconButton, SegmentedButtons } from 'react-native-paper';
+import { LinearGradient } from 'expo-linear-gradient';
 import { supabase } from '../../services/supabase';
 import { useAuth } from '../../hooks/useAuth';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
@@ -438,55 +439,52 @@ export default function FriendsScreen() {
     }
   };
 
+  const tabButtons = [
+    { value: 'friends', label: 'Arkadaşlar', icon: 'account-multiple' },
+    { value: 'requests', label: friendRequests.length > 0 ? `İstekler (${friendRequests.length})` : 'İstekler', icon: 'account-clock' },
+    { value: 'sent', label: 'Gönderilen', icon: 'send-clock' },
+    { value: 'search', label: 'Ara', icon: 'magnify' },
+  ];
+
   return (
     <View style={styles.container}>
-      {/* Tabs */}
-      <View style={styles.tabs}>
-        <Chip
-          selected={activeTab === 'friends'}
-          onPress={() => setActiveTab('friends')}
-          style={styles.tab}
-          icon="account-multiple"
-        >
-          Arkadaşlar
-        </Chip>
-        <Chip
-          selected={activeTab === 'requests'}
-          onPress={() => setActiveTab('requests')}
-          style={styles.tab}
-          icon="account-clock"
-        >
-          İstekler {friendRequests.length > 0 && `(${friendRequests.length})`}
-        </Chip>
-        <Chip
-          selected={activeTab === 'sent'}
-          onPress={() => setActiveTab('sent')}
-          style={styles.tab}
-          icon="send-clock"
-        >
-          Gönderilen
-        </Chip>
-        <Chip
-          selected={activeTab === 'search'}
-          onPress={() => setActiveTab('search')}
-          style={styles.tab}
-          icon="magnify"
-        >
-          Ara
-        </Chip>
-      </View>
+      <LinearGradient
+        colors={['#6200ee', '#9c27b0']}
+        start={{ x: 0, y: 0 }}
+        end={{ x: 1, y: 1 }}
+        style={styles.headerGradient}
+      >
+        <View style={styles.headerContent}>
+          <MaterialCommunityIcons name="account-group" size={32} color="#fff" />
+          <Text style={styles.headerTitle}>Arkadaşlarım</Text>
+          <Text style={styles.headerSubtitle}>
+            {friends.length} arkadaş • {friendRequests.length} istek
+          </Text>
+        </View>
+      </LinearGradient>
 
-      <Divider />
+      {/* Tabs */}
+      <View style={styles.tabsContainer}>
+        <SegmentedButtons
+          value={activeTab}
+          onValueChange={(value) => setActiveTab(value as TabType)}
+          buttons={tabButtons}
+          style={styles.segmentedButtons}
+        />
+      </View>
 
       {/* Search bar for search tab */}
       {activeTab === 'search' && (
-        <Searchbar
-          placeholder="Kullanıcı ara..."
-          onChangeText={setSearchQuery}
-          value={searchQuery}
-          onSubmitEditing={searchUsers}
-          style={styles.searchBar}
-        />
+        <View style={styles.searchContainer}>
+          <Searchbar
+            placeholder="Kullanıcı ara..."
+            onChangeText={setSearchQuery}
+            value={searchQuery}
+            onSubmitEditing={searchUsers}
+            style={styles.searchBar}
+            icon="magnify"
+          />
+        </View>
       )}
 
       {/* List */}
@@ -515,17 +513,50 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: '#f5f5f5',
   },
-  tabs: {
-    flexDirection: 'row',
-    padding: 10,
-    backgroundColor: '#fff',
-    gap: 8,
+  headerGradient: {
+    paddingBottom: 24,
+    borderBottomLeftRadius: 24,
+    borderBottomRightRadius: 24,
+    elevation: 8,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.3,
+    shadowRadius: 4,
   },
-  tab: {
-    flex: 1,
+  headerContent: {
+    paddingTop: Platform.OS === 'android' ? (StatusBar.currentHeight || 24) + 16 : 60,
+    paddingHorizontal: 20,
+    paddingBottom: 12,
+    alignItems: 'center',
+  },
+  headerTitle: {
+    fontSize: 24,
+    fontWeight: 'bold',
+    color: '#fff',
+    marginTop: 12,
+  },
+  headerSubtitle: {
+    fontSize: 14,
+    color: 'rgba(255,255,255,0.9)',
+    marginTop: 4,
+  },
+  tabsContainer: {
+    backgroundColor: '#fff',
+    paddingHorizontal: 12,
+    paddingVertical: 12,
+    borderBottomWidth: 1,
+    borderBottomColor: '#e0e0e0',
+  },
+  segmentedButtons: {
+    marginBottom: 0,
+  },
+  searchContainer: {
+    backgroundColor: '#fff',
+    paddingHorizontal: 12,
+    paddingBottom: 8,
   },
   searchBar: {
-    margin: 10,
+    elevation: 0,
   },
   loadingContainer: {
     flex: 1,
@@ -533,28 +564,30 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   list: {
-    padding: 10,
+    padding: 12,
   },
   card: {
-    marginBottom: 10,
+    marginBottom: 12,
+    elevation: 2,
   },
   cardContent: {
     flexDirection: 'row',
     alignItems: 'center',
+    paddingVertical: 8,
   },
   friendInfo: {
     flex: 1,
-    marginLeft: 15,
+    marginLeft: 12,
   },
   friendName: {
     fontSize: 16,
-    fontWeight: 'bold',
+    fontWeight: '600',
     color: '#333',
   },
   friendBio: {
-    fontSize: 14,
+    fontSize: 13,
     color: '#666',
-    marginTop: 2,
+    marginTop: 4,
   },
   requestActions: {
     flexDirection: 'row',
@@ -562,10 +595,12 @@ const styles = StyleSheet.create({
   pendingChip: {
     marginTop: 4,
     alignSelf: 'flex-start',
+    backgroundColor: '#FF9800',
   },
   emptyContainer: {
     padding: 40,
     alignItems: 'center',
+    paddingTop: 80,
   },
   emptyText: {
     fontSize: 16,
