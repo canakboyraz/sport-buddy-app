@@ -1,0 +1,51 @@
+{
+  "expo": {
+    "name": "Sport Buddy",
+    "slug": "sport-buddy-app",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "userInterfaceStyle": "light",
+    "splash": {
+      "resizeMode": "contain",
+      "backgroundColor": "#6200ee"
+    },
+    "ios": {
+      "supportsTablet": true,
+      "bundleIdentifier": "com.sportbuddy.app"
+    },
+    "android": {
+      "package": "com.sportbuddy.app",
+      "adaptiveIcon": {
+        "backgroundColor": "#6200ee"
+      },
+      "config": {
+        "googleMaps": {
+          "apiKey": "YOUR_GOOGLE_MAPS_API_KEY"
+        }
+      }
+    },
+    "web": {
+      "bundler": "metro"
+    },
+    "plugins": [
+      [
+        "expo-location",
+        {
+          "locationAlwaysAndWhenInUsePermission": "Spor etkinliklerinizin konumunu belirlemek için konum erişimine ihtiyacımız var."
+        }
+      ],
+      [
+        "expo-notifications",
+        {
+          "icon": "./assets/notification-icon.png",
+          "color": "#6200ee",
+          "sounds": [
+            "./assets/notification-sound.wav"
+          ]
+        }
+      ],
+      "expo-asset",
+      "expo-secure-store"
+    ]
+  }
+}
