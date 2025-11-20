@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
-import { View, ScrollView, StyleSheet, Alert, TouchableOpacity, ActionSheetIOS, Platform } from 'react-native';
-import { Card, Text, Button, Avatar, Divider, ActivityIndicator, Switch, Menu } from 'react-native-paper';
+import { View, ScrollView, StyleSheet, Alert, TouchableOpacity, ActionSheetIOS, Platform, StatusBar } from 'react-native';
+import { Card, Text, Button, Avatar, Divider, ActivityIndicator, Switch, Menu, List } from 'react-native-paper';
+import { LinearGradient } from 'expo-linear-gradient';
 import { supabase } from '../../services/supabase';
 import { Profile, Rating } from '../../types';
 import { useAuth } from '../../hooks/useAuth';
@@ -156,186 +157,215 @@ export default function ProfileScreen() {
   }
 
   return (
-    <ScrollView style={styles.container}>
-      <Card style={styles.card}>
-        <Card.Content>
-          <View style={styles.header}>
-            <View>
-              <TouchableOpacity onPress={handlePhotoSelection} disabled={uploadingPhoto}>
-                {profile.avatar_url ? (
-                  <Avatar.Image size={80} source={{ uri: profile.avatar_url }} />
-                ) : (
-                  <Avatar.Text size={80} label={profile.full_name?.charAt(0) || 'U'} />
-                )}
-                {uploadingPhoto && (
-                  <View style={styles.uploadingOverlay}>
-                    <ActivityIndicator size="small" color="#fff" />
-                  </View>
-                )}
-              </TouchableOpacity>
-              <TouchableOpacity
-                style={styles.cameraButton}
-                onPress={handlePhotoSelection}
-                disabled={uploadingPhoto}
-              >
-                <MaterialCommunityIcons name="camera" size={20} color="#fff" />
-              </TouchableOpacity>
+    <View style={styles.container}>
+      <LinearGradient
+        colors={['#6200ee', '#9c27b0']}
+        start={{ x: 0, y: 0 }}
+        end={{ x: 1, y: 1 }}
+        style={styles.headerGradient}
+      >
+        <View style={styles.headerContent}>
+          <TouchableOpacity onPress={handlePhotoSelection} disabled={uploadingPhoto}>
+            {profile.avatar_url ? (
+              <Avatar.Image size={100} source={{ uri: profile.avatar_url }} style={styles.avatar} />
+            ) : (
+              <Avatar.Text size={100} label={profile.full_name?.charAt(0) || 'U'} style={styles.avatar} />
+            )}
+            {uploadingPhoto && (
+              <View style={styles.uploadingOverlay}>
+                <ActivityIndicator size="small" color="#fff" />
+              </View>
+            )}
+            <View style={styles.cameraButton}>
+              <MaterialCommunityIcons name="camera" size={20} color="#fff" />
             </View>
+          </TouchableOpacity>
 
-            <View style={styles.headerInfo}>
-              <Text style={styles.name}>{profile.full_name}</Text>
-              <Text style={styles.email}>{profile.email}</Text>
-              {profile.phone && <Text style={styles.phone}>{profile.phone}</Text>}
-            </View>
-          </View>
+          <Text style={styles.name}>{profile.full_name}</Text>
+          <Text style={styles.email}>{profile.email}</Text>
+          {profile.phone && <Text style={styles.phone}>{profile.phone}</Text>}
 
           {ratings.length > 0 && (
             <View style={styles.ratingContainer}>
-              <MaterialCommunityIcons name="star" size={24} color="#FFD700" />
+              <MaterialCommunityIcons name="star" size={20} color="#FFD700" />
               <Text style={styles.ratingText}>
                 {averageRating.toFixed(1)} ({ratings.length} değerlendirme)
               </Text>
             </View>
           )}
+        </View>
+      </LinearGradient>
 
-          {profile.bio && (
-            <>
-              <Divider style={styles.divider} />
-              <Text style={styles.bioLabel}>Hakkında:</Text>
+      <ScrollView style={styles.scrollView} contentContainerStyle={styles.scrollContent}>
+        {profile.bio && (
+          <Card style={styles.card} mode="elevated">
+            <Card.Content>
+              <Text style={styles.sectionTitle}>
+                <MaterialCommunityIcons name="information" size={20} color="#6200ee" /> Hakkında
+              </Text>
               <Text style={styles.bio}>{profile.bio}</Text>
-            </>
-          )}
+            </Card.Content>
+          </Card>
+        )}
 
-          <Divider style={styles.divider} />
-
-          <Button
-            mode="outlined"
-            icon="pencil"
-            onPress={() => navigation.navigate('EditProfile')}
-            style={styles.actionButton}
-          >
-            Profili Düzenle
-          </Button>
-
-          <Button
-            mode="outlined"
-            icon="chart-box"
-            onPress={() => navigation.navigate('ProfileStats')}
-            style={styles.actionButton}
-          >
-            İstatistiklerim
-          </Button>
-
-          <Button
-            mode="outlined"
-            icon="trophy"
-            onPress={() => navigation.navigate('Achievements')}
-            style={styles.actionButton}
-          >
-            Başarılarım
-          </Button>
-
-          <Button
-            mode="outlined"
-            icon="account-multiple"
-            onPress={() => navigation.navigate('Friends')}
-            style={styles.actionButton}
-          >
-            Arkadaşlarım
-          </Button>
-
-          <Button
-            mode="outlined"
-            icon="account-off"
-            onPress={() => navigation.navigate('BlockedUsers')}
-            style={styles.actionButton}
-          >
-            Engellenenler
-          </Button>
-
-          <Button
-            mode="outlined"
-            icon="heart"
-            onPress={() => navigation.navigate('Favorites')}
-            style={styles.actionButton}
-          >
-            Favorilerim
-          </Button>
-
-          <Button
-            mode="contained"
-            icon="plus-circle"
-            onPress={() => navigation.navigate('CreateSession')}
-            style={styles.actionButton}
-          >
-            Yeni Seans Oluştur
-          </Button>
-
-          <Divider style={styles.divider} />
-
-          <View style={styles.settingsRow}>
-            <View style={styles.settingItem}>
-              <MaterialCommunityIcons
-                name={isDarkMode ? "weather-night" : "weather-sunny"}
-                size={24}
-                color={isDarkMode ? "#bb86fc" : "#6200ee"}
-              />
-              <Text style={styles.settingLabel}>Koyu Tema</Text>
-            </View>
-            <Switch value={isDarkMode} onValueChange={toggleTheme} />
-          </View>
-        </Card.Content>
-      </Card>
-
-      {ratings.length > 0 && (
-        <Card style={styles.card}>
+        <Card style={styles.card} mode="elevated">
           <Card.Content>
-            <Text style={styles.sectionTitle}>Değerlendirmeler</Text>
-            {ratings.map((rating) => (
-              <Card key={rating.id} style={styles.ratingCard} mode="outlined">
-                <Card.Content>
-                  <View style={styles.ratingHeader}>
-                    <View style={styles.raterInfo}>
-                      <Avatar.Text
-                        size={32}
-                        label={rating.rater?.full_name?.charAt(0) || 'U'}
-                      />
-                      <Text style={styles.raterName}>
-                        {rating.rater?.full_name || 'Anonim'}
-                      </Text>
-                    </View>
-                    <View style={styles.starsRow}>
-                      {[1, 2, 3, 4, 5].map((star) => (
-                        <MaterialCommunityIcons
-                          key={star}
-                          name={star <= rating.rating ? 'star' : 'star-outline'}
-                          size={16}
-                          color={star <= rating.rating ? '#FFD700' : '#ccc'}
-                        />
-                      ))}
-                    </View>
-                  </View>
-                  {rating.comment && (
-                    <Text style={styles.comment}>{rating.comment}</Text>
-                  )}
-                  <Text style={styles.ratingDate}>
-                    {new Date(rating.created_at).toLocaleDateString('tr-TR')}
-                  </Text>
-                </Card.Content>
-              </Card>
-            ))}
+            <Text style={styles.sectionTitle}>
+              <MaterialCommunityIcons name="account-cog" size={20} color="#6200ee" /> Profil İşlemleri
+            </Text>
+
+            <List.Item
+              title="Profili Düzenle"
+              description="Bilgilerinizi güncelleyin"
+              left={props => <List.Icon {...props} icon="pencil" color="#6200ee" />}
+              right={props => <List.Icon {...props} icon="chevron-right" />}
+              onPress={() => navigation.navigate('EditProfile')}
+              style={styles.listItem}
+            />
+
+            <List.Item
+              title="İstatistiklerim"
+              description="Aktivite istatistiklerinizi görün"
+              left={props => <List.Icon {...props} icon="chart-box" color="#6200ee" />}
+              right={props => <List.Icon {...props} icon="chevron-right" />}
+              onPress={() => navigation.navigate('ProfileStats')}
+              style={styles.listItem}
+            />
+
+            <List.Item
+              title="Başarılarım"
+              description="Kazandığınız rozetler"
+              left={props => <List.Icon {...props} icon="trophy" color="#6200ee" />}
+              right={props => <List.Icon {...props} icon="chevron-right" />}
+              onPress={() => navigation.navigate('Achievements')}
+              style={styles.listItem}
+            />
           </Card.Content>
         </Card>
-      )}
 
-      <Button
-        mode="contained"
-        onPress={handleLogout}
-        style={styles.logoutButton}
-        buttonColor="#d32f2f"
-      >
-        Çıkış Yap
-      </Button>
+        <Card style={styles.card} mode="elevated">
+          <Card.Content>
+            <Text style={styles.sectionTitle}>
+              <MaterialCommunityIcons name="account-group" size={20} color="#6200ee" /> Sosyal
+            </Text>
+
+            <List.Item
+              title="Arkadaşlarım"
+              description="Arkadaş listenizi yönetin"
+              left={props => <List.Icon {...props} icon="account-multiple" color="#6200ee" />}
+              right={props => <List.Icon {...props} icon="chevron-right" />}
+              onPress={() => navigation.navigate('Friends')}
+              style={styles.listItem}
+            />
+
+            <List.Item
+              title="Favorilerim"
+              description="Favori etkinlikleriniz"
+              left={props => <List.Icon {...props} icon="heart" color="#6200ee" />}
+              right={props => <List.Icon {...props} icon="chevron-right" />}
+              onPress={() => navigation.navigate('Favorites')}
+              style={styles.listItem}
+            />
+
+            <List.Item
+              title="Engellenenler"
+              description="Engellenen kullanıcılar"
+              left={props => <List.Icon {...props} icon="account-off" color="#9E9E9E" />}
+              right={props => <List.Icon {...props} icon="chevron-right" />}
+              onPress={() => navigation.navigate('BlockedUsers')}
+              style={styles.listItem}
+            />
+          </Card.Content>
+        </Card>
+
+        <Card style={styles.card} mode="elevated">
+          <Card.Content>
+            <Text style={styles.sectionTitle}>
+              <MaterialCommunityIcons name="cog" size={20} color="#6200ee" /> Ayarlar
+            </Text>
+
+            <List.Item
+              title="Koyu Tema"
+              description={isDarkMode ? "Koyu tema aktif" : "Açık tema aktif"}
+              left={props => (
+                <List.Icon
+                  {...props}
+                  icon={isDarkMode ? "weather-night" : "weather-sunny"}
+                  color={isDarkMode ? "#bb86fc" : "#6200ee"}
+                />
+              )}
+              right={() => <Switch value={isDarkMode} onValueChange={toggleTheme} />}
+              style={styles.listItem}
+            />
+          </Card.Content>
+        </Card>
+
+        <Button
+          mode="contained"
+          icon="plus-circle"
+          onPress={() => navigation.navigate('CreateSession')}
+          style={styles.createButton}
+          contentStyle={styles.createButtonContent}
+        >
+          Yeni Seans Oluştur
+        </Button>
+
+        {ratings.length > 0 && (
+          <Card style={styles.card} mode="elevated">
+            <Card.Content>
+              <Text style={styles.sectionTitle}>
+                <MaterialCommunityIcons name="star-box" size={20} color="#6200ee" /> Değerlendirmeler
+              </Text>
+              {ratings.map((rating) => (
+                <Card key={rating.id} style={styles.ratingCard} mode="outlined">
+                  <Card.Content>
+                    <View style={styles.ratingHeader}>
+                      <View style={styles.raterInfo}>
+                        <Avatar.Text
+                          size={36}
+                          label={rating.rater?.full_name?.charAt(0) || 'U'}
+                        />
+                        <View style={styles.raterDetails}>
+                          <Text style={styles.raterName}>
+                            {rating.rater?.full_name || 'Anonim'}
+                          </Text>
+                          <View style={styles.starsRow}>
+                            {[1, 2, 3, 4, 5].map((star) => (
+                              <MaterialCommunityIcons
+                                key={star}
+                                name={star <= rating.rating ? 'star' : 'star-outline'}
+                                size={16}
+                                color={star <= rating.rating ? '#FFD700' : '#ccc'}
+                              />
+                            ))}
+                          </View>
+                        </View>
+                      </View>
+                      <Text style={styles.ratingDate}>
+                        {new Date(rating.created_at).toLocaleDateString('tr-TR')}
+                      </Text>
+                    </View>
+                    {rating.comment && (
+                      <Text style={styles.comment}>{rating.comment}</Text>
+                    )}
+                  </Card.Content>
+                </Card>
+              ))}
+            </Card.Content>
+          </Card>
+        )}
+
+        <Button
+          mode="contained"
+          onPress={handleLogout}
+          style={styles.logoutButton}
+          buttonColor="#d32f2f"
+          icon="logout"
+          contentStyle={styles.logoutButtonContent}
+        >
+          Çıkış Yap
+        </Button>
+      </ScrollView>
 
       {/* Android Photo Menu */}
       {Platform.OS !== 'ios' && (
@@ -348,7 +378,7 @@ export default function ProfileScreen() {
           <Menu.Item onPress={pickPhoto} title="Galeriden Seç" leadingIcon="image" />
         </Menu>
       )}
-    </ScrollView>
+    </View>
   );
 }
 
@@ -362,42 +392,44 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
   },
-  card: {
-    margin: 15,
+  headerGradient: {
+    paddingBottom: 32,
+    borderBottomLeftRadius: 24,
+    borderBottomRightRadius: 24,
+    elevation: 8,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.3,
+    shadowRadius: 4,
   },
-  header: {
-    flexDirection: 'row',
+  headerContent: {
+    paddingTop: Platform.OS === 'android' ? (StatusBar.currentHeight || 24) + 16 : 60,
+    paddingHorizontal: 20,
+    paddingBottom: 12,
     alignItems: 'center',
-    marginBottom: 15,
   },
-  headerInfo: {
-    marginLeft: 15,
-    flex: 1,
-  },
-  name: {
-    fontSize: 24,
-    fontWeight: 'bold',
-    marginBottom: 5,
-  },
-  email: {
-    fontSize: 16,
-    color: '#666',
-    marginBottom: 3,
-  },
-  phone: {
-    fontSize: 16,
-    color: '#666',
+  avatar: {
+    elevation: 4,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.2,
+    shadowRadius: 4,
   },
   cameraButton: {
     position: 'absolute',
     bottom: 0,
     right: 0,
     backgroundColor: '#6200ee',
-    borderRadius: 15,
-    width: 30,
-    height: 30,
+    borderRadius: 18,
+    width: 36,
+    height: 36,
     justifyContent: 'center',
     alignItems: 'center',
+    elevation: 3,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.2,
+    shadowRadius: 2,
   },
   uploadingOverlay: {
     position: 'absolute',
@@ -406,91 +438,120 @@ const styles = StyleSheet.create({
     right: 0,
     bottom: 0,
     backgroundColor: 'rgba(0,0,0,0.5)',
-    borderRadius: 40,
+    borderRadius: 50,
     justifyContent: 'center',
     alignItems: 'center',
+  },
+  name: {
+    fontSize: 24,
+    fontWeight: 'bold',
+    color: '#fff',
+    marginTop: 16,
+  },
+  email: {
+    fontSize: 14,
+    color: 'rgba(255,255,255,0.9)',
+    marginTop: 4,
+  },
+  phone: {
+    fontSize: 14,
+    color: 'rgba(255,255,255,0.9)',
+    marginTop: 2,
   },
   ratingContainer: {
     flexDirection: 'row',
     alignItems: 'center',
-    justifyContent: 'center',
-    marginTop: 10,
-    padding: 10,
-    backgroundColor: '#fff9e6',
-    borderRadius: 8,
+    marginTop: 12,
+    paddingHorizontal: 16,
+    paddingVertical: 6,
+    backgroundColor: 'rgba(255,215,0,0.2)',
+    borderRadius: 16,
   },
   ratingText: {
-    fontSize: 18,
+    fontSize: 14,
     fontWeight: 'bold',
-    marginLeft: 8,
+    marginLeft: 6,
+    color: '#fff',
   },
-  divider: {
-    marginVertical: 15,
+  scrollView: {
+    flex: 1,
   },
-  bioLabel: {
-    fontSize: 16,
-    fontWeight: 'bold',
-    marginBottom: 5,
+  scrollContent: {
+    paddingBottom: 24,
   },
-  bio: {
-    fontSize: 16,
-    color: '#666',
-  },
-  settingsRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    paddingVertical: 10,
-  },
-  settingItem: {
-    flexDirection: 'row',
-    alignItems: 'center',
-  },
-  settingLabel: {
-    fontSize: 16,
-    marginLeft: 12,
-    fontWeight: '500',
+  card: {
+    marginHorizontal: 16,
+    marginTop: 16,
+    elevation: 2,
   },
   sectionTitle: {
     fontSize: 18,
     fontWeight: 'bold',
-    marginBottom: 15,
+    color: '#333',
+    marginBottom: 12,
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  bio: {
+    fontSize: 15,
+    color: '#666',
+    lineHeight: 22,
+  },
+  listItem: {
+    paddingVertical: 4,
+  },
+  createButton: {
+    marginHorizontal: 16,
+    marginTop: 16,
+  },
+  createButtonContent: {
+    paddingVertical: 8,
   },
   ratingCard: {
-    marginBottom: 10,
+    marginBottom: 12,
+    borderColor: '#e0e0e0',
   },
   ratingHeader: {
     flexDirection: 'row',
     justifyContent: 'space-between',
-    alignItems: 'center',
-    marginBottom: 10,
+    alignItems: 'flex-start',
+    marginBottom: 8,
   },
   raterInfo: {
     flexDirection: 'row',
     alignItems: 'center',
+    flex: 1,
+  },
+  raterDetails: {
+    marginLeft: 12,
+    flex: 1,
   },
   raterName: {
-    fontSize: 14,
-    fontWeight: 'bold',
-    marginLeft: 8,
+    fontSize: 15,
+    fontWeight: '600',
+    color: '#333',
+    marginBottom: 4,
   },
   starsRow: {
     flexDirection: 'row',
+    gap: 2,
   },
   comment: {
     fontSize: 14,
-    color: '#333',
-    marginBottom: 8,
+    color: '#666',
+    marginTop: 8,
+    lineHeight: 20,
   },
   ratingDate: {
     fontSize: 12,
     color: '#999',
   },
   logoutButton: {
-    margin: 15,
-    marginTop: 5,
+    marginHorizontal: 16,
+    marginTop: 24,
+    marginBottom: 8,
   },
-  actionButton: {
-    marginTop: 10,
+  logoutButtonContent: {
+    paddingVertical: 8,
   },
 });

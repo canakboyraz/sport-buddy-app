@@ -85,19 +85,22 @@ export default function UserProfileScreen({ navigation, route }: Props) {
       setProfile(profileData);
 
       // Get user ratings
-      const { data: ratingsData } = await supabase
+      const { data: ratingsData, error: ratingsError } = await supabase
         .from('ratings')
         .select(`
           id,
           rating,
           comment,
           created_at,
-          rater:profiles!ratings_rater_id_fkey(full_name, avatar_url)
+          rater:profiles!ratings_rater_user_id_fkey(full_name, avatar_url)
         `)
         .eq('rated_user_id', userId)
         .order('created_at', { ascending: false })
         .limit(10);
 
+      if (ratingsError) {
+        console.error('[UserProfileScreen] Error loading ratings:', ratingsError);
+      }
       setRatings(ratingsData || []);
     } catch (error) {
       console.error('Error loading user profile:', error);
