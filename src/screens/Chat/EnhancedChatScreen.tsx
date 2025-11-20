@@ -86,12 +86,20 @@ export default function EnhancedChatScreen({ navigation, route }: Props) {
       .from('chat_messages')
       .select(`
         *,
-        user:profiles(*)
+        user:profiles!chat_messages_user_id_fkey(*)
       `)
       .eq('session_id', sessionId)
       .order('created_at', { ascending: true });
 
-    if (!error && data) {
+    if (error) {
+      console.error('[EnhancedChatScreen] Error loading messages:', error);
+    } else if (data) {
+      // Log any messages with missing profile data for debugging
+      const messagesWithoutProfile = data.filter((m: any) => !m.user);
+      if (messagesWithoutProfile.length > 0) {
+        console.warn('[EnhancedChatScreen] Found messages without profile data:',
+          messagesWithoutProfile.map((m: any) => ({ id: m.id, user_id: m.user_id })));
+      }
       setMessages(data);
       setTimeout(() => {
         flatListRef.current?.scrollToEnd({ animated: true });
@@ -111,14 +119,17 @@ export default function EnhancedChatScreen({ navigation, route }: Props) {
   };
 
   const loadTypingUsers = async () => {
-    const { data } = await supabase
+    const { data, error } = await supabase
       .from('typing_indicators')
-      .select('user:profiles(full_name)')
+      .select('user:profiles!typing_indicators_user_id_fkey(full_name)')
       .eq('session_id', sessionId)
       .eq('is_typing', true)
       .neq('user_id', user?.id || '');
 
-    if (data) {
+    if (error) {
+      console.error('[EnhancedChatScreen] Error loading typing users:', error);
+      setTypingUsers([]);
+    } else if (data) {
       const names = data.map((item: any) => item.user?.full_name).filter(Boolean);
       setTypingUsers(names);
     } else {

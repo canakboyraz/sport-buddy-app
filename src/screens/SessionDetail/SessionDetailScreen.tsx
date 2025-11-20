@@ -59,7 +59,8 @@ export default function SessionDetailScreen({ navigation, route }: Props) {
           session_id,
           user_id,
           status,
-          user:profiles(*)
+          joined_at,
+          user:profiles!session_participants_user_id_fkey(*)
         )
       `)
       .eq('id', sessionId)
@@ -68,9 +69,15 @@ export default function SessionDetailScreen({ navigation, route }: Props) {
     setLoading(false);
 
     if (error) {
-      // TODO: Implement proper error logging service (e.g., Sentry)
+      console.error('[SessionDetail] Error loading session:', error);
       setSession(null);
     } else if (data) {
+      // Log any participants with missing profile data for debugging
+      const participantsWithoutProfile = (data as SportSession).participants?.filter(p => !p.user) || [];
+      if (participantsWithoutProfile.length > 0) {
+        console.warn('[SessionDetail] Found participants without profile data:',
+          participantsWithoutProfile.map(p => ({ id: p.id, user_id: p.user_id })));
+      }
       setSession(data as SportSession);
     }
   };
@@ -101,9 +108,23 @@ export default function SessionDetailScreen({ navigation, route }: Props) {
 
     const { data: participant, error: fetchError } = await supabase
       .from('session_participants')
-      .select('user_id, user:profiles(full_name)')
+      .select('user_id, user:profiles!session_participants_user_id_fkey(full_name)')
       .eq('id', participantId)
       .single();
+
+    if (fetchError) {
+      console.error('[SessionDetail] Error fetching participant data:', fetchError);
+      setActionLoading(false);
+      Alert.alert('Hata', 'Katılımcı bilgileri yüklenemedi');
+      return;
+    }
+
+    if (!participant || !participant.user) {
+      console.error('[SessionDetail] Participant profile data missing:', { participantId, participant });
+      setActionLoading(false);
+      Alert.alert('Hata', 'Katılımcı profili bulunamadı. Lütfen daha sonra tekrar deneyin.');
+      return;
+    }
 
     const { error } = await supabase
       .from('session_participants')
@@ -113,6 +134,7 @@ export default function SessionDetailScreen({ navigation, route }: Props) {
     setActionLoading(false);
 
     if (error) {
+      console.error('[SessionDetail] Error approving participant:', error);
       Alert.alert('Hata', error.message);
     } else {
       Alert.alert('Başarılı', 'Katılımcı onaylandı!');
@@ -183,7 +205,8 @@ export default function SessionDetailScreen({ navigation, route }: Props) {
     if (userId === user?.id) return; // Don't show modal for current user
 
     if (!userName || userName === 'Kullanıcı') {
-      Alert.alert('Hata', 'Kullanıcı bilgileri yüklenemedi');
+      console.warn('[SessionDetail] Attempted to open user actions for user without profile:', userId);
+      Alert.alert('Hata', 'Kullanıcı profili yüklenemedi. Sayfayı yenilemeyi deneyin.');
       return;
     }
 
@@ -339,11 +362,21 @@ export default function SessionDetailScreen({ navigation, route }: Props) {
             </Text>
             <TouchableOpacity
               style={styles.creatorRow}
-              onPress={() => handleUserClick(session.creator_id, session.creator?.full_name || 'Kullanıcı')}
+              onPress={() => {
+                const creatorName = session.creator?.full_name || 'Kullanıcı';
+                if (session.creator?.full_name) {
+                  handleUserClick(session.creator_id, creatorName);
+                } else {
+                  Alert.alert('Hata', 'Organizatör bilgileri yüklenemedi');
+                }
+              }}
             >
-              <Avatar.Text size={48} label={session.creator?.full_name?.charAt(0) || 'U'} />
+              <Avatar.Text size={48} label={(session.creator?.full_name?.charAt(0) || 'U').toUpperCase()} />
               <View style={styles.creatorInfo}>
-                <Text style={styles.creatorName}>{session.creator?.full_name}</Text>
+                <Text style={styles.creatorName}>{session.creator?.full_name || 'Kullanıcı'}</Text>
+                {!session.creator && (
+                  <Text style={styles.profileWarning}>Profil yüklenemedi</Text>
+                )}
                 <Chip icon="crown" style={styles.creatorChip} textStyle={styles.creatorChipText} compact>
                   Organizatör
                 </Chip>
@@ -418,35 +451,43 @@ export default function SessionDetailScreen({ navigation, route }: Props) {
                 <Text style={styles.emptyText}>Henüz katılımcı yok</Text>
               </View>
             ) : (
-              approvedParticipants.map((participant) => (
-                <TouchableOpacity
-                  key={participant.id}
-                  style={styles.participantRow}
-                  onPress={() => handleUserClick(participant.user_id, participant.user?.full_name || 'Kullanıcı')}
-                >
-                  <Avatar.Text size={44} label={participant.user?.full_name?.charAt(0) || 'U'} />
-                  <View style={styles.participantInfo}>
-                    <Text style={styles.participantName}>{participant.user?.full_name}</Text>
-                    {isPast && participant.user_id !== user?.id && userParticipant?.status === 'approved' && (
-                      <Button
-                        mode="outlined"
-                        compact
-                        onPress={() =>
-                          navigation.navigate('RateUser', {
-                            sessionId: session.id,
-                            userId: participant.user_id,
-                            userName: participant.user?.full_name || 'Kullanıcı',
-                          })
-                        }
-                        style={styles.rateButton}
-                      >
-                        Değerlendir
-                      </Button>
-                    )}
-                  </View>
-                  <MaterialCommunityIcons name="chevron-right" size={24} color="#999" />
-                </TouchableOpacity>
-              ))
+              approvedParticipants.map((participant) => {
+                const userName = participant.user?.full_name || 'Kullanıcı';
+                const userInitial = userName.charAt(0).toUpperCase();
+
+                return (
+                  <TouchableOpacity
+                    key={participant.id}
+                    style={styles.participantRow}
+                    onPress={() => handleUserClick(participant.user_id, userName)}
+                  >
+                    <Avatar.Text size={44} label={userInitial} />
+                    <View style={styles.participantInfo}>
+                      <Text style={styles.participantName}>{userName}</Text>
+                      {!participant.user && (
+                        <Text style={styles.profileWarning}>Profil yüklenemedi</Text>
+                      )}
+                      {isPast && participant.user_id !== user?.id && userParticipant?.status === 'approved' && (
+                        <Button
+                          mode="outlined"
+                          compact
+                          onPress={() =>
+                            navigation.navigate('RateUser', {
+                              sessionId: session.id,
+                              userId: participant.user_id,
+                              userName: userName,
+                            })
+                          }
+                          style={styles.rateButton}
+                        >
+                          Değerlendir
+                        </Button>
+                      )}
+                    </View>
+                    <MaterialCommunityIcons name="chevron-right" size={24} color="#999" />
+                  </TouchableOpacity>
+                );
+              })
             )}
           </Card.Content>
         </Card>
@@ -754,6 +795,12 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: '500',
     color: '#333',
+    marginBottom: 4,
+  },
+  profileWarning: {
+    fontSize: 12,
+    color: '#FF9800',
+    fontStyle: 'italic',
     marginBottom: 4,
   },
   rateButton: {
