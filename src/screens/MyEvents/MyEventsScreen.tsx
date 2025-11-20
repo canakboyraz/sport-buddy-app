@@ -1,6 +1,6 @@
 import React, { useEffect, useState, useCallback } from 'react';
 import { View, FlatList, StyleSheet, RefreshControl } from 'react-native';
-import { Card, Text, Chip, ActivityIndicator, SegmentedButtons } from 'react-native-paper';
+import { Card, Text, Chip, ActivityIndicator, SegmentedButtons, useTheme } from 'react-native-paper';
 import { supabase } from '../../services/supabase';
 import { SportSession } from '../../types';
 import { format } from 'date-fns';
@@ -11,6 +11,7 @@ import { useFocusEffect } from '@react-navigation/native';
 
 export default function MyEventsScreen({ navigation }: any) {
   const { user } = useAuth();
+  const theme = useTheme();
   const [sessions, setSessions] = useState<SportSession[]>([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
@@ -98,7 +99,7 @@ export default function MyEventsScreen({ navigation }: any) {
       <Card style={styles.card} mode="elevated" onPress={() => navigation.navigate('SessionDetail', { sessionId: item.id })}>
         <Card.Content>
           <View style={styles.cardHeader}>
-            <Text style={styles.title} numberOfLines={1}>{item.title}</Text>
+            <Text style={[styles.title, { color: theme.colors.onSurface }]} numberOfLines={1}>{item.title}</Text>
             <Chip icon="account-multiple" style={styles.chip} compact>
               {participantCount}/{item.max_participants}
             </Chip>
@@ -106,49 +107,49 @@ export default function MyEventsScreen({ navigation }: any) {
 
           <View style={styles.badges}>
             {isCreator && (
-              <Chip icon="crown" style={styles.creatorChip} textStyle={styles.creatorChipText} compact>
+              <Chip icon="crown" style={[styles.creatorChip, { backgroundColor: theme.colors.primaryContainer }]} textStyle={[styles.creatorChipText, { color: theme.colors.onPrimaryContainer }]} compact>
                 Oluşturduğum
               </Chip>
             )}
             {!isCreator && (
-              <Chip icon="account-check" style={styles.participantChip} textStyle={styles.participantChipText} compact>
+              <Chip icon="account-check" style={[styles.participantChip, { backgroundColor: theme.colors.secondaryContainer }]} textStyle={[styles.participantChipText, { color: theme.colors.onSecondaryContainer }]} compact>
                 Katıldığım
               </Chip>
             )}
             {isFull && !isPast && (
-              <Chip icon="close-circle" style={styles.fullChip} textStyle={styles.fullChipText} compact>
+              <Chip icon="close-circle" style={[styles.fullChip, { backgroundColor: theme.colors.errorContainer }]} textStyle={[styles.fullChipText, { color: theme.colors.onErrorContainer }]} compact>
                 Dolu
               </Chip>
             )}
             {isPast && (
-              <Chip icon="clock-outline" style={styles.pastChip} textStyle={styles.pastChipText} compact>
+              <Chip icon="clock-outline" style={[styles.pastChip, { backgroundColor: theme.colors.surfaceVariant }]} textStyle={[styles.pastChipText, { color: theme.colors.onSurfaceVariant }]} compact>
                 Geçmiş
               </Chip>
             )}
           </View>
 
           <View style={styles.infoRow}>
-            <MaterialCommunityIcons name="soccer" size={18} color="#6200ee" />
-            <Text style={styles.infoText}>{item.sport?.name}</Text>
+            <MaterialCommunityIcons name="soccer" size={18} color={theme.colors.primary} />
+            <Text style={[styles.infoText, { color: theme.colors.onSurfaceVariant }]}>{item.sport?.name}</Text>
           </View>
 
           <View style={styles.infoRow}>
-            <MaterialCommunityIcons name="calendar" size={18} color="#6200ee" />
-            <Text style={styles.infoText}>
+            <MaterialCommunityIcons name="calendar" size={18} color={theme.colors.primary} />
+            <Text style={[styles.infoText, { color: theme.colors.onSurfaceVariant }]}>
               {format(new Date(item.session_date), 'dd MMM yyyy, HH:mm', { locale: tr })}
             </Text>
           </View>
 
           <View style={styles.infoRow}>
-            <MaterialCommunityIcons name="map-marker" size={18} color="#6200ee" />
-            <Text style={styles.infoText} numberOfLines={1}>
+            <MaterialCommunityIcons name="map-marker" size={18} color={theme.colors.primary} />
+            <Text style={[styles.infoText, { color: theme.colors.onSurfaceVariant }]} numberOfLines={1}>
               {item.city ? `${item.city} - ${item.location}` : item.location}
             </Text>
           </View>
 
           <View style={styles.infoRow}>
-            <MaterialCommunityIcons name="star" size={18} color="#6200ee" />
-            <Text style={styles.infoText}>
+            <MaterialCommunityIcons name="star" size={18} color={theme.colors.primary} />
+            <Text style={[styles.infoText, { color: theme.colors.onSurfaceVariant }]}>
               {item.skill_level} • {item.status}
             </Text>
           </View>
@@ -159,15 +160,15 @@ export default function MyEventsScreen({ navigation }: any) {
 
   if (loading) {
     return (
-      <View style={styles.loadingContainer}>
-        <ActivityIndicator size="large" />
+      <View style={[styles.loadingContainer, { backgroundColor: theme.colors.background }]}>
+        <ActivityIndicator size="large" color={theme.colors.primary} />
       </View>
     );
   }
 
   return (
-    <View style={styles.container}>
-      <View style={styles.filterContainer}>
+    <View style={[styles.container, { backgroundColor: theme.colors.background }]}>
+      <View style={[styles.filterContainer, { backgroundColor: theme.colors.surface, borderBottomColor: theme.colors.outlineVariant }]}>
         <SegmentedButtons
           value={filter}
           onValueChange={(value) => setFilter(value as 'upcoming' | 'past')}
@@ -184,11 +185,11 @@ export default function MyEventsScreen({ navigation }: any) {
         keyExtractor={(item) => String(item.id)}
         contentContainerStyle={styles.list}
         refreshControl={
-          <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
+          <RefreshControl refreshing={refreshing} onRefresh={onRefresh} colors={[theme.colors.primary]} />
         }
         ListEmptyComponent={
           <View style={styles.emptyContainer}>
-            <Text style={styles.emptyText}>
+            <Text style={[styles.emptyText, { color: theme.colors.onSurfaceVariant }]}>
               {filter === 'upcoming' ? 'Yaklaşan etkinlik yok' : 'Geçmiş etkinlik yok'}
             </Text>
           </View>
@@ -201,7 +202,6 @@ export default function MyEventsScreen({ navigation }: any) {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#f5f5f5',
   },
   loadingContainer: {
     flex: 1,
@@ -211,9 +211,7 @@ const styles = StyleSheet.create({
   filterContainer: {
     paddingHorizontal: 12,
     paddingVertical: 8,
-    backgroundColor: '#fff',
     borderBottomWidth: 1,
-    borderBottomColor: '#e0e0e0',
   },
   list: {
     padding: 8,
@@ -243,33 +241,25 @@ const styles = StyleSheet.create({
     gap: 5,
   },
   creatorChip: {
-    backgroundColor: '#FFD700',
   },
   creatorChipText: {
-    color: '#000',
     fontWeight: 'bold',
     fontSize: 12,
   },
   participantChip: {
-    backgroundColor: '#4CAF50',
   },
   participantChipText: {
-    color: '#FFF',
     fontWeight: 'bold',
     fontSize: 12,
   },
   fullChip: {
-    backgroundColor: '#F44336',
   },
   fullChipText: {
-    color: '#FFF',
     fontSize: 12,
   },
   pastChip: {
-    backgroundColor: '#9E9E9E',
   },
   pastChipText: {
-    color: '#FFF',
     fontSize: 12,
   },
   infoRow: {
@@ -280,7 +270,6 @@ const styles = StyleSheet.create({
   infoText: {
     fontSize: 13,
     marginLeft: 8,
-    color: '#333',
     flex: 1,
   },
   emptyContainer: {
@@ -289,6 +278,5 @@ const styles = StyleSheet.create({
   },
   emptyText: {
     fontSize: 16,
-    color: '#999',
   },
 });
