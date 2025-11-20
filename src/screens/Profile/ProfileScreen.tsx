@@ -255,11 +255,11 @@ export default function ProfileScreen() {
 
           <Button
             mode="outlined"
-            icon="calendar-check"
-            onPress={() => navigation.navigate('MyEvents')}
+            icon="heart"
+            onPress={() => navigation.navigate('Favorites')}
             style={styles.actionButton}
           >
-            Etkinliklerim
+            Favorilerim
           </Button>
 
           <Button

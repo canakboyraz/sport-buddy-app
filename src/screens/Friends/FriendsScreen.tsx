@@ -1,9 +1,10 @@
 import React, { useEffect, useState } from 'react';
-import { View, FlatList, StyleSheet, RefreshControl } from 'react-native';
+import { View, FlatList, StyleSheet, RefreshControl, Alert } from 'react-native';
 import { Card, Text, Button, Avatar, ActivityIndicator, Searchbar, Chip, Divider, IconButton } from 'react-native-paper';
 import { supabase } from '../../services/supabase';
 import { useAuth } from '../../hooks/useAuth';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
+import { friendService, FriendshipStatus } from '../../services/friendService';
 
 interface Friend {
   id: string;
@@ -46,21 +47,25 @@ export default function FriendsScreen() {
   const loadData = async () => {
     setLoading(true);
 
-    switch (activeTab) {
-      case 'friends':
-        await loadFriends();
-        break;
-      case 'requests':
-        await loadFriendRequests();
-        break;
-      case 'sent':
-        await loadSentRequests();
-        break;
-      case 'search':
-        if (searchQuery.trim()) {
-          await searchUsers();
-        }
-        break;
+    try {
+      switch (activeTab) {
+        case 'friends':
+          await loadFriends();
+          break;
+        case 'requests':
+          await loadFriendRequests();
+          break;
+        case 'sent':
+          await loadSentRequests();
+          break;
+        case 'search':
+          if (searchQuery.trim()) {
+            await searchUsers();
+          }
+          break;
+      }
+    } catch (error) {
+      console.error('Error loading data:', error);
     }
 
     setLoading(false);
@@ -69,78 +74,20 @@ export default function FriendsScreen() {
 
   const loadFriends = async () => {
     if (!user) return;
-
-    // Get accepted friendships where user is either user_id or friend_id
-    const { data, error } = await supabase
-      .from('friendships')
-      .select(`
-        id,
-        user_id,
-        friend_id,
-        requester:profiles!friendships_user_id_fkey(*),
-        target:profiles!friendships_friend_id_fkey(*)
-      `)
-      .eq('status', 'accepted')
-      .or(`user_id.eq.${user.id},friend_id.eq.${user.id}`);
-
-    if (!error && data) {
-      // Extract the friend (the other person in the relationship)
-      const friendsList = data.map((friendship: any) => {
-        if (friendship.user_id === user.id) {
-          return friendship.target;
-        } else {
-          return friendship.requester;
-        }
-      }).filter(Boolean);
-
-      setFriends(friendsList);
-    }
+    const data = await friendService.getFriends(user.id);
+    setFriends(data);
   };
 
   const loadFriendRequests = async () => {
     if (!user) return;
-
-    const { data, error } = await supabase
-      .from('friendships')
-      .select(`
-        id,
-        user_id,
-        friend_id,
-        status,
-        created_at,
-        requester:profiles!friendships_user_id_fkey(*),
-        target:profiles!friendships_friend_id_fkey(*)
-      `)
-      .eq('friend_id', user.id)
-      .eq('status', 'pending')
-      .order('created_at', { ascending: false });
-
-    if (!error && data) {
-      setFriendRequests(data as any);
-    }
+    const data = await friendService.getFriendRequests(user.id);
+    setFriendRequests(data as any);
   };
 
   const loadSentRequests = async () => {
     if (!user) return;
-
-    const { data, error } = await supabase
-      .from('friendships')
-      .select(`
-        id,
-        user_id,
-        friend_id,
-        status,
-        created_at,
-        requester:profiles!friendships_user_id_fkey(*),
-        target:profiles!friendships_friend_id_fkey(*)
-      `)
-      .eq('user_id', user.id)
-      .eq('status', 'pending')
-      .order('created_at', { ascending: false });
-
-    if (!error && data) {
-      setSentRequests(data as any);
-    }
+    const data = await friendService.getSentRequests(user.id);
+    setSentRequests(data as any);
   };
 
   const searchUsers = async () => {
@@ -164,18 +111,13 @@ export default function FriendsScreen() {
     setProcessingIds(prev => new Set(prev).add(targetId));
 
     try {
-      const { error } = await supabase.rpc('send_friend_request', {
-        requester_id: user.id,
-        target_id: targetId,
-      });
-
-      if (error) throw error;
-
+      await friendService.sendFriendRequest(targetId, user.id);
       // Refresh search results to update button states
       await searchUsers();
+      Alert.alert('Başarılı', 'Arkadaşlık isteği gönderildi');
     } catch (error: any) {
       console.error('Error sending friend request:', error);
-      alert(error.message || 'Arkadaşlık isteği gönderilemedi');
+      Alert.alert('Hata', error.message || 'Arkadaşlık isteği gönderilemedi');
     }
 
     setProcessingIds(prev => {
@@ -191,17 +133,12 @@ export default function FriendsScreen() {
     setProcessingIds(prev => new Set(prev).add(friendshipId));
 
     try {
-      const { error } = await supabase.rpc('accept_friend_request', {
-        friendship_id: friendshipId,
-        accepter_id: user.id,
-      });
-
-      if (error) throw error;
-
+      await friendService.acceptFriendRequest(friendshipId, user.id);
       await loadFriendRequests();
+      Alert.alert('Başarılı', 'Arkadaşlık isteği kabul edildi');
     } catch (error: any) {
       console.error('Error accepting friend request:', error);
-      alert('İstek kabul edilemedi');
+      Alert.alert('Hata', 'İstek kabul edilemedi');
     }
 
     setProcessingIds(prev => {
@@ -217,17 +154,12 @@ export default function FriendsScreen() {
     setProcessingIds(prev => new Set(prev).add(friendshipId));
 
     try {
-      const { error } = await supabase.rpc('reject_friend_request', {
-        friendship_id: friendshipId,
-        rejecter_id: user.id,
-      });
-
-      if (error) throw error;
-
+      await friendService.rejectFriendRequest(friendshipId, user.id);
       await loadFriendRequests();
+      Alert.alert('Başarılı', 'İstek reddedildi');
     } catch (error: any) {
       console.error('Error rejecting friend request:', error);
-      alert('İstek reddedilemedi');
+      Alert.alert('Hata', 'İstek reddedilemedi');
     }
 
     setProcessingIds(prev => {
@@ -243,17 +175,12 @@ export default function FriendsScreen() {
     setProcessingIds(prev => new Set(prev).add(friendshipId));
 
     try {
-      const { error } = await supabase
-        .from('friendships')
-        .delete()
-        .eq('id', friendshipId);
-
-      if (error) throw error;
-
+      await friendService.cancelFriendRequest(friendshipId);
       await loadSentRequests();
+      Alert.alert('Başarılı', 'İstek iptal edildi');
     } catch (error: any) {
       console.error('Error canceling friend request:', error);
-      alert('İstek iptal edilemedi');
+      Alert.alert('Hata', 'İstek iptal edilemedi');
     }
 
     setProcessingIds(prev => {
@@ -266,42 +193,36 @@ export default function FriendsScreen() {
   const removeFriend = async (friendId: string) => {
     if (!user) return;
 
-    setProcessingIds(prev => new Set(prev).add(friendId));
+    Alert.alert('Arkadaşı Sil', 'Arkadaş listenden çıkarmak istiyor musun?', [
+      { text: 'İptal', style: 'cancel' },
+      {
+        text: 'Sil',
+        style: 'destructive',
+        onPress: async () => {
+          setProcessingIds(prev => new Set(prev).add(friendId));
 
-    try {
-      const { error } = await supabase.rpc('remove_friend', {
-        user_a: user.id,
-        user_b: friendId,
-      });
+          try {
+            await friendService.removeFriend(friendId, user.id);
+            await loadFriends();
+            Alert.alert('Başarılı', 'Arkadaş silindi');
+          } catch (error: any) {
+            console.error('Error removing friend:', error);
+            Alert.alert('Hata', 'Arkadaş silinemedi');
+          }
 
-      if (error) throw error;
-
-      await loadFriends();
-    } catch (error: any) {
-      console.error('Error removing friend:', error);
-      alert('Arkadaş silinemedi');
-    }
-
-    setProcessingIds(prev => {
-      const newSet = new Set(prev);
-      newSet.delete(friendId);
-      return newSet;
-    });
+          setProcessingIds(prev => {
+            const newSet = new Set(prev);
+            newSet.delete(friendId);
+            return newSet;
+          });
+        }
+      }
+    ]);
   };
 
   const checkFriendshipStatus = async (targetId: string) => {
     if (!user) return null;
-
-    const { data, error } = await supabase.rpc('get_friendship_status', {
-      user_a: user.id,
-      user_b: targetId,
-    });
-
-    if (!error && data && data.length > 0) {
-      return data[0];
-    }
-
-    return null;
+    return await friendService.checkFriendshipStatus(targetId, user.id);
   };
 
   const onRefresh = () => {
@@ -386,7 +307,7 @@ export default function FriendsScreen() {
   );
 
   const renderSearchResult = ({ item }: { item: Friend }) => {
-    const [friendshipStatus, setFriendshipStatus] = useState<any>(null);
+    const [friendshipStatus, setFriendshipStatus] = useState<FriendshipStatus | null>(null);
     const [statusLoading, setStatusLoading] = useState(true);
 
     useEffect(() => {

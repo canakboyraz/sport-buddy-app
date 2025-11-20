@@ -1,7 +1,9 @@
 import React, { useState } from 'react';
 import { View, StyleSheet, Alert, KeyboardAvoidingView, Platform, ScrollView } from 'react-native';
-import { TextInput, Button, Text } from 'react-native-paper';
+import { TextInput, Button, Text, Surface, useTheme } from 'react-native-paper';
+import { LinearGradient } from 'expo-linear-gradient';
 import { supabase } from '../../services/supabase';
+import { validateEmail, validatePassword, validateName } from '../../utils/validation';
 import { StackNavigationProp } from '@react-navigation/stack';
 import { AuthStackParamList } from '../../navigation/AuthNavigator';
 
@@ -12,6 +14,7 @@ type Props = {
 };
 
 export default function RegisterScreen({ navigation }: Props) {
+  const theme = useTheme();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [fullName, setFullName] = useState('');
@@ -21,6 +24,22 @@ export default function RegisterScreen({ navigation }: Props) {
   const handleRegister = async () => {
     if (!email || !password || !fullName) {
       Alert.alert('Hata', 'Lütfen zorunlu alanları doldurun');
+      return;
+    }
+
+    if (!validateName(fullName)) {
+      Alert.alert('Hata', 'Ad Soyad en az 2 karakter olmalıdır');
+      return;
+    }
+
+    if (!validateEmail(email)) {
+      Alert.alert('Hata', 'Geçerli bir e-posta adresi giriniz');
+      return;
+    }
+
+    const passwordValidation = validatePassword(password);
+    if (!passwordValidation.isValid) {
+      Alert.alert('Hata', passwordValidation.message || 'Geçersiz şifre');
       return;
     }
 
@@ -58,107 +77,123 @@ export default function RegisterScreen({ navigation }: Props) {
   };
 
   return (
-    <KeyboardAvoidingView
-      behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+    <LinearGradient
+      colors={['#6200ee', '#9c27b0']}
       style={styles.container}
     >
-      <ScrollView contentContainerStyle={styles.scrollContainer}>
-        <View style={styles.form}>
-          <Text style={styles.title}>Kayıt Ol</Text>
-          <Text style={styles.subtitle}>Sport Buddy'e katıl!</Text>
+      <KeyboardAvoidingView
+        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+        style={styles.keyboardView}
+      >
+        <ScrollView contentContainerStyle={styles.scrollContainer}>
+          <Surface style={styles.surface} elevation={4}>
+            <Text style={[styles.title, { color: theme.colors.primary }]}>Kayıt Ol</Text>
+            <Text style={styles.subtitle}>Sport Buddy'e katıl!</Text>
 
-          <TextInput
-            label="Ad Soyad *"
-            value={fullName}
-            onChangeText={setFullName}
-            mode="outlined"
-            style={styles.input}
-          />
+            <TextInput
+              label="Ad Soyad *"
+              value={fullName}
+              onChangeText={setFullName}
+              mode="outlined"
+              style={styles.input}
+              left={<TextInput.Icon icon="account" />}
+            />
 
-          <TextInput
-            label="E-posta *"
-            value={email}
-            onChangeText={setEmail}
-            mode="outlined"
-            keyboardType="email-address"
-            autoCapitalize="none"
-            style={styles.input}
-          />
+            <TextInput
+              label="E-posta *"
+              value={email}
+              onChangeText={setEmail}
+              mode="outlined"
+              keyboardType="email-address"
+              autoCapitalize="none"
+              style={styles.input}
+              left={<TextInput.Icon icon="email" />}
+            />
 
-          <TextInput
-            label="Telefon"
-            value={phone}
-            onChangeText={setPhone}
-            mode="outlined"
-            keyboardType="phone-pad"
-            style={styles.input}
-          />
+            <TextInput
+              label="Telefon"
+              value={phone}
+              onChangeText={setPhone}
+              mode="outlined"
+              keyboardType="phone-pad"
+              style={styles.input}
+              left={<TextInput.Icon icon="phone" />}
+            />
 
-          <TextInput
-            label="Şifre *"
-            value={password}
-            onChangeText={setPassword}
-            mode="outlined"
-            secureTextEntry
-            style={styles.input}
-          />
+            <TextInput
+              label="Şifre *"
+              value={password}
+              onChangeText={setPassword}
+              mode="outlined"
+              secureTextEntry
+              style={styles.input}
+              left={<TextInput.Icon icon="lock" />}
+            />
 
-          <Button
-            mode="contained"
-            onPress={handleRegister}
-            loading={loading}
-            disabled={loading}
-            style={styles.button}
-          >
-            Kayıt Ol
-          </Button>
+            <Button
+              mode="contained"
+              onPress={handleRegister}
+              loading={loading}
+              disabled={loading}
+              style={styles.button}
+              contentStyle={{ height: 48 }}
+            >
+              Kayıt Ol
+            </Button>
 
-          <Button
-            mode="text"
-            onPress={() => navigation.navigate('Login')}
-            style={styles.loginButton}
-          >
-            Zaten hesabın var mı? Giriş Yap
-          </Button>
-        </View>
-      </ScrollView>
-    </KeyboardAvoidingView>
+            <Button
+              mode="text"
+              onPress={() => navigation.navigate('Login')}
+              style={styles.loginButton}
+            >
+              Zaten hesabın var mı? Giriş Yap
+            </Button>
+          </Surface>
+        </ScrollView>
+      </KeyboardAvoidingView>
+    </LinearGradient>
   );
 }
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#fff',
+  },
+  keyboardView: {
+    flex: 1,
   },
   scrollContainer: {
     flexGrow: 1,
     justifyContent: 'center',
-  },
-  form: {
     padding: 20,
+  },
+  surface: {
+    padding: 24,
+    borderRadius: 16,
+    backgroundColor: 'white',
+    alignItems: 'stretch',
   },
   title: {
     fontSize: 32,
     fontWeight: 'bold',
     textAlign: 'center',
-    marginBottom: 10,
-    color: '#6200ee',
+    marginBottom: 8,
   },
   subtitle: {
-    fontSize: 18,
+    fontSize: 16,
     textAlign: 'center',
-    marginBottom: 40,
+    marginBottom: 32,
     color: '#666',
   },
   input: {
-    marginBottom: 15,
+    marginBottom: 16,
+    backgroundColor: 'white',
   },
   button: {
-    marginTop: 10,
-    paddingVertical: 8,
+    marginTop: 8,
+    borderRadius: 8,
   },
   loginButton: {
-    marginTop: 15,
+    marginTop: 16,
   },
 });

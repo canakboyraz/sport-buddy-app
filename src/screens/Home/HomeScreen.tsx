@@ -1,6 +1,7 @@
 import React, { useEffect, useState, useMemo } from 'react';
-import { View, FlatList, StyleSheet, RefreshControl, Platform, Linking } from 'react-native';
-import { Text, Button, Chip, ActivityIndicator, FAB, Badge } from 'react-native-paper';
+import { View, FlatList, StyleSheet, RefreshControl, Platform, Linking, StatusBar } from 'react-native';
+import { Text, Button, Chip, ActivityIndicator, FAB, Badge, useTheme } from 'react-native-paper';
+import { LinearGradient } from 'expo-linear-gradient';
 import { supabase } from '../../services/supabase';
 import { SportSession, Sport } from '../../types';
 import { StackNavigationProp } from '@react-navigation/stack';
@@ -40,6 +41,7 @@ const getSportIcon = (sportName: string): string => {
 const PAGE_SIZE = 20;
 
 export default function HomeScreen({ navigation }: Props) {
+  const theme = useTheme();
   const [sessions, setSessions] = useState<SportSession[]>([]);
   const [sports, setSports] = useState<Sport[]>([]);
   const [cities, setCities] = useState<string[]>([]);
@@ -325,8 +327,8 @@ export default function HomeScreen({ navigation }: Props) {
       const url = Platform.OS === 'web'
         ? `https://www.google.com/maps/search/?api=1&query=${latitude},${longitude}`
         : Platform.OS === 'ios'
-        ? `maps://maps.apple.com/?q=${latitude},${longitude}`
-        : `geo:${latitude},${longitude}`;
+          ? `maps://maps.apple.com/?q=${latitude},${longitude}`
+          : `geo:${latitude},${longitude}`;
       Linking.openURL(url);
     }
   };
@@ -334,11 +336,11 @@ export default function HomeScreen({ navigation }: Props) {
   const renderSessionCard = ({ item }: { item: SportSession }) => {
     const distance = userLocation && item.latitude && item.longitude
       ? formatDistance(calculateDistance(
-          userLocation.latitude,
-          userLocation.longitude,
-          item.latitude,
-          item.longitude
-        ))
+        userLocation.latitude,
+        userLocation.longitude,
+        item.latitude,
+        item.longitude
+      ))
       : null;
 
     return (
@@ -367,42 +369,58 @@ export default function HomeScreen({ navigation }: Props) {
   return (
     <View style={styles.container}>
       <OfflineIndicator />
-      <View style={styles.filtersContainer}>
-        <Text style={styles.filterTitle}>Spor Türü:</Text>
-        <FlatList
-          horizontal
-          data={[{ id: null, name: 'Tümü', icon: 'trophy' }, ...sports.map(s => ({ ...s, icon: s.icon || getSportIcon(s.name) }))]}
-          keyExtractor={(item) => String(item.id)}
-          renderItem={({ item }) => (
-            <Chip
-              selected={selectedSport === item.id}
-              onPress={() => setSelectedSport(item.id)}
-              style={styles.filterChip}
-              icon={item.id === null ? 'trophy' : getSportIcon(item.name)}
-            >
-              {item.name}
-            </Chip>
-          )}
-          showsHorizontalScrollIndicator={false}
-        />
+      <LinearGradient
+        colors={['#6200ee', '#9c27b0']}
+        start={{ x: 0, y: 0 }}
+        end={{ x: 1, y: 1 }}
+        style={styles.headerGradient}
+      >
+        <View style={styles.filtersContainer}>
+          <Text style={[styles.filterTitle, { color: 'white' }]}>Spor Türü:</Text>
+          <FlatList
+            horizontal
+            data={[{ id: null, name: 'Tümü', icon: 'trophy' }, ...sports.map(s => ({ ...s, icon: s.icon || getSportIcon(s.name) }))]}
+            keyExtractor={(item) => String(item.id)}
+            renderItem={({ item }) => (
+              <Chip
+                selected={selectedSport === item.id}
+                onPress={() => setSelectedSport(item.id)}
+                style={[
+                  styles.filterChip,
+                  selectedSport === item.id ? { backgroundColor: 'white' } : { backgroundColor: 'rgba(255,255,255,0.2)' }
+                ]}
+                textStyle={{ color: selectedSport === item.id ? '#6200ee' : 'white' }}
+                icon={item.id === null ? 'trophy' : getSportIcon(item.name)}
+                selectedColor="#6200ee"
+              >
+                {item.name}
+              </Chip>
+            )}
+            showsHorizontalScrollIndicator={false}
+          />
 
-        <Text style={styles.filterTitle}>Şehir:</Text>
-        <FlatList
-          horizontal
-          data={[{ value: null, label: 'Tümü' }, ...cities.map(c => ({ value: c, label: c }))]}
-          keyExtractor={(item) => String(item.value || 'all')}
-          renderItem={({ item }) => (
-            <Chip
-              selected={selectedCity === item.value}
-              onPress={() => setSelectedCity(item.value)}
-              style={styles.filterChip}
-            >
-              {item.label}
-            </Chip>
-          )}
-          showsHorizontalScrollIndicator={false}
-        />
-      </View>
+          <Text style={[styles.filterTitle, { color: 'white', marginTop: 12 }]}>Şehir:</Text>
+          <FlatList
+            horizontal
+            data={[{ value: null, label: 'Tümü' }, ...cities.map(c => ({ value: c, label: c }))]}
+            keyExtractor={(item) => String(item.value || 'all')}
+            renderItem={({ item }) => (
+              <Chip
+                selected={selectedCity === item.value}
+                onPress={() => setSelectedCity(item.value)}
+                style={[
+                  styles.filterChip,
+                  selectedCity === item.value ? { backgroundColor: 'white' } : { backgroundColor: 'rgba(255,255,255,0.2)' }
+                ]}
+                textStyle={{ color: selectedCity === item.value ? '#6200ee' : 'white' }}
+              >
+                {item.label}
+              </Chip>
+            )}
+            showsHorizontalScrollIndicator={false}
+          />
+        </View>
+      </LinearGradient>
 
       <FlatList
         data={filteredSessions}
@@ -503,11 +521,19 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
   },
+  headerGradient: {
+    paddingBottom: 16,
+    borderBottomLeftRadius: 24,
+    borderBottomRightRadius: 24,
+    elevation: 8,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.3,
+    shadowRadius: 4,
+  },
   filtersContainer: {
-    backgroundColor: '#fff',
-    padding: 10,
-    borderBottomWidth: 1,
-    borderBottomColor: '#e0e0e0',
+    padding: 16,
+    paddingTop: Platform.OS === 'android' ? (StatusBar.currentHeight || 24) + 10 : 50,
   },
   filterTitle: {
     fontSize: 14,

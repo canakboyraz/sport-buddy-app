@@ -15,6 +15,7 @@ import { useAuth } from '../../hooks/useAuth';
 import { StackNavigationProp } from '@react-navigation/stack';
 import { RouteProp } from '@react-navigation/native';
 import { RootStackParamList } from '../../navigation/AppNavigator';
+import { friendService, FriendshipStatus } from '../../services/friendService';
 
 type Props = {
   navigation: StackNavigationProp<RootStackParamList, 'UserProfile'>;
@@ -53,11 +54,13 @@ export default function UserProfileScreen({ navigation, route }: Props) {
   const [ratings, setRatings] = useState<Rating[]>([]);
   const [isBlocked, setIsBlocked] = useState(false);
   const [actionLoading, setActionLoading] = useState(false);
+  const [friendshipStatus, setFriendshipStatus] = useState<FriendshipStatus | null>(null);
 
   useEffect(() => {
     if (user && userId) {
       loadUserProfile();
       checkBlockStatus();
+      checkFriendship();
     }
   }, [user, userId]);
 
@@ -116,6 +119,72 @@ export default function UserProfileScreen({ navigation, route }: Props) {
     } catch (error) {
       console.error('Error checking block status:', error);
     }
+  };
+
+  const checkFriendship = async () => {
+    if (!user) return;
+    try {
+      const status = await friendService.checkFriendshipStatus(userId, user.id);
+      setFriendshipStatus(status);
+    } catch (error) {
+      console.error('Error checking friendship:', error);
+    }
+  };
+
+  const handleFriendAction = async () => {
+    if (!user) return;
+    setActionLoading(true);
+
+    try {
+      if (!friendshipStatus) {
+        // Send request
+        await friendService.sendFriendRequest(userId, user.id);
+        Alert.alert('Başarılı', 'Arkadaşlık isteği gönderildi');
+      } else if (friendshipStatus.status === 'pending') {
+        if (friendshipStatus.is_requester) {
+          // Cancel request (need friendship ID, but for now we can use remove logic or fetch ID)
+          // Simplification: Use remove_friend which handles deletion regardless of status
+          await friendService.removeFriend(userId, user.id);
+          Alert.alert('Başarılı', 'İstek iptal edildi');
+        } else {
+          // Accept request (need friendship ID)
+          // We need to fetch the friendship ID first or use a different RPC. 
+          // For now, let's assume we can't easily accept without ID from this screen unless we fetch it.
+          // Let's re-fetch requests to get ID or use a more robust service method.
+          // Actually, let's just use the Friends screen for accepting for now to keep it simple, 
+          // OR implement a specific acceptByUserId RPC if needed.
+          // But wait, I can just fetch the friendship ID.
+          const requests = await friendService.getFriendRequests(user.id);
+          const request = requests.find((r: any) => r.requester.id === userId);
+          if (request) {
+            await friendService.acceptFriendRequest(request.id, user.id);
+            Alert.alert('Başarılı', 'Arkadaşlık isteği kabul edildi');
+          }
+        }
+      } else if (friendshipStatus.status === 'accepted') {
+        // Remove friend
+        Alert.alert('Arkadaşı Sil', 'Arkadaş listenden çıkarmak istiyor musun?', [
+          { text: 'İptal', style: 'cancel' },
+          {
+            text: 'Sil',
+            style: 'destructive',
+            onPress: async () => {
+              await friendService.removeFriend(userId, user.id);
+              checkFriendship();
+            }
+          }
+        ]);
+        setActionLoading(false);
+        return;
+      }
+
+      await checkFriendship();
+    } catch (error: any) {
+      console.error('Friend action error:', error);
+      Alert.alert('Hata', error.message || 'İşlem gerçekleştirilemedi');
+    }
+
+    setActionLoading(false);
   };
 
   const handleBlock = async () => {
@@ -209,6 +278,49 @@ export default function UserProfileScreen({ navigation, route }: Props) {
     });
   };
 
+  const renderFriendButton = () => {
+    if (isBlocked) return null;
+
+    let icon = 'account-plus';
+    let label = 'Arkadaş Ekle';
+    let mode: 'contained' | 'outlined' = 'contained';
+    let color = undefined;
+
+    if (friendshipStatus) {
+      if (friendshipStatus.status === 'accepted') {
+        icon = 'account-check';
+        label = 'Arkadaş';
+        mode = 'outlined';
+        color = '#4CAF50';
+      } else if (friendshipStatus.status === 'pending') {
+        if (friendshipStatus.is_requester) {
+          icon = 'account-clock';
+          label = 'İstek Gönderildi';
+          mode = 'outlined';
+        } else {
+          icon = 'account-question';
+          label = 'İsteği Kabul Et';
+          mode = 'contained';
+          color = '#2196F3';
+        }
+      }
+    }
+
+    return (
+      <Button
+        mode={mode}
+        icon={icon}
+        onPress={handleFriendAction}
+        loading={actionLoading}
+        disabled={actionLoading}
+        style={styles.actionButton}
+        textColor={color}
+      >
+        {label}
+      </Button>
+    );
+  };
+
   if (loading) {
     return (
       <View style={styles.loadingContainer}>
@@ -277,6 +389,8 @@ export default function UserProfileScreen({ navigation, route }: Props) {
           <Divider style={styles.divider} />
 
           <View style={styles.actions}>
+            {renderFriendButton()}
+
             {isBlocked ? (
               <Button
                 mode="outlined"
@@ -429,9 +543,11 @@ const styles = StyleSheet.create({
   actions: {
     flexDirection: 'row',
     gap: 10,
+    flexWrap: 'wrap',
   },
   actionButton: {
     flex: 1,
+    minWidth: '45%',
   },
   ratingsCard: {
     margin: 15,

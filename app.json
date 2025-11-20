@@ -39,9 +39,13 @@
         {
           "icon": "./assets/notification-icon.png",
           "color": "#6200ee",
-          "sounds": ["./assets/notification-sound.wav"]
+          "sounds": [
+            "./assets/notification-sound.wav"
+          ]
         }
-      ]
+      ],
+      "expo-asset",
+      "expo-secure-store"
     ]
   }
 }

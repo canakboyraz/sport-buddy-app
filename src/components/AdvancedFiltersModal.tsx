@@ -3,6 +3,7 @@ import { View, StyleSheet, ScrollView, Platform } from 'react-native';
 import { Modal, Text, Button, Switch, Divider, Chip, TextInput } from 'react-native-paper';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import DateTimePicker from '@react-native-community/datetimepicker';
+import Slider from '@react-native-community/slider';
 import { format } from 'date-fns';
 import { tr } from 'date-fns/locale';
 
@@ -77,24 +78,35 @@ export default function AdvancedFiltersModal({
             <Text style={styles.sectionSubtitle}>
               Konumunuza olan maksimum mesafe
             </Text>
-            <View style={styles.chipContainer}>
-              {DISTANCE_OPTIONS.map((distance) => (
-                <Chip
-                  key={distance}
-                  selected={localFilters.maxDistance === distance}
-                  onPress={() => updateFilter('maxDistance', distance)}
-                  style={styles.chip}
-                >
-                  {distance} km
-                </Chip>
-              ))}
-              <Chip
-                selected={localFilters.maxDistance === null}
-                onPress={() => updateFilter('maxDistance', null)}
-                style={styles.chip}
-              >
-                Tümü
-              </Chip>
+            <View style={styles.distanceControl}>
+              <View style={styles.switchRow}>
+                <Text style={styles.switchTitle}>Mesafe Sınırı</Text>
+                <Switch
+                  value={localFilters.maxDistance !== null}
+                  onValueChange={(value) => updateFilter('maxDistance', value ? 50 : null)}
+                />
+              </View>
+
+              {localFilters.maxDistance !== null && (
+                <View style={styles.sliderContainer}>
+                  <Text style={styles.sliderValue}>{localFilters.maxDistance} km</Text>
+                  <Slider
+                    style={styles.slider}
+                    minimumValue={1}
+                    maximumValue={100}
+                    step={1}
+                    value={localFilters.maxDistance}
+                    onValueChange={(value) => updateFilter('maxDistance', value)}
+                    minimumTrackTintColor="#6200ee"
+                    maximumTrackTintColor="#000000"
+                    thumbTintColor="#6200ee"
+                  />
+                  <View style={styles.sliderLabels}>
+                    <Text style={styles.sliderLabel}>1 km</Text>
+                    <Text style={styles.sliderLabel}>100 km</Text>
+                  </View>
+                </View>
+              )}
             </View>
           </View>
         ) : (
@@ -366,5 +378,32 @@ const styles = StyleSheet.create({
   },
   actionButton: {
     flex: 1,
+  },
+  distanceControl: {
+    marginTop: 5,
+  },
+  sliderContainer: {
+    marginTop: 10,
+    alignItems: 'center',
+  },
+  slider: {
+    width: '100%',
+    height: 40,
+  },
+  sliderValue: {
+    fontSize: 18,
+    fontWeight: 'bold',
+    color: '#6200ee',
+    marginBottom: 5,
+  },
+  sliderLabels: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    width: '100%',
+    paddingHorizontal: 5,
+  },
+  sliderLabel: {
+    fontSize: 12,
+    color: '#666',
   },
 });

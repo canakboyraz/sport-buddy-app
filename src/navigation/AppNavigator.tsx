@@ -22,7 +22,7 @@ import UserProfileScreen from '../screens/Profile/UserProfileScreen';
 export type MainTabParamList = {
   Home: undefined;
   MapView: undefined;
-  Favorites: undefined;
+  MyEvents: undefined;
   Profile: undefined;
 };
 
@@ -31,7 +31,7 @@ export type RootStackParamList = {
   SessionDetail: { sessionId: number };
   Chat: { sessionId: number };
   RateUser: { sessionId: number; userId: string; userName: string };
-  MyEvents: undefined;
+  Favorites: undefined;
   CreateSession: undefined;
   EditProfile: undefined;
   ProfileStats: undefined;
@@ -86,12 +86,12 @@ function MainTabNavigator() {
         }}
       />
       <MainTab.Screen
-        name="Favorites"
-        component={FavoritesScreen}
+        name="MyEvents"
+        component={MyEventsScreen}
         options={{
-          title: 'Favoriler',
+          title: 'Seanslarım',
           tabBarIcon: ({ color, size }) => (
-            <MaterialCommunityIcons name="heart" size={28} color={color} />
+            <MaterialCommunityIcons name="calendar-check" size={28} color={color} />
           ),
         }}
       />
@@ -136,9 +136,9 @@ export default function AppNavigator() {
         options={{ title: 'Kullanıcıyı Değerlendir' }}
       />
       <RootStack.Screen
-        name="MyEvents"
-        component={MyEventsScreen}
-        options={{ title: 'Etkinliklerim' }}
+        name="Favorites"
+        component={FavoritesScreen}
+        options={{ title: 'Favorilerim' }}
       />
       <RootStack.Screen
         name="CreateSession"

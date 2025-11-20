@@ -1,10 +1,12 @@
 import React, { useState, useEffect } from 'react';
-import { View, StyleSheet, Alert, KeyboardAvoidingView, Platform } from 'react-native';
-import { TextInput, Button, Text, Checkbox } from 'react-native-paper';
+import { View, StyleSheet, Alert, KeyboardAvoidingView, Platform, Image } from 'react-native';
+import { TextInput, Button, Text, Checkbox, Surface, useTheme } from 'react-native-paper';
+import { LinearGradient } from 'expo-linear-gradient';
 import { supabase } from '../../services/supabase';
+import { validateEmail } from '../../utils/validation';
 import { StackNavigationProp } from '@react-navigation/stack';
 import { AuthStackParamList } from '../../navigation/AuthNavigator';
-import AsyncStorage from '@react-native-async-storage/async-storage';
+import { secureStore } from '../../services/secureStore';
 
 type LoginScreenNavigationProp = StackNavigationProp<AuthStackParamList, 'Login'>;
 
@@ -13,6 +15,7 @@ type Props = {
 };
 
 export default function LoginScreen({ navigation }: Props) {
+  const theme = useTheme();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
@@ -25,8 +28,8 @@ export default function LoginScreen({ navigation }: Props) {
 
   const loadSavedCredentials = async () => {
     try {
-      const savedEmail = await AsyncStorage.getItem('rememberedEmail');
-      const savedPassword = await AsyncStorage.getItem('rememberedPassword');
+      const savedEmail = await secureStore.getItem('rememberedEmail');
+      const savedPassword = await secureStore.getItem('rememberedPassword');
       if (savedEmail && savedPassword) {
         setEmail(savedEmail);
         setPassword(savedPassword);
@@ -40,6 +43,11 @@ export default function LoginScreen({ navigation }: Props) {
   const handleLogin = async () => {
     if (!email || !password) {
       Alert.alert('Hata', 'Lütfen tüm alanları doldurun');
+      return;
+    }
+
+    if (!validateEmail(email)) {
+      Alert.alert('Hata', 'Geçerli bir e-posta adresi giriniz');
       return;
     }
 
@@ -58,16 +66,16 @@ export default function LoginScreen({ navigation }: Props) {
       // Save credentials if "Remember Me" is checked
       if (rememberMe) {
         try {
-          await AsyncStorage.setItem('rememberedEmail', email);
-          await AsyncStorage.setItem('rememberedPassword', password);
+          await secureStore.setItem('rememberedEmail', email);
+          await secureStore.setItem('rememberedPassword', password);
         } catch (error) {
           console.error('Error saving credentials:', error);
         }
       } else {
         // Clear saved credentials if "Remember Me" is unchecked
         try {
-          await AsyncStorage.removeItem('rememberedEmail');
-          await AsyncStorage.removeItem('rememberedPassword');
+          await secureStore.deleteItem('rememberedEmail');
+          await secureStore.deleteItem('rememberedPassword');
         } catch (error) {
           console.error('Error clearing credentials:', error);
         }
@@ -76,111 +84,125 @@ export default function LoginScreen({ navigation }: Props) {
   };
 
   return (
-    <KeyboardAvoidingView
-      behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+    <LinearGradient
+      colors={['#6200ee', '#9c27b0']}
       style={styles.container}
     >
-      <View style={styles.form}>
-        <Text style={styles.title}>Sport Buddy</Text>
-        <Text style={styles.subtitle}>Spor arkadaşını bul!</Text>
+      <KeyboardAvoidingView
+        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+        style={styles.keyboardView}
+      >
+        <Surface style={styles.surface} elevation={4}>
+          <Text style={[styles.title, { color: theme.colors.primary }]}>Sport Buddy</Text>
+          <Text style={styles.subtitle}>Spor arkadaşını bul!</Text>
 
-        <TextInput
-          label="E-posta"
-          value={email}
-          onChangeText={setEmail}
-          mode="outlined"
-          keyboardType="email-address"
-          autoCapitalize="none"
-          style={styles.input}
-        />
-
-        <TextInput
-          label="Şifre"
-          value={password}
-          onChangeText={setPassword}
-          mode="outlined"
-          secureTextEntry={!showPassword}
-          style={styles.input}
-          right={
-            <TextInput.Icon
-              icon={showPassword ? 'eye-off' : 'eye'}
-              onPress={() => setShowPassword(!showPassword)}
-            />
-          }
-        />
-
-        <View style={styles.rememberMeContainer}>
-          <Checkbox
-            status={rememberMe ? 'checked' : 'unchecked'}
-            onPress={() => setRememberMe(!rememberMe)}
+          <TextInput
+            label="E-posta"
+            value={email}
+            onChangeText={setEmail}
+            mode="outlined"
+            keyboardType="email-address"
+            autoCapitalize="none"
+            style={styles.input}
+            left={<TextInput.Icon icon="email" />}
           />
-          <Text style={styles.rememberMeText} onPress={() => setRememberMe(!rememberMe)}>
-            Beni Hatırla
-          </Text>
-        </View>
 
-        <Button
-          mode="contained"
-          onPress={handleLogin}
-          loading={loading}
-          disabled={loading}
-          style={styles.button}
-        >
-          Giriş Yap
-        </Button>
+          <TextInput
+            label="Şifre"
+            value={password}
+            onChangeText={setPassword}
+            mode="outlined"
+            secureTextEntry={!showPassword}
+            style={styles.input}
+            left={<TextInput.Icon icon="lock" />}
+            right={
+              <TextInput.Icon
+                icon={showPassword ? 'eye-off' : 'eye'}
+                onPress={() => setShowPassword(!showPassword)}
+              />
+            }
+          />
 
-        <Button
-          mode="text"
-          onPress={() => navigation.navigate('Register')}
-          style={styles.registerButton}
-        >
-          Hesabın yok mu? Kayıt Ol
-        </Button>
-      </View>
-    </KeyboardAvoidingView>
+          <View style={styles.rememberMeContainer}>
+            <Checkbox
+              status={rememberMe ? 'checked' : 'unchecked'}
+              onPress={() => setRememberMe(!rememberMe)}
+            />
+            <Text style={styles.rememberMeText} onPress={() => setRememberMe(!rememberMe)}>
+              Beni Hatırla
+            </Text>
+          </View>
+
+          <Button
+            mode="contained"
+            onPress={handleLogin}
+            loading={loading}
+            disabled={loading}
+            style={styles.button}
+            contentStyle={{ height: 48 }}
+          >
+            Giriş Yap
+          </Button>
+
+          <Button
+            mode="text"
+            onPress={() => navigation.navigate('Register')}
+            style={styles.registerButton}
+          >
+            Hesabın yok mu? Kayıt Ol
+          </Button>
+        </Surface>
+      </KeyboardAvoidingView>
+    </LinearGradient>
   );
 }
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#fff',
-    justifyContent: 'center',
   },
-  form: {
+  keyboardView: {
+    flex: 1,
+    justifyContent: 'center',
     padding: 20,
+  },
+  surface: {
+    padding: 24,
+    borderRadius: 16,
+    backgroundColor: 'white',
+    alignItems: 'stretch',
   },
   title: {
     fontSize: 32,
     fontWeight: 'bold',
     textAlign: 'center',
-    marginBottom: 10,
-    color: '#6200ee',
+    marginBottom: 8,
   },
   subtitle: {
-    fontSize: 18,
+    fontSize: 16,
     textAlign: 'center',
-    marginBottom: 40,
+    marginBottom: 32,
     color: '#666',
   },
   input: {
-    marginBottom: 15,
+    marginBottom: 16,
+    backgroundColor: 'white',
   },
   rememberMeContainer: {
     flexDirection: 'row',
     alignItems: 'center',
-    marginBottom: 10,
+    marginBottom: 24,
   },
   rememberMeText: {
     marginLeft: 8,
-    fontSize: 16,
-    color: '#333',
+    fontSize: 14,
+    color: '#444',
   },
   button: {
-    marginTop: 10,
-    paddingVertical: 8,
+    borderRadius: 8,
+    marginBottom: 16,
   },
   registerButton: {
-    marginTop: 15,
+    marginTop: 8,
   },
 });
