@@ -1,6 +1,6 @@
-import React, { useState, useEffect } from 'react';
-import { View, ScrollView, StyleSheet, Alert, TouchableOpacity, Animated } from 'react-native';
-import { Text, TextInput, Button, Card, Chip, ActivityIndicator, Avatar } from 'react-native-paper';
+import React, { useState, useEffect, useRef } from 'react';
+import { View, ScrollView, StyleSheet, Alert, TouchableOpacity, Animated, Dimensions } from 'react-native';
+import { Text, TextInput, Button, Card, Chip, ActivityIndicator, Avatar, Surface } from 'react-native-paper';
 import { StackNavigationProp } from '@react-navigation/stack';
 import { RouteProp } from '@react-navigation/native';
 import { RootStackParamList } from '../../navigation/AppNavigator';
@@ -8,6 +8,9 @@ import { useAuth } from '../../hooks/useAuth';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { submitRating, canRateSession } from '../../services/ratingService';
 import { useTheme } from '../../contexts/ThemeContext';
+import { LinearGradient } from 'expo-linear-gradient';
+
+const { width } = Dimensions.get('window');
 
 type RateUserScreenNavigationProp = StackNavigationProp<RootStackParamList, 'RateUser'>;
 type RateUserScreenRouteProp = RouteProp<RootStackParamList, 'RateUser'>;
@@ -28,10 +31,31 @@ export default function RateUserScreen({ navigation, route }: Props) {
   const [canRate, setCanRate] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string>('');
   const [scaleAnims] = useState([1, 2, 3, 4, 5].map(() => new Animated.Value(1)));
+  const [glowAnims] = useState([1, 2, 3, 4, 5].map(() => new Animated.Value(0)));
+  const cardFadeAnim = useRef(new Animated.Value(0)).current;
+  const cardSlideAnim = useRef(new Animated.Value(50)).current;
 
   useEffect(() => {
     checkRatingEligibility();
   }, [sessionId]);
+
+  useEffect(() => {
+    if (canRate && !checkingEligibility) {
+      Animated.parallel([
+        Animated.timing(cardFadeAnim, {
+          toValue: 1,
+          duration: 600,
+          useNativeDriver: true,
+        }),
+        Animated.spring(cardSlideAnim, {
+          toValue: 0,
+          tension: 20,
+          friction: 7,
+          useNativeDriver: true,
+        }),
+      ]).start();
+    }
+  }, [canRate, checkingEligibility]);
 
   const checkRatingEligibility = async () => {
     setCheckingEligibility(true);
@@ -45,19 +69,38 @@ export default function RateUserScreen({ navigation, route }: Props) {
 
   const handleStarPress = (star: number) => {
     setRating(star);
-    // Animate the selected star
-    Animated.sequence([
-      Animated.timing(scaleAnims[star - 1], {
-        toValue: 1.3,
-        duration: 150,
-        useNativeDriver: true,
-      }),
-      Animated.timing(scaleAnims[star - 1], {
-        toValue: 1,
-        duration: 150,
-        useNativeDriver: true,
-      }),
-    ]).start();
+
+    // Animate all stars up to the selected one
+    for (let i = 0; i < star; i++) {
+      Animated.parallel([
+        Animated.sequence([
+          Animated.spring(scaleAnims[i], {
+            toValue: 1.3,
+            tension: 300,
+            friction: 5,
+            useNativeDriver: true,
+          }),
+          Animated.spring(scaleAnims[i], {
+            toValue: 1,
+            tension: 100,
+            friction: 7,
+            useNativeDriver: true,
+          }),
+        ]),
+        Animated.sequence([
+          Animated.timing(glowAnims[i], {
+            toValue: 1,
+            duration: 200,
+            useNativeDriver: true,
+          }),
+          Animated.timing(glowAnims[i], {
+            toValue: 0,
+            duration: 400,
+            useNativeDriver: true,
+          }),
+        ]),
+      ]).start();
+    }
   };
 
   const handleSubmit = async () => {
@@ -102,32 +145,78 @@ export default function RateUserScreen({ navigation, route }: Props) {
 
   const renderStars = () => {
     const labels = ['Çok Kötü', 'Kötü', 'Orta', 'İyi', 'Mükemmel'];
+    const labelColors = ['#F44336', '#FF9800', '#FFC107', '#8BC34A', '#4CAF50'];
+
     return (
       <View style={styles.starsSection}>
         <View style={styles.starsContainer}>
-          {[1, 2, 3, 4, 5].map((star) => (
-            <TouchableOpacity
-              key={star}
-              onPress={() => handleStarPress(star)}
-              disabled={!canRate}
-              style={styles.starButton}
-            >
-              <Animated.View style={{ transform: [{ scale: scaleAnims[star - 1] }] }}>
-                <MaterialCommunityIcons
-                  name={star <= rating ? 'star' : 'star-outline'}
-                  size={56}
-                  color={star <= rating ? '#FFD700' : theme.colors.onSurfaceDisabled}
-                />
-              </Animated.View>
-            </TouchableOpacity>
-          ))}
+          {[1, 2, 3, 4, 5].map((star) => {
+            const isSelected = star <= rating;
+            const glowOpacity = glowAnims[star - 1];
+
+            return (
+              <TouchableOpacity
+                key={star}
+                onPress={() => handleStarPress(star)}
+                disabled={!canRate}
+                style={styles.starButton}
+                activeOpacity={0.7}
+              >
+                <View>
+                  {/* Glow effect */}
+                  {isSelected && (
+                    <Animated.View
+                      style={[
+                        styles.starGlow,
+                        {
+                          opacity: glowOpacity,
+                          transform: [{ scale: scaleAnims[star - 1] }],
+                        },
+                      ]}
+                    />
+                  )}
+                  {/* Star icon */}
+                  <Animated.View
+                    style={{
+                      transform: [{ scale: scaleAnims[star - 1] }],
+                    }}
+                  >
+                    <MaterialCommunityIcons
+                      name={isSelected ? 'star' : 'star-outline'}
+                      size={60}
+                      color={isSelected ? '#FFD700' : theme.colors.onSurfaceDisabled}
+                      style={isSelected && styles.starShadow}
+                    />
+                  </Animated.View>
+                </View>
+              </TouchableOpacity>
+            );
+          })}
         </View>
         {rating > 0 && (
-          <View style={[styles.ratingLabel, { backgroundColor: theme.colors.primaryContainer }]}>
-            <Text style={[styles.ratingLabelText, { color: theme.colors.onPrimaryContainer }]}>
-              {labels[rating - 1]}
-            </Text>
-          </View>
+          <Animated.View
+            style={[
+              styles.ratingLabelContainer,
+              { opacity: cardFadeAnim },
+            ]}
+          >
+            <LinearGradient
+              colors={[labelColors[rating - 1] + '20', labelColors[rating - 1] + '10']}
+              start={{ x: 0, y: 0 }}
+              end={{ x: 1, y: 1 }}
+              style={styles.ratingLabel}
+            >
+              <MaterialCommunityIcons
+                name={rating >= 4 ? 'emoticon-happy-outline' : rating >= 3 ? 'emoticon-neutral-outline' : 'emoticon-sad-outline'}
+                size={20}
+                color={labelColors[rating - 1]}
+                style={{ marginRight: 6 }}
+              />
+              <Text style={[styles.ratingLabelText, { color: labelColors[rating - 1] }]}>
+                {labels[rating - 1]}
+              </Text>
+            </LinearGradient>
+          </Animated.View>
         )}
       </View>
     );
@@ -174,81 +263,149 @@ export default function RateUserScreen({ navigation, route }: Props) {
   }
 
   return (
-    <ScrollView style={[styles.container, { backgroundColor: theme.colors.background }]}>
-      <Card style={[styles.card, { backgroundColor: theme.colors.surface }]}>
-        <Card.Content>
-          <View style={styles.header}>
-            <Avatar.Text
-              size={72}
-              label={userName?.charAt(0)?.toUpperCase() || 'U'}
-              style={{ backgroundColor: theme.colors.primary }}
-            />
+    <ScrollView
+      style={[styles.container, { backgroundColor: theme.colors.background }]}
+      showsVerticalScrollIndicator={false}
+    >
+      <Animated.View
+        style={{
+          opacity: cardFadeAnim,
+          transform: [{ translateY: cardSlideAnim }],
+        }}
+      >
+        {/* Header Card with Gradient */}
+        <Surface style={styles.headerCard} elevation={3}>
+          <LinearGradient
+            colors={[theme.colors.primary + '15', theme.colors.primary + '05']}
+            start={{ x: 0, y: 0 }}
+            end={{ x: 1, y: 1 }}
+            style={styles.headerGradient}
+          >
+            <View style={styles.avatarContainer}>
+              <View style={styles.avatarGlow}>
+                <Avatar.Text
+                  size={80}
+                  label={userName?.charAt(0)?.toUpperCase() || 'U'}
+                  style={[styles.avatar, { backgroundColor: theme.colors.primary }]}
+                />
+              </View>
+            </View>
             <Text style={[styles.title, { color: theme.colors.onSurface }]}>
               Kullanıcıyı Değerlendir
             </Text>
             <Text style={[styles.userName, { color: theme.colors.primary }]}>{userName}</Text>
-          </View>
+          </LinearGradient>
+        </Surface>
 
-          <View style={styles.divider} />
+        {/* Rating Card */}
+        <Card style={styles.ratingCard} elevation={2}>
+          <Card.Content>
+            <View style={styles.ratingTitleRow}>
+              <MaterialCommunityIcons name="star-circle" size={24} color={theme.colors.primary} />
+              <Text style={[styles.sectionTitle, { color: theme.colors.onSurface }]}>
+                Puanınız
+              </Text>
+            </View>
 
-          <Text style={[styles.sectionTitle, { color: theme.colors.onSurface }]}>
-            Puanınız
-          </Text>
-          {renderStars()}
+            {renderStars()}
 
-          <Text style={[styles.helperText, { color: theme.colors.onSurfaceVariant }]}>
-            4+ yıldız olumlu değerlendirme sayılır ve rozet kazanmaya yardımcı olur
-          </Text>
+            <Surface style={styles.helperCard} elevation={0}>
+              <LinearGradient
+                colors={['#4CAF5015', '#4CAF5005']}
+                start={{ x: 0, y: 0 }}
+                end={{ x: 1, y: 0 }}
+                style={styles.helperGradient}
+              >
+                <MaterialCommunityIcons name="information-outline" size={18} color="#4CAF50" />
+                <Text style={[styles.helperText, { color: '#4CAF50' }]}>
+                  4+ yıldız olumlu değerlendirme sayılır ve rozet kazanmaya yardımcı olur
+                </Text>
+              </LinearGradient>
+            </Surface>
+          </Card.Content>
+        </Card>
 
-          <TextInput
-            label="Yorumunuz (İsteğe bağlı)"
-            value={comment}
-            onChangeText={setComment}
-            mode="outlined"
-            multiline
-            numberOfLines={5}
-            style={styles.input}
-            maxLength={500}
-            placeholder="Bu kullanıcı ile oynarken deneyiminizi paylaşın..."
-            outlineColor={theme.colors.outline}
-            activeOutlineColor={theme.colors.primary}
-            textColor={theme.colors.onSurface}
-          />
+        {/* Comment Card */}
+        <Card style={styles.commentCard} elevation={2}>
+          <Card.Content>
+            <View style={styles.commentTitleRow}>
+              <MaterialCommunityIcons name="message-text" size={22} color={theme.colors.primary} />
+              <Text style={[styles.commentTitle, { color: theme.colors.onSurface }]}>
+                Yorumunuz (İsteğe bağlı)
+              </Text>
+            </View>
 
-          <View style={styles.characterCount}>
-            <Text style={[styles.characterCountText, { color: theme.colors.onSurfaceVariant }]}>
-              {comment.length}/500
-            </Text>
-          </View>
+            <TextInput
+              value={comment}
+              onChangeText={setComment}
+              mode="outlined"
+              multiline
+              numberOfLines={5}
+              style={styles.input}
+              maxLength={500}
+              placeholder="Bu kullanıcı ile oynarken deneyiminizi paylaşın..."
+              outlineColor={theme.colors.outline}
+              activeOutlineColor={theme.colors.primary}
+              textColor={theme.colors.onSurface}
+            />
 
-          <Button
-            mode="contained"
-            onPress={handleSubmit}
-            loading={loading}
-            disabled={loading || rating === 0}
-            style={styles.button}
-            icon="check-circle"
-            contentStyle={styles.buttonContent}
+            <View style={styles.characterCount}>
+              <Text style={[styles.characterCountText, { color: theme.colors.onSurfaceVariant }]}>
+                {comment.length}/500 karakter
+              </Text>
+            </View>
+          </Card.Content>
+        </Card>
+
+        {/* Submit Button */}
+        <View style={styles.submitContainer}>
+          <LinearGradient
+            colors={
+              rating === 0
+                ? ['#9E9E9E', '#757575']
+                : [theme.colors.primary, theme.colors.primary + 'DD']
+            }
+            start={{ x: 0, y: 0 }}
+            end={{ x: 1, y: 0 }}
+            style={styles.submitGradient}
           >
-            Değerlendirmeyi Kaydet
-          </Button>
-        </Card.Content>
-      </Card>
+            <TouchableOpacity
+              onPress={handleSubmit}
+              disabled={loading || rating === 0}
+              style={styles.submitButton}
+              activeOpacity={0.8}
+            >
+              {loading ? (
+                <ActivityIndicator color="#FFFFFF" size="small" />
+              ) : (
+                <>
+                  <MaterialCommunityIcons name="check-circle" size={24} color="#FFFFFF" />
+                  <Text style={styles.submitText}>Değerlendirmeyi Kaydet</Text>
+                </>
+              )}
+            </TouchableOpacity>
+          </LinearGradient>
+        </View>
 
-      <Card style={[styles.infoCard, { backgroundColor: theme.colors.secondaryContainer }]}>
-        <Card.Content>
-          <View style={styles.infoRow}>
+        {/* Info Card */}
+        <Surface style={styles.infoCard} elevation={1}>
+          <LinearGradient
+            colors={[theme.colors.secondaryContainer + 'CC', theme.colors.secondaryContainer + '99']}
+            start={{ x: 0, y: 0 }}
+            end={{ x: 1, y: 1 }}
+            style={styles.infoGradient}
+          >
             <MaterialCommunityIcons
-              name="information"
-              size={24}
-              color={theme.colors.onSecondaryContainer}
+              name="shield-star-outline"
+              size={28}
+              color={theme.colors.secondary}
             />
             <Text style={[styles.infoText, { color: theme.colors.onSecondaryContainer }]}>
               Değerlendirmeleriniz sayesinde kullanıcılar rozet kazanır ve toplulukta güven oluşturulur.
             </Text>
-          </View>
-        </Card.Content>
-      </Card>
+          </LinearGradient>
+        </Surface>
+      </Animated.View>
     </ScrollView>
   );
 }
@@ -266,17 +423,19 @@ const styles = StyleSheet.create({
   loadingText: {
     marginTop: 16,
     fontSize: 16,
+    fontWeight: '500',
   },
   errorCard: {
     width: '100%',
     maxWidth: 400,
+    borderRadius: 20,
   },
   errorContent: {
     alignItems: 'center',
-    paddingVertical: 20,
+    paddingVertical: 24,
   },
   errorTitle: {
-    fontSize: 20,
+    fontSize: 22,
     fontWeight: 'bold',
     marginTop: 16,
     marginBottom: 8,
@@ -285,98 +444,213 @@ const styles = StyleSheet.create({
   errorMessage: {
     fontSize: 16,
     textAlign: 'center',
-    marginBottom: 20,
-    lineHeight: 22,
+    marginBottom: 24,
+    lineHeight: 24,
+    paddingHorizontal: 16,
   },
   backButton: {
     marginTop: 8,
+    borderRadius: 12,
   },
-  card: {
+  // Header Card
+  headerCard: {
     margin: 16,
-    elevation: 4,
+    marginBottom: 12,
+    borderRadius: 24,
+    overflow: 'hidden',
   },
-  header: {
+  headerGradient: {
+    padding: 24,
     alignItems: 'center',
-    paddingVertical: 16,
+  },
+  avatarContainer: {
+    marginBottom: 16,
+  },
+  avatarGlow: {
+    padding: 4,
+    borderRadius: 50,
+    backgroundColor: 'rgba(255, 255, 255, 0.1)',
+  },
+  avatar: {
+    elevation: 8,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.3,
+    shadowRadius: 8,
   },
   title: {
-    fontSize: 22,
-    fontWeight: 'bold',
-    marginTop: 16,
-    marginBottom: 8,
-  },
-  userName: {
     fontSize: 20,
     fontWeight: '600',
+    marginBottom: 6,
+    letterSpacing: 0.5,
   },
-  divider: {
-    height: 1,
-    backgroundColor: '#e0e0e0',
-    marginVertical: 20,
+  userName: {
+    fontSize: 24,
+    fontWeight: 'bold',
+    letterSpacing: 0.3,
+  },
+  // Rating Card
+  ratingCard: {
+    margin: 16,
+    marginTop: 0,
+    marginBottom: 12,
+    borderRadius: 20,
+    overflow: 'hidden',
+  },
+  ratingTitleRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 20,
+    gap: 8,
   },
   sectionTitle: {
     fontSize: 18,
     fontWeight: 'bold',
-    marginBottom: 16,
-    textAlign: 'center',
+    letterSpacing: 0.3,
   },
   starsSection: {
     alignItems: 'center',
-    marginBottom: 16,
+    marginBottom: 20,
   },
   starsContainer: {
     flexDirection: 'row',
     justifyContent: 'center',
-    gap: 8,
-    marginBottom: 12,
+    gap: 4,
+    marginBottom: 20,
+    paddingVertical: 8,
   },
   starButton: {
-    padding: 4,
+    padding: 8,
+    position: 'relative',
+  },
+  starGlow: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    borderRadius: 30,
+    backgroundColor: '#FFD700',
+    opacity: 0.3,
+  },
+  starShadow: {
+    textShadowColor: 'rgba(255, 215, 0, 0.5)',
+    textShadowOffset: { width: 0, height: 2 },
+    textShadowRadius: 4,
+  },
+  ratingLabelContainer: {
+    width: '100%',
+    alignItems: 'center',
   },
   ratingLabel: {
-    paddingHorizontal: 20,
-    paddingVertical: 8,
-    borderRadius: 20,
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: 24,
+    paddingVertical: 12,
+    borderRadius: 25,
+    borderWidth: 1.5,
+    borderColor: 'rgba(0, 0, 0, 0.05)',
   },
   ratingLabelText: {
-    fontSize: 16,
-    fontWeight: '600',
+    fontSize: 17,
+    fontWeight: 'bold',
+    letterSpacing: 0.5,
+  },
+  helperCard: {
+    borderRadius: 16,
+    overflow: 'hidden',
+  },
+  helperGradient: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    padding: 14,
+    gap: 10,
   },
   helperText: {
+    flex: 1,
     fontSize: 13,
-    textAlign: 'center',
-    marginBottom: 20,
-    lineHeight: 18,
+    lineHeight: 19,
+    fontWeight: '600',
+  },
+  // Comment Card
+  commentCard: {
+    margin: 16,
+    marginTop: 0,
+    marginBottom: 12,
+    borderRadius: 20,
+    overflow: 'hidden',
+  },
+  commentTitleRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 16,
+    gap: 8,
+  },
+  commentTitle: {
+    fontSize: 16,
+    fontWeight: 'bold',
+    letterSpacing: 0.3,
   },
   input: {
     marginBottom: 8,
     backgroundColor: 'transparent',
+    fontSize: 15,
   },
   characterCount: {
     alignItems: 'flex-end',
-    marginBottom: 20,
+    marginTop: 4,
   },
   characterCountText: {
     fontSize: 12,
+    fontWeight: '500',
   },
-  button: {
-    paddingVertical: 6,
-  },
-  buttonContent: {
-    paddingVertical: 8,
-  },
-  infoCard: {
+  // Submit Button
+  submitContainer: {
     margin: 16,
-    marginTop: 0,
+    marginTop: 4,
+    borderRadius: 16,
+    overflow: 'hidden',
+    elevation: 6,
+    shadowColor: '#6200ee',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.3,
+    shadowRadius: 8,
   },
-  infoRow: {
+  submitGradient: {
+    borderRadius: 16,
+  },
+  submitButton: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 12,
+    justifyContent: 'center',
+    paddingVertical: 16,
+    paddingHorizontal: 24,
+    gap: 10,
+  },
+  submitText: {
+    color: '#FFFFFF',
+    fontSize: 16,
+    fontWeight: 'bold',
+    letterSpacing: 0.5,
+  },
+  // Info Card
+  infoCard: {
+    margin: 16,
+    marginTop: 8,
+    marginBottom: 24,
+    borderRadius: 20,
+    overflow: 'hidden',
+  },
+  infoGradient: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    padding: 18,
+    gap: 14,
   },
   infoText: {
     flex: 1,
     fontSize: 14,
-    lineHeight: 20,
+    lineHeight: 21,
+    fontWeight: '500',
   },
 });

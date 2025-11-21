@@ -1,5 +1,5 @@
-import React, { useEffect, useState } from 'react';
-import { View, ScrollView, StyleSheet, Alert } from 'react-native';
+import React, { useEffect, useState, useRef } from 'react';
+import { View, ScrollView, StyleSheet, Alert, Animated, Easing } from 'react-native';
 import {
   Card,
   Text,
@@ -8,8 +8,10 @@ import {
   Button,
   Divider,
   Chip,
+  Surface,
 } from 'react-native-paper';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
+import { LinearGradient } from 'expo-linear-gradient';
 import { supabase } from '../../services/supabase';
 import { useAuth } from '../../hooks/useAuth';
 import { StackNavigationProp } from '@react-navigation/stack';
@@ -67,6 +69,52 @@ export default function UserProfileScreen({ navigation, route }: Props) {
     positiveReviewsCount: 0,
     ratingDistribution: { 1: 0, 2: 0, 3: 0, 4: 0, 5: 0 },
   });
+
+  // Animations
+  const badgePulseAnim = useRef(new Animated.Value(1)).current;
+  const badgeRotateAnim = useRef(new Animated.Value(0)).current;
+  const statsCardAnim = useRef(new Animated.Value(0)).current;
+
+  useEffect(() => {
+    // Pulse animation for badge
+    Animated.loop(
+      Animated.sequence([
+        Animated.timing(badgePulseAnim, {
+          toValue: 1.1,
+          duration: 2000,
+          easing: Easing.inOut(Easing.ease),
+          useNativeDriver: true,
+        }),
+        Animated.timing(badgePulseAnim, {
+          toValue: 1,
+          duration: 2000,
+          easing: Easing.inOut(Easing.ease),
+          useNativeDriver: true,
+        }),
+      ])
+    ).start();
+
+    // Rotate animation for badge
+    Animated.loop(
+      Animated.timing(badgeRotateAnim, {
+        toValue: 1,
+        duration: 20000,
+        easing: Easing.linear,
+        useNativeDriver: true,
+      })
+    ).start();
+  }, []);
+
+  useEffect(() => {
+    if (!loading) {
+      Animated.spring(statsCardAnim, {
+        toValue: 1,
+        tension: 20,
+        friction: 7,
+        useNativeDriver: true,
+      }).start();
+    }
+  }, [loading]);
 
   useEffect(() => {
     if (user && userId) {
@@ -450,26 +498,77 @@ export default function UserProfileScreen({ navigation, route }: Props) {
 
       {/* Rating Stats Card */}
       {ratingStats.totalRatings > 0 && (
-        <Card style={styles.statsCard}>
-          <Card.Content>
-            <Text style={styles.sectionTitle}>İstatistikler</Text>
-            <View style={styles.statsGrid}>
-              <View style={styles.statItem}>
-                <MaterialCommunityIcons name="star" size={32} color="#FFD700" />
-                <Text style={styles.statValue}>{ratingStats.averageRating.toFixed(1)}</Text>
-                <Text style={styles.statLabel}>Ortalama Puan</Text>
+        <Animated.View
+          style={{
+            opacity: statsCardAnim,
+            transform: [
+              {
+                scale: statsCardAnim.interpolate({
+                  inputRange: [0, 1],
+                  outputRange: [0.9, 1],
+                }),
+              },
+            ],
+          }}
+        >
+          <Surface style={styles.statsCard} elevation={3}>
+            <LinearGradient
+              colors={[theme.colors.primary + '08', theme.colors.primary + '03']}
+              start={{ x: 0, y: 0 }}
+              end={{ x: 1, y: 1 }}
+              style={styles.statsGradient}
+            >
+              <View style={styles.statsTitleRow}>
+                <MaterialCommunityIcons name="chart-box" size={24} color={theme.colors.primary} />
+                <Text style={[styles.sectionTitle, { marginBottom: 0 }]}>İstatistikler</Text>
               </View>
-              <View style={styles.statItem}>
-                <MaterialCommunityIcons name="account-star" size={32} color={theme.colors.primary} />
-                <Text style={styles.statValue}>{ratingStats.totalRatings}</Text>
-                <Text style={styles.statLabel}>Değerlendirme</Text>
+
+              <View style={styles.statsGrid}>
+                <Surface style={styles.statItem} elevation={1}>
+                  <LinearGradient
+                    colors={['#FFD70015', '#FFD70008']}
+                    start={{ x: 0, y: 0 }}
+                    end={{ x: 1, y: 1 }}
+                    style={styles.statGradient}
+                  >
+                    <View style={styles.statIconContainer}>
+                      <MaterialCommunityIcons name="star" size={36} color="#FFD700" />
+                    </View>
+                    <Text style={styles.statValue}>{ratingStats.averageRating.toFixed(1)}</Text>
+                    <Text style={styles.statLabel}>Ortalama</Text>
+                  </LinearGradient>
+                </Surface>
+
+                <Surface style={styles.statItem} elevation={1}>
+                  <LinearGradient
+                    colors={[theme.colors.primary + '15', theme.colors.primary + '08']}
+                    start={{ x: 0, y: 0 }}
+                    end={{ x: 1, y: 1 }}
+                    style={styles.statGradient}
+                  >
+                    <View style={styles.statIconContainer}>
+                      <MaterialCommunityIcons name="account-star" size={36} color={theme.colors.primary} />
+                    </View>
+                    <Text style={styles.statValue}>{ratingStats.totalRatings}</Text>
+                    <Text style={styles.statLabel}>Toplam</Text>
+                  </LinearGradient>
+                </Surface>
+
+                <Surface style={styles.statItem} elevation={1}>
+                  <LinearGradient
+                    colors={['#4CAF5015', '#4CAF5008']}
+                    start={{ x: 0, y: 0 }}
+                    end={{ x: 1, y: 1 }}
+                    style={styles.statGradient}
+                  >
+                    <View style={styles.statIconContainer}>
+                      <MaterialCommunityIcons name="thumb-up" size={36} color="#4CAF50" />
+                    </View>
+                    <Text style={styles.statValue}>{ratingStats.positiveReviewsCount}</Text>
+                    <Text style={styles.statLabel}>Olumlu</Text>
+                  </LinearGradient>
+                </Surface>
               </View>
-              <View style={styles.statItem}>
-                <MaterialCommunityIcons name="thumb-up" size={32} color="#4CAF50" />
-                <Text style={styles.statValue}>{ratingStats.positiveReviewsCount}</Text>
-                <Text style={styles.statLabel}>Olumlu Yorum</Text>
-              </View>
-            </View>
 
             {/* Rating Distribution */}
             <View style={styles.distributionContainer}>
@@ -496,48 +595,115 @@ export default function UserProfileScreen({ navigation, route }: Props) {
                 );
               })}
             </View>
-          </Card.Content>
-        </Card>
+            </LinearGradient>
+          </Surface>
+        </Animated.View>
       )}
 
       {/* Badges Card */}
       {ratingStats.positiveReviewsCount > 0 && (
-        <Card style={styles.badgesCard}>
-          <Card.Content>
-            <Text style={styles.sectionTitle}>Rozetler</Text>
+        <Surface style={styles.badgesCard} elevation={3}>
+          <LinearGradient
+            colors={[theme.colors.primary + '05', theme.colors.background]}
+            start={{ x: 0, y: 0 }}
+            end={{ x: 0, y: 1 }}
+            style={styles.badgesGradient}
+          >
+            <View style={styles.badgesTitleRow}>
+              <MaterialCommunityIcons name="trophy-award" size={24} color={theme.colors.primary} />
+              <Text style={[styles.sectionTitle, { marginBottom: 0 }]}>Rozetler</Text>
+            </View>
+
             <View style={styles.badgeContainer}>
               {(() => {
                 const badgeInfo = getBadgeLevel(ratingStats.positiveReviewsCount);
+                const rotate = badgeRotateAnim.interpolate({
+                  inputRange: [0, 1],
+                  outputRange: ['0deg', '360deg'],
+                });
+
                 return (
                   <View style={styles.mainBadge}>
-                    <View style={[styles.badgeCircle, { backgroundColor: badgeInfo.color }]}>
-                      <MaterialCommunityIcons
-                        name={badgeInfo.icon}
-                        size={48}
-                        color="#FFFFFF"
+                    {/* Glow effect background */}
+                    <Animated.View
+                      style={[
+                        styles.badgeGlowEffect,
+                        {
+                          backgroundColor: badgeInfo.color + '30',
+                          transform: [{ scale: badgePulseAnim }],
+                        },
+                      ]}
+                    />
+
+                    {/* Rotating border */}
+                    <Animated.View style={[styles.badgeRotatingBorder, { transform: [{ rotate }] }]}>
+                      <LinearGradient
+                        colors={[badgeInfo.color + '80', badgeInfo.color + '20', badgeInfo.color + '80']}
+                        start={{ x: 0, y: 0 }}
+                        end={{ x: 1, y: 1 }}
+                        style={styles.badgeRotatingGradient}
                       />
-                    </View>
+                    </Animated.View>
+
+                    {/* Badge Circle */}
+                    <Animated.View
+                      style={[
+                        styles.badgeCircle,
+                        { transform: [{ scale: badgePulseAnim }] },
+                      ]}
+                    >
+                      <LinearGradient
+                        colors={[badgeInfo.color, badgeInfo.color + 'DD']}
+                        start={{ x: 0, y: 0 }}
+                        end={{ x: 1, y: 1 }}
+                        style={styles.badgeGradient}
+                      >
+                        <MaterialCommunityIcons
+                          name={badgeInfo.icon}
+                          size={52}
+                          color="#FFFFFF"
+                          style={styles.badgeIcon}
+                        />
+                      </LinearGradient>
+                    </Animated.View>
+
                     <Text style={[styles.badgeTitle, { color: badgeInfo.color }]}>
                       {badgeInfo.level}
                     </Text>
-                    <Text style={styles.badgeSubtitle}>
-                      {ratingStats.positiveReviewsCount} Olumlu Değerlendirme
-                    </Text>
+                    <View style={styles.badgeSubtitleRow}>
+                      <MaterialCommunityIcons name="thumb-up" size={16} color={badgeInfo.color} />
+                      <Text style={[styles.badgeSubtitle, { color: badgeInfo.color + 'CC' }]}>
+                        {ratingStats.positiveReviewsCount} Olumlu Değerlendirme
+                      </Text>
+                    </View>
+
                     {badgeInfo.nextMilestone && (
                       <View style={styles.progressContainer}>
-                        <View style={styles.progressBar}>
-                          <View
-                            style={[
-                              styles.progressFill,
-                              {
-                                width: `${(ratingStats.positiveReviewsCount / badgeInfo.nextMilestone) * 100}%`,
-                                backgroundColor: badgeInfo.color
-                              }
-                            ]}
-                          />
+                        <View style={styles.progressBarContainer}>
+                          <LinearGradient
+                            colors={['#e0e0e0', '#f5f5f5']}
+                            start={{ x: 0, y: 0 }}
+                            end={{ x: 1, y: 0 }}
+                            style={styles.progressBar}
+                          >
+                            <LinearGradient
+                              colors={[badgeInfo.color, badgeInfo.color + 'CC']}
+                              start={{ x: 0, y: 0 }}
+                              end={{ x: 1, y: 0 }}
+                              style={[
+                                styles.progressFill,
+                                {
+                                  width: `${(ratingStats.positiveReviewsCount / badgeInfo.nextMilestone) * 100}%`,
+                                },
+                              ]}
+                            />
+                          </LinearGradient>
                         </View>
                         <Text style={styles.progressText}>
-                          Sonraki seviye için {badgeInfo.nextMilestone - ratingStats.positiveReviewsCount} olumlu değerlendirme daha
+                          <Text style={styles.progressTextBold}>
+                            {badgeInfo.nextMilestone - ratingStats.positiveReviewsCount}
+                          </Text>
+                          {' '}değerlendirme sonraki seviye!
                         </Text>
                       </View>
                     )}
@@ -550,36 +716,49 @@ export default function UserProfileScreen({ navigation, route }: Props) {
             {achievements.length > 0 && (
               <>
                 <Divider style={styles.achievementDivider} />
-                <Text style={styles.achievementTitle}>Kazanılan Başarılar</Text>
+                <View style={styles.achievementTitleRow}>
+                  <MaterialCommunityIcons name="medal" size={20} color={theme.colors.primary} />
+                  <Text style={styles.achievementTitle}>Kazanılan Başarılar</Text>
+                </View>
                 <View style={styles.achievementsGrid}>
                   {achievements.slice(0, 6).map((userAchievement) => {
                     const achievement = userAchievement.achievement;
                     if (!achievement) return null;
                     return (
-                      <View key={userAchievement.id} style={styles.achievementItem}>
-                        <View style={[styles.achievementIcon, { backgroundColor: achievement.color || theme.colors.primary }]}>
-                          <MaterialCommunityIcons
-                            name={achievement.icon || 'trophy'}
-                            size={24}
-                            color="#FFFFFF"
-                          />
-                        </View>
-                        <Text style={styles.achievementName} numberOfLines={2}>
-                          {achievement.name}
-                        </Text>
-                      </View>
+                      <Surface key={userAchievement.id} style={styles.achievementItem} elevation={1}>
+                        <LinearGradient
+                          colors={[achievement.color + '20' || theme.colors.primary + '20', achievement.color + '10' || theme.colors.primary + '10']}
+                          start={{ x: 0, y: 0 }}
+                          end={{ x: 1, y: 1 }}
+                          style={styles.achievementGradient}
+                        >
+                          <View style={[styles.achievementIcon, { backgroundColor: achievement.color || theme.colors.primary }]}>
+                            <MaterialCommunityIcons
+                              name={achievement.icon || 'trophy'}
+                              size={26}
+                              color="#FFFFFF"
+                            />
+                          </View>
+                          <Text style={styles.achievementName} numberOfLines={2}>
+                            {achievement.name}
+                          </Text>
+                        </LinearGradient>
+                      </Surface>
                     );
                   })}
                 </View>
                 {achievements.length > 6 && (
-                  <Text style={styles.moreAchievements}>
-                    +{achievements.length - 6} başarı daha
-                  </Text>
+                  <View style={styles.moreAchievementsContainer}>
+                    <MaterialCommunityIcons name="dots-horizontal" size={18} color={theme.colors.primary} />
+                    <Text style={[styles.moreAchievements, { color: theme.colors.primary }]}>
+                      +{achievements.length - 6} başarı daha
+                    </Text>
+                  </View>
                 )}
               </>
             )}
-          </Card.Content>
-        </Card>
+          </LinearGradient>
+        </Surface>
       )}
 
       {ratings.length > 0 && (
@@ -752,27 +931,49 @@ const styles = StyleSheet.create({
   statsCard: {
     margin: 15,
     marginTop: 0,
+    borderRadius: 20,
+    overflow: 'hidden',
+  },
+  statsGradient: {
+    padding: 20,
+  },
+  statsTitleRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 20,
+    gap: 8,
   },
   statsGrid: {
     flexDirection: 'row',
-    justifyContent: 'space-around',
-    marginBottom: 20,
+    justifyContent: 'space-between',
+    gap: 12,
   },
   statItem: {
-    alignItems: 'center',
     flex: 1,
+    borderRadius: 16,
+    overflow: 'hidden',
+  },
+  statGradient: {
+    alignItems: 'center',
+    padding: 16,
+    paddingVertical: 20,
+  },
+  statIconContainer: {
+    marginBottom: 8,
   },
   statValue: {
-    fontSize: 24,
+    fontSize: 28,
     fontWeight: 'bold',
     color: '#333',
-    marginTop: 8,
+    marginTop: 4,
+    letterSpacing: -0.5,
   },
   statLabel: {
     fontSize: 12,
     color: '#666',
     marginTop: 4,
     textAlign: 'center',
+    fontWeight: '600',
   },
   distributionContainer: {
     marginTop: 10,
@@ -815,97 +1016,174 @@ const styles = StyleSheet.create({
   badgesCard: {
     margin: 15,
     marginTop: 0,
+    borderRadius: 24,
+    overflow: 'hidden',
+  },
+  badgesGradient: {
+    padding: 20,
+  },
+  badgesTitleRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 24,
+    gap: 8,
   },
   badgeContainer: {
     alignItems: 'center',
-    paddingVertical: 10,
+    paddingVertical: 16,
   },
   mainBadge: {
     alignItems: 'center',
     width: '100%',
+    position: 'relative',
+  },
+  badgeGlowEffect: {
+    position: 'absolute',
+    width: 140,
+    height: 140,
+    borderRadius: 70,
+    top: 0,
+  },
+  badgeRotatingBorder: {
+    position: 'absolute',
+    width: 120,
+    height: 120,
+    borderRadius: 60,
+    top: 10,
+  },
+  badgeRotatingGradient: {
+    width: '100%',
+    height: '100%',
+    borderRadius: 60,
   },
   badgeCircle: {
-    width: 96,
-    height: 96,
-    borderRadius: 48,
+    width: 104,
+    height: 104,
+    borderRadius: 52,
+    overflow: 'hidden',
+    marginBottom: 16,
+    elevation: 8,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.3,
+    shadowRadius: 8,
+  },
+  badgeGradient: {
+    width: '100%',
+    height: '100%',
     justifyContent: 'center',
     alignItems: 'center',
-    marginBottom: 12,
-    elevation: 4,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.25,
-    shadowRadius: 3.84,
+  },
+  badgeIcon: {
+    textShadowColor: 'rgba(0, 0, 0, 0.3)',
+    textShadowOffset: { width: 0, height: 2 },
+    textShadowRadius: 4,
   },
   badgeTitle: {
-    fontSize: 22,
+    fontSize: 26,
     fontWeight: 'bold',
-    marginBottom: 4,
+    marginBottom: 8,
+    letterSpacing: 0.5,
+  },
+  badgeSubtitleRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    marginBottom: 20,
   },
   badgeSubtitle: {
-    fontSize: 14,
-    color: '#666',
-    marginBottom: 16,
+    fontSize: 15,
+    fontWeight: '600',
   },
   progressContainer: {
     width: '100%',
-    marginTop: 8,
+    marginTop: 4,
+    paddingHorizontal: 16,
+  },
+  progressBarContainer: {
+    marginBottom: 12,
   },
   progressBar: {
-    height: 8,
-    backgroundColor: '#e0e0e0',
-    borderRadius: 4,
+    height: 12,
+    borderRadius: 8,
     overflow: 'hidden',
-    marginBottom: 8,
   },
   progressFill: {
     height: '100%',
-    borderRadius: 4,
+    borderRadius: 8,
   },
   progressText: {
-    fontSize: 12,
+    fontSize: 13,
     color: '#666',
     textAlign: 'center',
+    lineHeight: 19,
+  },
+  progressTextBold: {
+    fontWeight: 'bold',
+    fontSize: 14,
+    color: '#333',
   },
   achievementDivider: {
-    marginVertical: 20,
+    marginVertical: 24,
+  },
+  achievementTitleRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 16,
+    gap: 6,
   },
   achievementTitle: {
     fontSize: 16,
     fontWeight: 'bold',
     color: '#333',
-    marginBottom: 12,
+    letterSpacing: 0.3,
   },
   achievementsGrid: {
     flexDirection: 'row',
     flexWrap: 'wrap',
     gap: 12,
-    justifyContent: 'space-between',
   },
   achievementItem: {
     width: '30%',
+    borderRadius: 16,
+    overflow: 'hidden',
+    marginBottom: 4,
+  },
+  achievementGradient: {
     alignItems: 'center',
-    marginBottom: 12,
+    padding: 12,
+    paddingVertical: 16,
   },
   achievementIcon: {
-    width: 56,
-    height: 56,
-    borderRadius: 28,
+    width: 54,
+    height: 54,
+    borderRadius: 27,
     justifyContent: 'center',
     alignItems: 'center',
-    marginBottom: 6,
+    marginBottom: 8,
+    elevation: 3,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.2,
+    shadowRadius: 3,
   },
   achievementName: {
     fontSize: 11,
     color: '#666',
     textAlign: 'center',
-    lineHeight: 14,
+    lineHeight: 15,
+    fontWeight: '600',
+  },
+  moreAchievementsContainer: {
+    flexDirection: 'row',
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginTop: 12,
+    gap: 6,
   },
   moreAchievements: {
     fontSize: 13,
-    color: '#666',
     textAlign: 'center',
-    marginTop: 8,
-    fontStyle: 'italic',
+    fontWeight: '600',
   },
 });
