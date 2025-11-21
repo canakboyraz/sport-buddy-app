@@ -11,6 +11,7 @@ import { RootStackParamList } from '../../navigation/AppNavigator';
 import { useAuth } from '../../hooks/useAuth';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import UserQuickActionsModal from '../../components/UserQuickActionsModal';
+import WeatherCard from '../../components/WeatherCard';
 import { scheduleSessionReminders, cancelSessionReminders, sendParticipantJoinedNotification } from '../../services/notificationService';
 import { getBadgeLevel } from '../../services/ratingService';
 import { useTheme } from '../../contexts/ThemeContext';
@@ -273,6 +274,19 @@ export default function SessionDetailScreen({ navigation, route }: Props) {
             <MaterialCommunityIcons name="star" size={20} color="#6200ee" />
             <Text style={styles.infoText}>Seviye: {session.skill_level}</Text>
           </View>
+
+          {/* Weather Forecast */}
+          {session.latitude && session.longitude && (
+            <>
+              <Divider style={styles.divider} />
+              <WeatherCard
+                latitude={session.latitude}
+                longitude={session.longitude}
+                sessionDate={new Date(session.session_date)}
+                compact={false}
+              />
+            </>
+          )}
 
           {session.description && (
             <>

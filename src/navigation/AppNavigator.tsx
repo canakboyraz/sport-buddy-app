@@ -18,6 +18,9 @@ import FriendsScreen from '../screens/Friends/FriendsScreen';
 import BlockedUsersScreen from '../screens/Blocked/BlockedUsersScreen';
 import ReportUserScreen from '../screens/Report/ReportUserScreen';
 import UserProfileScreen from '../screens/Profile/UserProfileScreen';
+import SettingsScreen from '../screens/Settings/SettingsScreen';
+import LanguageSelectionScreen from '../screens/Settings/LanguageSelectionScreen';
+import NotificationSettingsScreen from '../screens/Settings/NotificationSettingsScreen';
 
 export type MainTabParamList = {
   Home: undefined;
@@ -40,6 +43,9 @@ export type RootStackParamList = {
   BlockedUsers: undefined;
   ReportUser: { userId: string; userName: string };
   UserProfile: { userId: string };
+  Settings: undefined;
+  LanguageSelection: undefined;
+  NotificationSettings: undefined;
 };
 
 const MainTab = createBottomTabNavigator<MainTabParamList>();
@@ -179,6 +185,21 @@ export default function AppNavigator() {
         name="UserProfile"
         component={UserProfileScreen}
         options={{ title: 'Kullanıcı Profili' }}
+      />
+      <RootStack.Screen
+        name="Settings"
+        component={SettingsScreen}
+        options={{ title: 'Ayarlar' }}
+      />
+      <RootStack.Screen
+        name="LanguageSelection"
+        component={LanguageSelectionScreen}
+        options={{ title: 'Dil Seçimi' }}
+      />
+      <RootStack.Screen
+        name="NotificationSettings"
+        component={NotificationSettingsScreen}
+        options={{ title: 'Bildirim Ayarları' }}
       />
     </RootStack.Navigator>
   );

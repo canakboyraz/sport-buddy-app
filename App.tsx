@@ -14,6 +14,7 @@ import {
   addNotificationReceivedListener,
 } from './src/services/notificationService';
 import { ThemeProvider, useTheme } from './src/contexts/ThemeContext';
+import { LanguageProvider } from './src/contexts/LanguageContext';
 import ErrorBoundary from './src/components/ErrorBoundary';
 import './src/i18n'; // Initialize i18n
 import * as Sentry from '@sentry/react-native';
@@ -107,9 +108,11 @@ function App() {
   return (
     <ErrorBoundary>
       <SafeAreaProvider>
-        <ThemeProvider>
-          <AppContent />
-        </ThemeProvider>
+        <LanguageProvider>
+          <ThemeProvider>
+            <AppContent />
+          </ThemeProvider>
+        </LanguageProvider>
       </SafeAreaProvider>
     </ErrorBoundary>
   );

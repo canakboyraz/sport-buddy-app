@@ -256,6 +256,15 @@ export default function ProfileScreen() {
 
           <Button
             mode="outlined"
+            icon="cog"
+            onPress={() => navigation.navigate('Settings')}
+            style={styles.actionButton}
+          >
+            Ayarlar
+          </Button>
+
+          <Button
+            mode="outlined"
             icon="heart"
             onPress={() => navigation.navigate('Favorites')}
             style={styles.actionButton}
