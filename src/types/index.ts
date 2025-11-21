@@ -6,6 +6,9 @@ export interface Profile {
   bio?: string;
   avatar_url?: string;
   created_at: string;
+  average_rating?: number;
+  total_ratings?: number;
+  positive_reviews_count?: number;
 }
 
 export interface Sport {
@@ -60,8 +63,10 @@ export interface Rating {
   rater_user_id: string;
   rating: number;
   comment?: string;
+  is_positive?: boolean;
   created_at: string;
   rater?: Profile;
+  rated_user?: Profile;
 }
 
 export interface ExtendedMessage extends Message {

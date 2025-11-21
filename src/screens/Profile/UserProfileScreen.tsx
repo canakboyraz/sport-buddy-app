@@ -16,6 +16,10 @@ import { StackNavigationProp } from '@react-navigation/stack';
 import { RouteProp } from '@react-navigation/native';
 import { RootStackParamList } from '../../navigation/AppNavigator';
 import { friendService, FriendshipStatus } from '../../services/friendService';
+import { getBadgeLevel, getUserRatingStats } from '../../services/ratingService';
+import { getUserAchievements } from '../../services/achievementService';
+import { Achievement, UserAchievement } from '../../types';
+import { useTheme } from '../../contexts/ThemeContext';
 
 type Props = {
   navigation: StackNavigationProp<RootStackParamList, 'UserProfile'>;
@@ -49,12 +53,20 @@ interface Rating {
 export default function UserProfileScreen({ navigation, route }: Props) {
   const { userId } = route.params;
   const { user } = useAuth();
+  const { theme } = useTheme();
   const [loading, setLoading] = useState(true);
   const [profile, setProfile] = useState<Profile | null>(null);
   const [ratings, setRatings] = useState<Rating[]>([]);
   const [isBlocked, setIsBlocked] = useState(false);
   const [actionLoading, setActionLoading] = useState(false);
   const [friendshipStatus, setFriendshipStatus] = useState<FriendshipStatus | null>(null);
+  const [achievements, setAchievements] = useState<UserAchievement[]>([]);
+  const [ratingStats, setRatingStats] = useState({
+    averageRating: 0,
+    totalRatings: 0,
+    positiveReviewsCount: 0,
+    ratingDistribution: { 1: 0, 2: 0, 3: 0, 4: 0, 5: 0 },
+  });
 
   useEffect(() => {
     if (user && userId) {
@@ -92,13 +104,22 @@ export default function UserProfileScreen({ navigation, route }: Props) {
           rating,
           comment,
           created_at,
-          rater:profiles!ratings_rater_id_fkey(full_name, avatar_url)
+          is_positive,
+          rater:profiles!ratings_rater_user_id_fkey(full_name, avatar_url)
         `)
         .eq('rated_user_id', userId)
         .order('created_at', { ascending: false })
         .limit(10);
 
       setRatings(ratingsData || []);
+
+      // Get user achievements
+      const userAchievements = await getUserAchievements(userId);
+      setAchievements(userAchievements);
+
+      // Get rating statistics
+      const stats = await getUserRatingStats(userId);
+      setRatingStats(stats);
     } catch (error) {
       console.error('Error loading user profile:', error);
     }
@@ -427,6 +448,140 @@ export default function UserProfileScreen({ navigation, route }: Props) {
         </Card.Content>
       </Card>
 
+      {/* Rating Stats Card */}
+      {ratingStats.totalRatings > 0 && (
+        <Card style={styles.statsCard}>
+          <Card.Content>
+            <Text style={styles.sectionTitle}>İstatistikler</Text>
+            <View style={styles.statsGrid}>
+              <View style={styles.statItem}>
+                <MaterialCommunityIcons name="star" size={32} color="#FFD700" />
+                <Text style={styles.statValue}>{ratingStats.averageRating.toFixed(1)}</Text>
+                <Text style={styles.statLabel}>Ortalama Puan</Text>
+              </View>
+              <View style={styles.statItem}>
+                <MaterialCommunityIcons name="account-star" size={32} color={theme.colors.primary} />
+                <Text style={styles.statValue}>{ratingStats.totalRatings}</Text>
+                <Text style={styles.statLabel}>Değerlendirme</Text>
+              </View>
+              <View style={styles.statItem}>
+                <MaterialCommunityIcons name="thumb-up" size={32} color="#4CAF50" />
+                <Text style={styles.statValue}>{ratingStats.positiveReviewsCount}</Text>
+                <Text style={styles.statLabel}>Olumlu Yorum</Text>
+              </View>
+            </View>
+
+            {/* Rating Distribution */}
+            <View style={styles.distributionContainer}>
+              <Text style={styles.distributionTitle}>Puan Dağılımı</Text>
+              {[5, 4, 3, 2, 1].map((star) => {
+                const count = ratingStats.ratingDistribution[star] || 0;
+                const percentage = ratingStats.totalRatings > 0
+                  ? (count / ratingStats.totalRatings) * 100
+                  : 0;
+                return (
+                  <View key={star} style={styles.distributionRow}>
+                    <Text style={styles.starLabel}>{star}</Text>
+                    <MaterialCommunityIcons name="star" size={14} color="#FFD700" />
+                    <View style={styles.barContainer}>
+                      <View
+                        style={[
+                          styles.bar,
+                          { width: `${percentage}%`, backgroundColor: theme.colors.primary }
+                        ]}
+                      />
+                    </View>
+                    <Text style={styles.countLabel}>{count}</Text>
+                  </View>
+                );
+              })}
+            </View>
+          </Card.Content>
+        </Card>
+      )}
+
+      {/* Badges Card */}
+      {ratingStats.positiveReviewsCount > 0 && (
+        <Card style={styles.badgesCard}>
+          <Card.Content>
+            <Text style={styles.sectionTitle}>Rozetler</Text>
+            <View style={styles.badgeContainer}>
+              {(() => {
+                const badgeInfo = getBadgeLevel(ratingStats.positiveReviewsCount);
+                return (
+                  <View style={styles.mainBadge}>
+                    <View style={[styles.badgeCircle, { backgroundColor: badgeInfo.color }]}>
+                      <MaterialCommunityIcons
+                        name={badgeInfo.icon}
+                        size={48}
+                        color="#FFFFFF"
+                      />
+                    </View>
+                    <Text style={[styles.badgeTitle, { color: badgeInfo.color }]}>
+                      {badgeInfo.level}
+                    </Text>
+                    <Text style={styles.badgeSubtitle}>
+                      {ratingStats.positiveReviewsCount} Olumlu Değerlendirme
+                    </Text>
+                    {badgeInfo.nextMilestone && (
+                      <View style={styles.progressContainer}>
+                        <View style={styles.progressBar}>
+                          <View
+                            style={[
+                              styles.progressFill,
+                              {
+                                width: `${(ratingStats.positiveReviewsCount / badgeInfo.nextMilestone) * 100}%`,
+                                backgroundColor: badgeInfo.color
+                              }
+                            ]}
+                          />
+                        </View>
+                        <Text style={styles.progressText}>
+                          Sonraki seviye için {badgeInfo.nextMilestone - ratingStats.positiveReviewsCount} olumlu değerlendirme daha
+                        </Text>
+                      </View>
+                    )}
+                  </View>
+                );
+              })()}
+            </View>
+
+            {/* Other Achievements */}
+            {achievements.length > 0 && (
+              <>
+                <Divider style={styles.achievementDivider} />
+                <Text style={styles.achievementTitle}>Kazanılan Başarılar</Text>
+                <View style={styles.achievementsGrid}>
+                  {achievements.slice(0, 6).map((userAchievement) => {
+                    const achievement = userAchievement.achievement;
+                    if (!achievement) return null;
+                    return (
+                      <View key={userAchievement.id} style={styles.achievementItem}>
+                        <View style={[styles.achievementIcon, { backgroundColor: achievement.color || theme.colors.primary }]}>
+                          <MaterialCommunityIcons
+                            name={achievement.icon || 'trophy'}
+                            size={24}
+                            color="#FFFFFF"
+                          />
+                        </View>
+                        <Text style={styles.achievementName} numberOfLines={2}>
+                          {achievement.name}
+                        </Text>
+                      </View>
+                    );
+                  })}
+                </View>
+                {achievements.length > 6 && (
+                  <Text style={styles.moreAchievements}>
+                    +{achievements.length - 6} başarı daha
+                  </Text>
+                )}
+              </>
+            )}
+          </Card.Content>
+        </Card>
+      )}
+
       {ratings.length > 0 && (
         <Card style={styles.ratingsCard}>
           <Card.Content>
@@ -593,5 +748,164 @@ const styles = StyleSheet.create({
   },
   ratingDivider: {
     marginTop: 10,
+  },
+  statsCard: {
+    margin: 15,
+    marginTop: 0,
+  },
+  statsGrid: {
+    flexDirection: 'row',
+    justifyContent: 'space-around',
+    marginBottom: 20,
+  },
+  statItem: {
+    alignItems: 'center',
+    flex: 1,
+  },
+  statValue: {
+    fontSize: 24,
+    fontWeight: 'bold',
+    color: '#333',
+    marginTop: 8,
+  },
+  statLabel: {
+    fontSize: 12,
+    color: '#666',
+    marginTop: 4,
+    textAlign: 'center',
+  },
+  distributionContainer: {
+    marginTop: 10,
+  },
+  distributionTitle: {
+    fontSize: 14,
+    fontWeight: 'bold',
+    color: '#333',
+    marginBottom: 10,
+  },
+  distributionRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 8,
+  },
+  starLabel: {
+    fontSize: 14,
+    color: '#333',
+    width: 20,
+  },
+  barContainer: {
+    flex: 1,
+    height: 8,
+    backgroundColor: '#e0e0e0',
+    borderRadius: 4,
+    marginLeft: 8,
+    marginRight: 8,
+    overflow: 'hidden',
+  },
+  bar: {
+    height: '100%',
+    borderRadius: 4,
+  },
+  countLabel: {
+    fontSize: 12,
+    color: '#666',
+    width: 30,
+    textAlign: 'right',
+  },
+  badgesCard: {
+    margin: 15,
+    marginTop: 0,
+  },
+  badgeContainer: {
+    alignItems: 'center',
+    paddingVertical: 10,
+  },
+  mainBadge: {
+    alignItems: 'center',
+    width: '100%',
+  },
+  badgeCircle: {
+    width: 96,
+    height: 96,
+    borderRadius: 48,
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginBottom: 12,
+    elevation: 4,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.25,
+    shadowRadius: 3.84,
+  },
+  badgeTitle: {
+    fontSize: 22,
+    fontWeight: 'bold',
+    marginBottom: 4,
+  },
+  badgeSubtitle: {
+    fontSize: 14,
+    color: '#666',
+    marginBottom: 16,
+  },
+  progressContainer: {
+    width: '100%',
+    marginTop: 8,
+  },
+  progressBar: {
+    height: 8,
+    backgroundColor: '#e0e0e0',
+    borderRadius: 4,
+    overflow: 'hidden',
+    marginBottom: 8,
+  },
+  progressFill: {
+    height: '100%',
+    borderRadius: 4,
+  },
+  progressText: {
+    fontSize: 12,
+    color: '#666',
+    textAlign: 'center',
+  },
+  achievementDivider: {
+    marginVertical: 20,
+  },
+  achievementTitle: {
+    fontSize: 16,
+    fontWeight: 'bold',
+    color: '#333',
+    marginBottom: 12,
+  },
+  achievementsGrid: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 12,
+    justifyContent: 'space-between',
+  },
+  achievementItem: {
+    width: '30%',
+    alignItems: 'center',
+    marginBottom: 12,
+  },
+  achievementIcon: {
+    width: 56,
+    height: 56,
+    borderRadius: 28,
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginBottom: 6,
+  },
+  achievementName: {
+    fontSize: 11,
+    color: '#666',
+    textAlign: 'center',
+    lineHeight: 14,
+  },
+  moreAchievements: {
+    fontSize: 13,
+    color: '#666',
+    textAlign: 'center',
+    marginTop: 8,
+    fontStyle: 'italic',
   },
 });
