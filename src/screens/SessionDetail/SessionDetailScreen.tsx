@@ -51,37 +51,45 @@ export default function SessionDetailScreen({ navigation, route }: Props) {
   const loadSession = async () => {
     setLoading(true);
 
-    const { data, error } = await supabase
-      .from('sport_sessions')
-      .select(`
-        *,
-        creator:profiles!sport_sessions_creator_id_fkey(*),
-        sport:sports(*),
-        participants:session_participants(
-          id,
-          session_id,
-          user_id,
-          status,
-          user:profiles(
+    try {
+      const { data, error } = await supabase
+        .from('sport_sessions')
+        .select(`
+          *,
+          creator:profiles!sport_sessions_creator_id_fkey(*),
+          sport:sports(*),
+          participants:session_participants(
             id,
-            full_name,
-            avatar_url,
-            average_rating,
-            total_ratings,
-            positive_reviews_count
+            session_id,
+            user_id,
+            status,
+            user:profiles(
+              id,
+              full_name,
+              avatar_url,
+              average_rating,
+              total_ratings,
+              positive_reviews_count
+            )
           )
-        )
-      `)
-      .eq('id', sessionId)
-      .single();
+        `)
+        .eq('id', sessionId)
+        .single();
 
-    setLoading(false);
-
-    if (error) {
-      // TODO: Implement proper error logging service (e.g., Sentry)
+      if (error) {
+        console.error('[SessionDetail] Error loading session:', error);
+        console.error('[SessionDetail] Session ID:', sessionId);
+        Alert.alert('Hata', `Seans yüklenirken hata oluştu: ${error.message}`);
+        setSession(null);
+      } else if (data) {
+        console.log('[SessionDetail] Session loaded successfully:', data.id);
+        setSession(data as SportSession);
+      }
+    } catch (err) {
+      console.error('[SessionDetail] Unexpected error:', err);
       setSession(null);
-    } else if (data) {
-      setSession(data as SportSession);
+    } finally {
+      setLoading(false);
     }
   };
 
