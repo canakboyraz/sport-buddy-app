@@ -7,6 +7,7 @@ import { DateTimePickerAndroid } from '@react-native-community/datetimepicker';
 import DateTimePicker from '@react-native-community/datetimepicker';
 import * as Location from 'expo-location';
 import MapPicker from '../../components/MapPicker';
+import WeatherCard from '../../components/WeatherCard';
 import { useAuth } from '../../hooks/useAuth';
 import { format } from 'date-fns';
 import { tr } from 'date-fns/locale';
@@ -458,6 +459,16 @@ export default function CreateSessionScreen({ navigation }: any) {
         >
           {format(sessionDate, 'dd MMM yyyy, HH:mm', { locale: tr })}
         </Button>
+
+        {/* Weather Forecast */}
+        {latitude && longitude && (
+          <WeatherCard
+            latitude={latitude}
+            longitude={longitude}
+            sessionDate={sessionDate}
+            compact={false}
+          />
+        )}
 
         <TextInput
           label="Maksimum Katılımcı *"
