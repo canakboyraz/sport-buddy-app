@@ -148,6 +148,7 @@ export async function sendEventReminderNotification(
 /**
  * Schedule smart session reminders
  * Schedules notifications at 2 hours, 1 hour, and 30 minutes before session
+ * Also schedules a rating reminder 1 hour after session ends
  */
 export async function scheduleSessionReminders(
   sessionId: number,
@@ -162,6 +163,7 @@ export async function scheduleSessionReminders(
   const twoHoursBefore = new Date(sessionTime.getTime() - 2 * 60 * 60 * 1000);
   const oneHourBefore = new Date(sessionTime.getTime() - 60 * 60 * 1000);
   const thirtyMinsBefore = new Date(sessionTime.getTime() - 30 * 60 * 1000);
+  const oneHourAfter = new Date(sessionTime.getTime() + 60 * 60 * 1000);
 
   // Schedule 2 hours before reminder
   if (twoHoursBefore > now) {
@@ -200,6 +202,20 @@ export async function scheduleSessionReminders(
         priority: Notifications.AndroidNotificationPriority.HIGH,
       },
       trigger: thirtyMinsBefore,
+    });
+  }
+
+  // Schedule rating reminder 1 hour after session ends
+  if (oneHourAfter > now) {
+    await Notifications.scheduleNotificationAsync({
+      content: {
+        title: '⭐ Katılımcıları Değerlendir',
+        body: `"${sessionTitle}" seansı nasıl geçti? Katılımcıları değerlendirin!`,
+        data: { sessionId, type: 'rating_reminder' },
+        sound: true,
+        priority: Notifications.AndroidNotificationPriority.HIGH,
+      },
+      trigger: oneHourAfter,
     });
   }
 }

@@ -2,7 +2,6 @@ import React, { useEffect, useState } from 'react';
 import { View, StyleSheet } from 'react-native';
 import { Text, Surface, ActivityIndicator } from 'react-native-paper';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
-import { LinearGradient } from 'expo-linear-gradient';
 import { useTheme } from '../contexts/ThemeContext';
 import { useLanguage } from '../contexts/LanguageContext';
 import {
@@ -14,15 +13,21 @@ import {
   getTemperatureEmoji,
   getClothingRecommendation,
 } from '../services/weatherService';
+import {
+  formatCalorieEstimate,
+  getCalorieIntensityIcon,
+  getCalorieIntensityColor,
+} from '../services/calorieService';
 
 interface WeatherCardProps {
   latitude?: number;
   longitude?: number;
   sessionDate?: Date;
   compact?: boolean;
+  sportName?: string;
 }
 
-export default function WeatherCard({ latitude, longitude, sessionDate, compact = false }: WeatherCardProps) {
+export default function WeatherCard({ latitude, longitude, sessionDate, compact = false, sportName }: WeatherCardProps) {
   const { theme } = useTheme();
   const { t, currentLanguage } = useLanguage();
   const [weather, setWeather] = useState<WeatherData | null>(null);
@@ -102,13 +107,8 @@ export default function WeatherCard({ latitude, longitude, sessionDate, compact 
 
   if (compact) {
     return (
-      <Surface style={styles.compactCard} elevation={1}>
-        <LinearGradient
-          colors={[theme.colors.primary + '10', theme.colors.primary + '05']}
-          start={{ x: 0, y: 0 }}
-          end={{ x: 1, y: 1 }}
-          style={styles.compactGradient}
-        >
+      <Surface style={[styles.compactCard, { backgroundColor: theme.colors.surface }]} elevation={1}>
+        <View style={styles.compactGradient}>
           <View style={styles.compactContent}>
             <MaterialCommunityIcons name={iconName as any} size={32} color={theme.colors.primary} />
             <View style={styles.compactInfo}>
@@ -120,86 +120,68 @@ export default function WeatherCard({ latitude, longitude, sessionDate, compact 
               </Text>
             </View>
           </View>
-        </LinearGradient>
+        </View>
       </Surface>
     );
   }
 
   return (
-    <Surface style={styles.card} elevation={2}>
-      <LinearGradient
-        colors={[theme.colors.primary + '12', theme.colors.primary + '06']}
-        start={{ x: 0, y: 0 }}
-        end={{ x: 1, y: 1 }}
-        style={styles.gradient}
-      >
+    <Surface style={[styles.card, { backgroundColor: theme.colors.surface }]} elevation={1}>
+      <View style={styles.compactWeatherContainer}>
         {/* Header */}
-        <View style={styles.header}>
-          <View style={styles.headerLeft}>
-            <MaterialCommunityIcons name="weather-partly-cloudy" size={24} color={theme.colors.primary} />
-            <Text variant="titleMedium" style={[styles.title, { color: theme.colors.primary }]}>
-              {sessionDate ? t('weather.atSessionTime') : t('weather.current')}
-            </Text>
-          </View>
+        <View style={styles.compactHeader}>
+          <MaterialCommunityIcons name="weather-partly-cloudy" size={18} color={theme.colors.primary} />
+          <Text variant="titleSmall" style={[styles.compactTitle, { color: theme.colors.primary }]}>
+            {sessionDate ? t('weather.atSessionTime') : t('weather.current')}
+          </Text>
         </View>
 
-        {/* Main Weather Info */}
-        <View style={styles.mainInfo}>
-          <View style={[styles.iconContainer, { backgroundColor: theme.colors.primary + '20' }]}>
-            <MaterialCommunityIcons name={iconName as any} size={64} color={theme.colors.primary} />
-          </View>
+        {/* Main Weather Info - Compact */}
+        <View style={styles.compactMainInfo}>
+          <MaterialCommunityIcons name={iconName as any} size={40} color={theme.colors.primary} />
 
-          <View style={styles.tempContainer}>
-            <Text variant="displaySmall" style={[styles.mainTemp, { color: theme.colors.onSurface }]}>
+          <View style={styles.compactTempContainer}>
+            <Text variant="headlineSmall" style={[styles.compactTemp, { color: theme.colors.onSurface }]}>
               {weather.temperature}°C
             </Text>
-            <Text variant="titleMedium" style={[styles.description, { color: theme.colors.onSurfaceVariant }]}>
+            <Text variant="bodySmall" style={{ color: theme.colors.onSurfaceVariant }}>
               {temperatureEmoji} {weather.description}
             </Text>
           </View>
         </View>
 
-        {/* Weather Details */}
-        <View style={styles.detailsGrid}>
-          <View style={styles.detailItem}>
-            <MaterialCommunityIcons name="thermometer" size={20} color={theme.colors.primary} />
-            <Text variant="bodySmall" style={{ color: theme.colors.onSurfaceVariant, marginTop: 4 }}>
-              {t('weather.feelsLike')}
-            </Text>
-            <Text variant="titleSmall" style={{ color: theme.colors.onSurface, fontWeight: '600' }}>
+        {/* Weather Details - Compact Row */}
+        <View style={styles.compactDetailsRow}>
+          <View style={styles.compactDetailItem}>
+            <MaterialCommunityIcons name="thermometer" size={16} color={theme.colors.primary} />
+            <Text variant="bodySmall" style={{ color: theme.colors.onSurface, marginLeft: 4 }}>
               {weather.feelsLike}°C
             </Text>
           </View>
 
-          <View style={styles.detailItem}>
-            <MaterialCommunityIcons name="water-percent" size={20} color={theme.colors.primary} />
-            <Text variant="bodySmall" style={{ color: theme.colors.onSurfaceVariant, marginTop: 4 }}>
-              {t('weather.humidity')}
-            </Text>
-            <Text variant="titleSmall" style={{ color: theme.colors.onSurface, fontWeight: '600' }}>
+          <View style={styles.compactDetailItem}>
+            <MaterialCommunityIcons name="water-percent" size={16} color={theme.colors.primary} />
+            <Text variant="bodySmall" style={{ color: theme.colors.onSurface, marginLeft: 4 }}>
               {weather.humidity}%
             </Text>
           </View>
 
-          <View style={styles.detailItem}>
-            <MaterialCommunityIcons name="weather-windy" size={20} color={theme.colors.primary} />
-            <Text variant="bodySmall" style={{ color: theme.colors.onSurfaceVariant, marginTop: 4 }}>
-              {t('weather.wind')}
-            </Text>
-            <Text variant="titleSmall" style={{ color: theme.colors.onSurface, fontWeight: '600' }}>
+          <View style={styles.compactDetailItem}>
+            <MaterialCommunityIcons name="weather-windy" size={16} color={theme.colors.primary} />
+            <Text variant="bodySmall" style={{ color: theme.colors.onSurface, marginLeft: 4 }}>
               {weather.windSpeed} km/h
             </Text>
           </View>
         </View>
 
-        {/* Warnings */}
+        {/* Warnings - Compact */}
         {warnings.length > 0 && (
-          <View style={styles.warningsContainer}>
+          <View style={styles.compactWarningsContainer}>
             {warnings.map((warning, index) => (
               <View
                 key={index}
                 style={[
-                  styles.warningItem,
+                  styles.compactWarningItem,
                   {
                     backgroundColor:
                       warning.type === 'good'
@@ -210,13 +192,7 @@ export default function WeatherCard({ latitude, longitude, sessionDate, compact 
                   },
                 ]}
               >
-                <Text
-                  variant="bodyMedium"
-                  style={{
-                    color: theme.colors.onSurface,
-                    flex: 1,
-                  }}
-                >
+                <Text variant="bodySmall" style={{ color: theme.colors.onSurface }}>
                   {warning.message}
                 </Text>
               </View>
@@ -224,22 +200,35 @@ export default function WeatherCard({ latitude, longitude, sessionDate, compact 
           </View>
         )}
 
-        {/* Clothing Recommendation */}
-        <View style={[styles.recommendationContainer, { backgroundColor: theme.colors.primary + '10' }]}>
-          <MaterialCommunityIcons name="tshirt-crew" size={20} color={theme.colors.primary} />
-          <Text variant="bodySmall" style={{ color: theme.colors.onSurface, marginLeft: 8, flex: 1 }}>
-            <Text style={{ fontWeight: '600' }}>{t('weather.recommendedClothing')}: </Text>
+        {/* Clothing Recommendation - Compact */}
+        <View style={[styles.compactRecommendation, { backgroundColor: theme.colors.surfaceVariant }]}>
+          <MaterialCommunityIcons name="tshirt-crew" size={16} color={theme.colors.primary} />
+          <Text variant="bodySmall" style={{ color: theme.colors.onSurface, marginLeft: 6, flex: 1 }}>
             {clothingRecommendation}
           </Text>
         </View>
-      </LinearGradient>
+
+        {/* Calorie Estimate */}
+        {sportName && (
+          <View style={[styles.compactRecommendation, { backgroundColor: theme.colors.surfaceVariant }]}>
+            <MaterialCommunityIcons
+              name={getCalorieIntensityIcon(0) as any}
+              size={16}
+              color={getCalorieIntensityColor(400)}
+            />
+            <Text variant="bodySmall" style={{ color: theme.colors.onSurface, marginLeft: 6, flex: 1 }}>
+              {formatCalorieEstimate(sportName, currentLanguage)}
+            </Text>
+          </View>
+        )}
+      </View>
     </Surface>
   );
 }
 
 const styles = StyleSheet.create({
   card: {
-    borderRadius: 16,
+    borderRadius: 12,
     overflow: 'hidden',
     marginVertical: 8,
   },
@@ -247,9 +236,6 @@ const styles = StyleSheet.create({
     borderRadius: 12,
     overflow: 'hidden',
     marginVertical: 8,
-  },
-  gradient: {
-    padding: 20,
   },
   compactGradient: {
     padding: 12,
@@ -266,69 +252,6 @@ const styles = StyleSheet.create({
     padding: 16,
     justifyContent: 'center',
   },
-  header: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    marginBottom: 16,
-  },
-  headerLeft: {
-    flexDirection: 'row',
-    alignItems: 'center',
-  },
-  title: {
-    marginLeft: 8,
-    fontWeight: '700',
-  },
-  mainInfo: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginBottom: 20,
-  },
-  iconContainer: {
-    width: 100,
-    height: 100,
-    borderRadius: 20,
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginRight: 16,
-  },
-  tempContainer: {
-    flex: 1,
-  },
-  mainTemp: {
-    fontWeight: 'bold',
-    marginBottom: 4,
-  },
-  description: {
-    textTransform: 'capitalize',
-  },
-  detailsGrid: {
-    flexDirection: 'row',
-    justifyContent: 'space-around',
-    marginBottom: 16,
-  },
-  detailItem: {
-    alignItems: 'center',
-    flex: 1,
-  },
-  warningsContainer: {
-    marginTop: 8,
-    gap: 8,
-  },
-  warningItem: {
-    padding: 12,
-    borderRadius: 8,
-    flexDirection: 'row',
-    alignItems: 'center',
-  },
-  recommendationContainer: {
-    marginTop: 12,
-    padding: 12,
-    borderRadius: 8,
-    flexDirection: 'row',
-    alignItems: 'center',
-  },
   compactContent: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -339,5 +262,55 @@ const styles = StyleSheet.create({
   },
   temperature: {
     fontWeight: '700',
+  },
+  // New compact weather container styles
+  compactWeatherContainer: {
+    padding: 12,
+  },
+  compactHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 8,
+  },
+  compactTitle: {
+    marginLeft: 6,
+    fontWeight: '600',
+  },
+  compactMainInfo: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 10,
+  },
+  compactTempContainer: {
+    marginLeft: 12,
+    flex: 1,
+  },
+  compactTemp: {
+    fontWeight: '700',
+  },
+  compactDetailsRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-around',
+    marginBottom: 8,
+    paddingVertical: 6,
+  },
+  compactDetailItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  compactWarningsContainer: {
+    marginTop: 6,
+    gap: 6,
+  },
+  compactWarningItem: {
+    padding: 8,
+    borderRadius: 6,
+  },
+  compactRecommendation: {
+    marginTop: 8,
+    padding: 8,
+    borderRadius: 6,
+    flexDirection: 'row',
+    alignItems: 'center',
   },
 });

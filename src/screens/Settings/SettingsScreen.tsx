@@ -100,18 +100,21 @@ export default function SettingsScreen() {
     <ScrollView style={[styles.container, { backgroundColor: theme.colors.background }]}>
       <View style={styles.content}>
         {/* Header Card */}
-        <Surface style={styles.headerCard} elevation={2}>
+        <Surface style={styles.headerCard} elevation={3}>
           <LinearGradient
-            colors={[theme.colors.primary + '15', theme.colors.primary + '05']}
+            colors={isDarkMode ? ['#6200ee', '#9c27b0'] : ['#6200ee', '#9c27b0']}
             start={{ x: 0, y: 0 }}
             end={{ x: 1, y: 1 }}
             style={styles.headerGradient}
           >
-            <View style={[styles.iconCircle, { backgroundColor: theme.colors.primary + '20' }]}>
-              <MaterialCommunityIcons name="cog" size={48} color={theme.colors.primary} />
+            <View style={styles.iconCircle}>
+              <MaterialCommunityIcons name="cog" size={56} color="white" />
             </View>
-            <Text variant="headlineSmall" style={styles.headerTitle}>
+            <Text variant="headlineMedium" style={styles.headerTitle}>
               {t('settings.title')}
+            </Text>
+            <Text variant="bodyMedium" style={styles.headerSubtitle}>
+              Tercihlerinizi yönetin
             </Text>
           </LinearGradient>
         </Surface>
@@ -119,11 +122,11 @@ export default function SettingsScreen() {
         {/* Settings Sections */}
         {settingsSections.map((section, sectionIndex) => (
           <View key={sectionIndex} style={styles.section}>
-            <Text variant="titleSmall" style={[styles.sectionTitle, { color: theme.colors.primary }]}>
+            <Text variant="titleSmall" style={[styles.sectionTitle, { color: theme.colors.onSurface }]}>
               {section.title}
             </Text>
 
-            <Surface style={styles.sectionCard} elevation={1}>
+            <Surface style={styles.sectionCard} elevation={2}>
               {section.items.map((item, itemIndex) => (
                 <React.Fragment key={itemIndex}>
                   {itemIndex > 0 && <Divider />}
@@ -172,15 +175,15 @@ function SettingItem({
     <TouchableOpacity onPress={onPress} activeOpacity={0.7}>
       <View style={styles.settingRow}>
         <View style={styles.settingLeft}>
-          <View style={[styles.settingIconContainer, { backgroundColor: theme.colors.primary + '15' }]}>
-            <MaterialCommunityIcons name={icon as any} size={24} color={theme.colors.primary} />
+          <View style={[styles.settingIconContainer, { backgroundColor: theme.colors.primaryContainer }]}>
+            <MaterialCommunityIcons name={icon as any} size={26} color={theme.colors.primary} />
           </View>
           <View style={styles.settingTextContainer}>
             <Text variant="bodyLarge" style={[styles.settingTitle, { color: theme.colors.onSurface }]}>
               {title}
             </Text>
             {subtitle && (
-              <Text variant="bodySmall" style={{ color: theme.colors.onSurfaceVariant }}>
+              <Text variant="bodyMedium" style={[styles.settingSubtitle, { color: theme.colors.onSurfaceVariant }]}>
                 {subtitle}
               </Text>
             )}
@@ -207,39 +210,50 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   content: {
-    padding: 20,
+    padding: 16,
   },
   headerCard: {
     borderRadius: 20,
-    marginBottom: 24,
+    marginBottom: 20,
     overflow: 'hidden',
   },
   headerGradient: {
-    padding: 30,
+    padding: 36,
     alignItems: 'center',
   },
   iconCircle: {
-    width: 100,
-    height: 100,
-    borderRadius: 50,
+    width: 110,
+    height: 110,
+    borderRadius: 55,
+    backgroundColor: 'rgba(255, 255, 255, 0.2)',
     alignItems: 'center',
     justifyContent: 'center',
     marginBottom: 16,
   },
   headerTitle: {
-    fontWeight: 'bold',
+    fontWeight: '700',
+    textAlign: 'center',
+    color: 'white',
+    marginBottom: 4,
+  },
+  headerSubtitle: {
+    color: 'rgba(255, 255, 255, 0.9)',
     textAlign: 'center',
   },
   section: {
-    marginBottom: 24,
+    marginBottom: 20,
   },
   sectionTitle: {
     fontWeight: '700',
-    marginBottom: 12,
-    marginLeft: 4,
+    marginBottom: 10,
+    marginLeft: 6,
+    textTransform: 'uppercase',
+    letterSpacing: 0.5,
+    fontSize: 13,
+    opacity: 0.7,
   },
   sectionCard: {
-    borderRadius: 12,
+    borderRadius: 16,
     overflow: 'hidden',
   },
   settingRow: {
@@ -247,6 +261,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'space-between',
     padding: 16,
+    minHeight: 72,
   },
   settingLeft: {
     flexDirection: 'row',
@@ -254,18 +269,22 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   settingIconContainer: {
-    width: 40,
-    height: 40,
-    borderRadius: 10,
+    width: 48,
+    height: 48,
+    borderRadius: 12,
     alignItems: 'center',
     justifyContent: 'center',
-    marginRight: 12,
+    marginRight: 14,
   },
   settingTextContainer: {
     flex: 1,
   },
   settingTitle: {
-    fontWeight: '500',
+    fontWeight: '600',
+    marginBottom: 2,
+  },
+  settingSubtitle: {
+    fontSize: 14,
   },
   settingRight: {
     marginLeft: 12,

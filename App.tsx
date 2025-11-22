@@ -1,5 +1,5 @@
 import React, { useEffect, useState, useRef } from 'react';
-import { NavigationContainer } from '@react-navigation/native';
+import { NavigationContainer, NavigationContainerRef } from '@react-navigation/native';
 import { Provider as PaperProvider } from 'react-native-paper';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import AppNavigator from './src/navigation/AppNavigator';
@@ -42,6 +42,7 @@ function AppContent() {
   const [loading, setLoading] = useState(true);
   const notificationListener = useRef<any>();
   const responseListener = useRef<any>();
+  const navigationRef = useRef<NavigationContainerRef<any>>(null);
   const { theme } = useTheme();
 
   useEffect(() => {
@@ -71,11 +72,31 @@ function AppContent() {
 
       // Bildirim dinleyicilerini ekle
       notificationListener.current = addNotificationReceivedListener(notification => {
-        // TODO: Handle notification received (e.g., update badge count)
+        console.log('Notification received:', notification);
       });
 
       responseListener.current = addNotificationResponseListener(response => {
-        // TODO: Handle notification tap - navigate to relevant screen
+        // Bildirime tıklandığında ilgili ekrana yönlendir
+        const notificationData = response.notification.request.content.data;
+
+        if (notificationData?.sessionId && navigationRef.current?.isReady()) {
+          // Bildirim türüne göre yönlendirme yap
+          if (notificationData.type === 'rating_reminder' ||
+              notificationData.type === 'session_reminder' ||
+              notificationData.type === 'join_request' ||
+              notificationData.type === 'join_approved' ||
+              notificationData.type === 'participant_joined') {
+            // Seans detay sayfasına git
+            navigationRef.current.navigate('SessionDetail', {
+              sessionId: notificationData.sessionId
+            });
+          } else if (notificationData.type === 'new_message') {
+            // Chat sayfasına git
+            navigationRef.current.navigate('Chat', {
+              sessionId: notificationData.sessionId
+            });
+          }
+        }
       });
 
       return () => {
@@ -96,7 +117,7 @@ function AppContent() {
   return (
     <ErrorBoundary>
       <PaperProvider theme={theme}>
-        <NavigationContainer theme={theme}>
+        <NavigationContainer ref={navigationRef} theme={theme}>
           {session ? <AppNavigator /> : <AuthNavigator />}
         </NavigationContainer>
       </PaperProvider>

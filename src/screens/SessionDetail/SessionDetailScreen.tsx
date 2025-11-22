@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { View, ScrollView, StyleSheet, Alert, Platform, Linking, TouchableOpacity } from 'react-native';
 import { Card, Text, Button, Avatar, Chip, ActivityIndicator, Divider, Portal, Modal } from 'react-native-paper';
+import { LinearGradient } from 'expo-linear-gradient';
 import { supabase } from '../../services/supabase';
 import { SportSession, SessionParticipant } from '../../types';
 import { format } from 'date-fns';
@@ -12,9 +13,10 @@ import { useAuth } from '../../hooks/useAuth';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import UserQuickActionsModal from '../../components/UserQuickActionsModal';
 import WeatherCard from '../../components/WeatherCard';
-import { scheduleSessionReminders, cancelSessionReminders, sendParticipantJoinedNotification } from '../../services/notificationService';
+import { scheduleSessionReminders, cancelSessionReminders, sendParticipantJoinedNotification, scheduleLocalNotification } from '../../services/notificationService';
 import { getBadgeLevel } from '../../services/ratingService';
 import { useTheme } from '../../contexts/ThemeContext';
+import { getSkillLevelLabel } from '../../utils/skillLevelUtils';
 
 let MapView: any = null;
 let Marker: any = null;
@@ -43,6 +45,7 @@ export default function SessionDetailScreen({ navigation, route }: Props) {
   const [mapVisible, setMapVisible] = useState(false);
   const [quickActionsVisible, setQuickActionsVisible] = useState(false);
   const [selectedUser, setSelectedUser] = useState<{ id: string; name: string } | null>(null);
+  const [myRatings, setMyRatings] = useState<{ [userId: string]: { rating: number; comment: string | null } }>({});
 
   useEffect(() => {
     loadSession();
@@ -56,7 +59,18 @@ export default function SessionDetailScreen({ navigation, route }: Props) {
         .from('sport_sessions')
         .select(`
           *,
-          creator:profiles!sport_sessions_creator_id_fkey(*),
+          creator:profiles!sport_sessions_creator_id_fkey(
+            id,
+            email,
+            full_name,
+            phone,
+            bio,
+            avatar_url,
+            created_at,
+            average_rating,
+            total_ratings,
+            positive_reviews_count
+          ),
           sport:sports(*),
           participants:session_participants(
             id,
@@ -65,6 +79,7 @@ export default function SessionDetailScreen({ navigation, route }: Props) {
             status,
             user:profiles(
               id,
+              email,
               full_name,
               avatar_url,
               average_rating,
@@ -83,7 +98,28 @@ export default function SessionDetailScreen({ navigation, route }: Props) {
         setSession(null);
       } else if (data) {
         console.log('[SessionDetail] Session loaded successfully:', data.id);
+        console.log('[SessionDetail] Creator data:', data.creator);
         setSession(data as SportSession);
+
+        // Load user's ratings for this session
+        if (user) {
+          const { data: ratingsData } = await supabase
+            .from('ratings')
+            .select('rated_user_id, rating, comment')
+            .eq('session_id', sessionId)
+            .eq('rater_id', user.id);
+
+          if (ratingsData) {
+            const ratingsMap: { [userId: string]: { rating: number; comment: string | null } } = {};
+            ratingsData.forEach((r: any) => {
+              ratingsMap[r.rated_user_id] = {
+                rating: r.rating,
+                comment: r.comment,
+              };
+            });
+            setMyRatings(ratingsMap);
+          }
+        }
       }
     } catch (err) {
       console.error('[SessionDetail] Unexpected error:', err);
@@ -109,6 +145,38 @@ export default function SessionDetailScreen({ navigation, route }: Props) {
     if (error) {
       Alert.alert('Hata', error.message);
     } else {
+      // Send notification to session creator
+      try {
+        // Only send notification if current user is NOT the creator
+        if (session.creator_id !== user.id) {
+          const { data: currentUserProfile } = await supabase
+            .from('profiles')
+            .select('full_name, email')
+            .eq('id', user.id)
+            .single();
+
+          const participantName = currentUserProfile?.full_name || currentUserProfile?.email || 'Bir kullanıcı';
+
+          // Note: This sends a local notification to the device that runs this code
+          // In a production app, you should use push notifications via a backend service
+          // to notify the session creator on their device
+          await scheduleLocalNotification(
+            '🔔 Yeni Katılım Talebi',
+            `${participantName} "${session.title}" seansına katılmak istiyor`,
+            {
+              type: 'join_request',
+              sessionId: session.id,
+              userId: user.id,
+              creatorId: session.creator_id,
+            },
+            0 // Immediate notification
+          );
+        }
+      } catch (notifError) {
+        console.error('Notification error:', notifError);
+        // Don't block the join request if notification fails
+      }
+
       Alert.alert('Başarılı', 'Katılım talebiniz gönderildi!');
       loadSession();
     }
@@ -150,17 +218,33 @@ export default function SessionDetailScreen({ navigation, route }: Props) {
         }
       }
 
-      // Notify session creator about new participant
+      // Notify the participant that their request was approved
       if (session && participant && participant.user_id !== user?.id) {
         try {
           const participantName = (participant as any).user?.full_name || 'Bir kullanıcı';
+
+          // Send approval notification to participant
+          // Note: This is a local notification and won't reach the participant's device
+          // In production, use push notifications via a backend service
+          await scheduleLocalNotification(
+            '✅ Katılım Onaylandı',
+            `"${session.title}" seansına katılımınız onaylandı!`,
+            {
+              type: 'join_approved',
+              sessionId: session.id,
+              participantId: participant.user_id,
+            },
+            0
+          );
+
+          // Also notify session creator about new participant joining
           await sendParticipantJoinedNotification(
             session.title,
             participantName,
             session.id
           );
         } catch (err) {
-          console.error('[SessionDetail] Failed to send participant notification:', err);
+          console.error('[SessionDetail] Failed to send notifications:', err);
         }
       }
 
@@ -197,15 +281,15 @@ export default function SessionDetailScreen({ navigation, route }: Props) {
     }
   };
 
-  const handleUserClick = (userId: string, userName: string) => {
+  const handleUserClick = (userId: string, userName?: string) => {
     if (userId === user?.id) return; // Don't show modal for current user
 
-    if (!userName || userName === 'Kullanıcı') {
+    if (!userId) {
       Alert.alert('Hata', 'Kullanıcı bilgileri yüklenemedi');
       return;
     }
 
-    setSelectedUser({ id: userId, name: userName });
+    setSelectedUser({ id: userId, name: userName || 'Kullanıcı' });
     setQuickActionsVisible(true);
   };
 
@@ -233,55 +317,76 @@ export default function SessionDetailScreen({ navigation, route }: Props) {
   const isPast = new Date(session.session_date) < new Date();
 
   return (
-    <ScrollView style={styles.container}>
-      <Card style={styles.card}>
-        <Card.Content>
+    <ScrollView style={[styles.container, { backgroundColor: theme.colors.background }]}>
+      <Card style={styles.card} mode="elevated">
+        {/* Modern Gradient Header */}
+        <LinearGradient
+          colors={
+            theme.dark
+              ? [theme.colors.primaryContainer, theme.colors.secondaryContainer]
+              : ['#6200ee', '#9c27b0']
+          }
+          start={{ x: 0, y: 0 }}
+          end={{ x: 1, y: 0 }}
+          style={styles.headerGradient}
+        >
           <Text style={styles.title}>{session.title}</Text>
+          <View style={styles.headerBadges}>
+            <Chip icon="soccer" textStyle={styles.headerChipText} style={styles.headerChip}>
+              {session.sport?.name}
+            </Chip>
+            <Chip icon="star" textStyle={styles.headerChipText} style={styles.headerChip}>
+              {getSkillLevelLabel(session.skill_level)}
+            </Chip>
+          </View>
+        </LinearGradient>
 
-          <View style={styles.infoRow}>
-            <MaterialCommunityIcons name="soccer" size={20} color="#6200ee" />
-            <Text style={styles.infoText}>{session.sport?.name}</Text>
+        <Card.Content style={styles.cardContent}>
+          {/* Compact Info Grid */}
+          <View style={styles.infoGrid}>
+            <View style={[styles.infoBox, { backgroundColor: theme.colors.primaryContainer + '40' }]}>
+              <MaterialCommunityIcons name="calendar-clock" size={18} color={theme.colors.primary} />
+              <Text style={[styles.infoBoxLabel, { color: theme.colors.onSurfaceVariant }]}>Tarih & Saat</Text>
+              <Text style={[styles.infoBoxValue, { color: theme.colors.onSurface }]}>
+                {format(new Date(session.session_date), 'd MMM yyyy', { locale: tr })}
+              </Text>
+              <Text style={[styles.infoBoxSubvalue, { color: theme.colors.onSurfaceVariant }]}>
+                {format(new Date(session.session_date), 'HH:mm', { locale: tr })}
+              </Text>
+            </View>
+
+            <View style={[styles.infoBox, { backgroundColor: theme.colors.secondaryContainer + '40' }]}>
+              <MaterialCommunityIcons name="account-multiple" size={18} color={theme.colors.primary} />
+              <Text style={[styles.infoBoxLabel, { color: theme.colors.onSurfaceVariant }]}>Katılımcı</Text>
+              <Text style={[styles.infoBoxValue, { color: theme.colors.onSurface }]}>
+                {approvedParticipants.length}/{session.max_participants}
+              </Text>
+              <Text style={[styles.infoBoxSubvalue, { color: theme.colors.onSurfaceVariant }]}>
+                {isFull ? 'DOLU' : 'Müsait'}
+              </Text>
+            </View>
           </View>
 
+          {/* Location */}
           <TouchableOpacity
-            style={styles.infoRow}
+            style={[styles.locationCard, { backgroundColor: theme.colors.surfaceVariant }]}
             onPress={handleLocationPress}
             disabled={!session.latitude || !session.longitude}
           >
-            <MaterialCommunityIcons name="map-marker" size={20} color="#6200ee" />
-            <Text style={[styles.infoText, (session.latitude && session.longitude) && styles.linkText]}>
-              {session.location}
-            </Text>
+            <MaterialCommunityIcons name="map-marker" size={20} color={theme.colors.primary} />
+            <View style={styles.locationTextContainer}>
+              <Text style={[styles.locationLabel, { color: theme.colors.onSurfaceVariant }]}>Konum</Text>
+              <Text style={[styles.locationText, { color: theme.colors.onSurface }]} numberOfLines={2}>
+                {session.location}
+              </Text>
+              {session.city && (
+                <Text style={[styles.cityText, { color: theme.colors.onSurfaceVariant }]}>{session.city}</Text>
+              )}
+            </View>
             {session.latitude && session.longitude && (
-              <MaterialCommunityIcons name="open-in-new" size={16} color="#6200ee" style={styles.openIcon} />
+              <MaterialCommunityIcons name="chevron-right" size={20} color={theme.colors.primary} />
             )}
           </TouchableOpacity>
-
-          {session.city && (
-            <View style={styles.infoRow}>
-              <MaterialCommunityIcons name="city" size={20} color="#6200ee" />
-              <Text style={styles.infoText}>{session.city}</Text>
-            </View>
-          )}
-
-          <View style={styles.infoRow}>
-            <MaterialCommunityIcons name="calendar" size={20} color="#6200ee" />
-            <Text style={styles.infoText}>
-              {format(new Date(session.session_date), 'dd MMMM yyyy, HH:mm', { locale: tr })}
-            </Text>
-          </View>
-
-          <View style={styles.infoRow}>
-            <MaterialCommunityIcons name="account-multiple" size={20} color="#6200ee" />
-            <Text style={styles.infoText}>
-              {approvedParticipants.length}/{session.max_participants} katılımcı
-            </Text>
-          </View>
-
-          <View style={styles.infoRow}>
-            <MaterialCommunityIcons name="star" size={20} color="#6200ee" />
-            <Text style={styles.infoText}>Seviye: {session.skill_level}</Text>
-          </View>
 
           {/* Weather Forecast */}
           {session.latitude && session.longitude && (
@@ -292,6 +397,7 @@ export default function SessionDetailScreen({ navigation, route }: Props) {
                 longitude={session.longitude}
                 sessionDate={new Date(session.session_date)}
                 compact={false}
+                sportName={session.sport?.name}
               />
             </>
           )}
@@ -308,10 +414,14 @@ export default function SessionDetailScreen({ navigation, route }: Props) {
           <Text style={styles.creatorLabel}>Oluşturan:</Text>
           <TouchableOpacity
             style={styles.creatorRow}
-            onPress={() => handleUserClick(session.creator_id, session.creator?.full_name || 'Kullanıcı')}
+            onPress={() => handleUserClick(session.creator_id, session.creator?.full_name)}
           >
-            <Avatar.Text size={40} label={session.creator?.full_name?.charAt(0) || 'U'} />
-            <Text style={styles.creatorName}>{session.creator?.full_name}</Text>
+            {session.creator?.avatar_url ? (
+              <Avatar.Image size={40} source={{ uri: session.creator.avatar_url }} />
+            ) : (
+              <Avatar.Text size={40} label={session.creator?.full_name?.charAt(0) || 'U'} />
+            )}
+            <Text style={styles.creatorName}>{session.creator?.full_name || session.creator?.email || 'Oluşturan'}</Text>
           </TouchableOpacity>
         </Card.Content>
       </Card>
@@ -370,17 +480,23 @@ export default function SessionDetailScreen({ navigation, route }: Props) {
             const totalRatings = userProfile?.total_ratings || 0;
             const positiveReviews = userProfile?.positive_reviews_count || 0;
             const badgeInfo = getBadgeLevel(positiveReviews);
+            const displayName = participant.user?.full_name || participant.user?.email || 'Katılımcı';
+            const avatarLabel = (participant.user?.full_name || participant.user?.email || 'U').charAt(0).toUpperCase();
 
             return (
               <View key={participant.id} style={styles.participantRow}>
                 <TouchableOpacity
                   style={styles.participantInfo}
-                  onPress={() => handleUserClick(participant.user_id, participant.user?.full_name || 'Kullanıcı')}
+                  onPress={() => handleUserClick(participant.user_id, displayName)}
                 >
-                  <Avatar.Text size={40} label={participant.user?.full_name?.charAt(0) || 'U'} />
+                  {participant.user?.avatar_url ? (
+                    <Avatar.Image size={40} source={{ uri: participant.user.avatar_url }} />
+                  ) : (
+                    <Avatar.Text size={40} label={avatarLabel} />
+                  )}
                   <View style={styles.participantDetails}>
                     <View style={styles.participantNameRow}>
-                      <Text style={styles.participantName}>{participant.user?.full_name}</Text>
+                      <Text style={styles.participantName}>{displayName}</Text>
                       {positiveReviews >= 3 && (
                         <MaterialCommunityIcons
                           name={badgeInfo.icon}
@@ -406,19 +522,44 @@ export default function SessionDetailScreen({ navigation, route }: Props) {
                   </View>
                 </TouchableOpacity>
                 {isPast && participant.user_id !== user?.id && userParticipant?.status === 'approved' && (
-                  <Button
-                    mode="outlined"
-                    compact
-                    onPress={() =>
-                      navigation.navigate('RateUser', {
-                        sessionId: session.id,
-                        userId: participant.user_id,
-                        userName: participant.user?.full_name || 'Kullanıcı',
-                      })
-                    }
-                  >
-                    Değerlendir
-                  </Button>
+                  myRatings[participant.user_id] ? (
+                    <View style={styles.ratedBadgeContainer}>
+                      <Chip
+                        icon="check-circle"
+                        mode="flat"
+                        style={[styles.ratedChip, { backgroundColor: theme.colors.primaryContainer }]}
+                        textStyle={{ color: theme.colors.primary, fontSize: 12, fontWeight: '600' }}
+                      >
+                        Değerlendirildi
+                      </Chip>
+                      <View style={styles.ratingStarsSmall}>
+                        {[1, 2, 3, 4, 5].map((star) => (
+                          <MaterialCommunityIcons
+                            key={star}
+                            name={star <= myRatings[participant.user_id].rating ? 'star' : 'star-outline'}
+                            size={14}
+                            color="#FFD700"
+                          />
+                        ))}
+                      </View>
+                    </View>
+                  ) : (
+                    <Button
+                      mode="contained"
+                      compact
+                      icon="star"
+                      style={styles.rateButton}
+                      onPress={() =>
+                        navigation.navigate('RateUser', {
+                          sessionId: session.id,
+                          userId: participant.user_id,
+                          userName: displayName,
+                        })
+                      }
+                    >
+                      Değerlendir
+                    </Button>
+                  )
                 )}
               </View>
             );
@@ -431,11 +572,8 @@ export default function SessionDetailScreen({ navigation, route }: Props) {
           <Card.Content>
             <Text style={styles.sectionTitle}>Bekleyen Talepler ({pendingParticipants.length})</Text>
             {pendingParticipants.map((participant) => {
-              const userName = participant.user?.full_name || 'Kullanıcı';
-              const userInitial = userName.charAt(0).toUpperCase();
-
-              console.log('Pending participant:', participant);
-              console.log('User data:', participant.user);
+              const userName = participant.user?.full_name || participant.user?.email || 'Katılımcı';
+              const userInitial = (participant.user?.full_name || participant.user?.email || 'U').charAt(0).toUpperCase();
 
               return (
                 <View key={participant.id} style={styles.participantRow}>
@@ -443,7 +581,11 @@ export default function SessionDetailScreen({ navigation, route }: Props) {
                     style={styles.participantInfo}
                     onPress={() => handleUserClick(participant.user_id, userName)}
                   >
-                    <Avatar.Text size={36} label={userInitial} />
+                    {participant.user?.avatar_url ? (
+                      <Avatar.Image size={36} source={{ uri: participant.user.avatar_url }} />
+                    ) : (
+                      <Avatar.Text size={36} label={userInitial} />
+                    )}
                     <Text style={styles.participantName}>{userName}</Text>
                   </TouchableOpacity>
                   <View style={styles.actionButtons}>
@@ -517,8 +659,8 @@ export default function SessionDetailScreen({ navigation, route }: Props) {
           userId={selectedUser.id}
           userName={selectedUser.name}
           onNavigateToProfile={() => {
-            // TODO: Navigate to user profile screen when implemented
-            Alert.alert('Profil', `${selectedUser.name} profili görüntüleniyor...`);
+            setQuickActionsVisible(false);
+            navigation.navigate('ProfileDetail', { userId: selectedUser.id });
           }}
           onNavigateToReport={() => {
             // TODO: Navigate to report screen when implemented
@@ -533,7 +675,6 @@ export default function SessionDetailScreen({ navigation, route }: Props) {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#f5f5f5',
   },
   loadingContainer: {
     flex: 1,
@@ -541,38 +682,100 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   card: {
-    margin: 15,
+    margin: 10,
+    borderRadius: 12,
+    overflow: 'hidden',
+  },
+  headerGradient: {
+    padding: 16,
+    paddingTop: 20,
   },
   title: {
-    fontSize: 24,
-    fontWeight: 'bold',
-    marginBottom: 15,
-  },
-  infoRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
+    fontSize: 22,
+    fontWeight: '700',
+    color: 'white',
     marginBottom: 10,
   },
-  infoText: {
-    fontSize: 16,
+  headerBadges: {
+    flexDirection: 'row',
+    gap: 8,
+  },
+  headerChip: {
+    backgroundColor: 'rgba(255, 255, 255, 0.25)',
+  },
+  headerChipText: {
+    color: 'white',
+    fontSize: 12,
+    fontWeight: '600',
+  },
+  cardContent: {
+    paddingTop: 12,
+  },
+  infoGrid: {
+    flexDirection: 'row',
+    gap: 10,
+    marginBottom: 12,
+  },
+  infoBox: {
+    flex: 1,
+    padding: 12,
+    borderRadius: 10,
+    alignItems: 'center',
+  },
+  infoBoxLabel: {
+    fontSize: 11,
+    marginTop: 6,
+    fontWeight: '500',
+  },
+  infoBoxValue: {
+    fontSize: 14,
+    fontWeight: '700',
+    marginTop: 4,
+    textAlign: 'center',
+  },
+  infoBoxSubvalue: {
+    fontSize: 10,
+    marginTop: 2,
+  },
+  locationCard: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    padding: 12,
+    borderRadius: 10,
+    marginBottom: 12,
+  },
+  locationTextContainer: {
+    flex: 1,
     marginLeft: 10,
-    color: '#333',
+  },
+  locationLabel: {
+    fontSize: 11,
+    fontWeight: '500',
+  },
+  locationText: {
+    fontSize: 14,
+    fontWeight: '600',
+    marginTop: 2,
+  },
+  cityText: {
+    fontSize: 11,
+    marginTop: 2,
   },
   divider: {
-    marginVertical: 15,
+    marginVertical: 12,
   },
   descriptionLabel: {
-    fontSize: 16,
-    fontWeight: 'bold',
-    marginBottom: 5,
+    fontSize: 14,
+    fontWeight: '700',
+    marginBottom: 6,
   },
   description: {
-    fontSize: 16,
-    color: '#666',
+    fontSize: 14,
+    lineHeight: 20,
   },
   creatorLabel: {
-    fontSize: 16,
-    fontWeight: 'bold',
+    fontSize: 14,
+    fontWeight: '700',
     marginBottom: 10,
   },
   creatorRow: {
@@ -580,31 +783,34 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   creatorName: {
-    fontSize: 16,
+    fontSize: 15,
     marginLeft: 10,
+    fontWeight: '500',
   },
   joinButton: {
-    marginHorizontal: 15,
-    marginTop: 10,
+    marginHorizontal: 10,
+    marginTop: 8,
+    borderRadius: 10,
   },
   chatButton: {
-    marginHorizontal: 15,
-    marginTop: 10,
+    marginHorizontal: 10,
+    marginTop: 8,
+    borderRadius: 10,
   },
   statusChip: {
     alignSelf: 'center',
-    marginTop: 15,
+    marginTop: 12,
   },
   sectionTitle: {
-    fontSize: 18,
-    fontWeight: 'bold',
-    marginBottom: 15,
+    fontSize: 16,
+    fontWeight: '700',
+    marginBottom: 12,
   },
   participantRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    marginBottom: 12,
-    paddingVertical: 4,
+    marginBottom: 10,
+    paddingVertical: 3,
   },
   participantInfo: {
     flexDirection: 'row',
@@ -613,7 +819,7 @@ const styles = StyleSheet.create({
   },
   participantDetails: {
     flex: 1,
-    marginLeft: 12,
+    marginLeft: 10,
   },
   participantNameRow: {
     flexDirection: 'row',
@@ -621,12 +827,11 @@ const styles = StyleSheet.create({
     marginBottom: 2,
   },
   participantName: {
-    fontSize: 16,
-    fontWeight: '500',
-    color: '#333',
+    fontSize: 15,
+    fontWeight: '600',
   },
   badgeIcon: {
-    marginLeft: 6,
+    marginLeft: 5,
   },
   ratingRow: {
     flexDirection: 'row',
@@ -634,14 +839,13 @@ const styles = StyleSheet.create({
     marginTop: 2,
   },
   ratingText: {
-    fontSize: 13,
-    color: '#666',
+    fontSize: 12,
     marginLeft: 3,
   },
   badgeText: {
-    fontSize: 12,
+    fontSize: 11,
     fontWeight: '600',
-    marginLeft: 6,
+    marginLeft: 5,
   },
   actionButtons: {
     flexDirection: 'row',
@@ -649,6 +853,21 @@ const styles = StyleSheet.create({
   },
   approveButton: {
     marginRight: 5,
+    borderRadius: 8,
+  },
+  ratedBadgeContainer: {
+    alignItems: 'flex-end',
+    gap: 6,
+  },
+  ratedChip: {
+    height: 28,
+  },
+  ratingStarsSmall: {
+    flexDirection: 'row',
+    gap: 2,
+  },
+  rateButton: {
+    borderRadius: 8,
   },
   linkText: {
     color: '#6200ee',

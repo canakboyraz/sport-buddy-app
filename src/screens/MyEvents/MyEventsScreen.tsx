@@ -1,6 +1,7 @@
 import React, { useEffect, useState, useCallback } from 'react';
 import { View, FlatList, StyleSheet, RefreshControl } from 'react-native';
 import { Card, Text, Chip, ActivityIndicator, SegmentedButtons, useTheme } from 'react-native-paper';
+import { LinearGradient } from 'expo-linear-gradient';
 import { supabase } from '../../services/supabase';
 import { SportSession } from '../../types';
 import { format } from 'date-fns';
@@ -8,6 +9,7 @@ import { tr } from 'date-fns/locale';
 import { useAuth } from '../../hooks/useAuth';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { useFocusEffect } from '@react-navigation/native';
+import { getSkillLevelLabel } from '../../utils/skillLevelUtils';
 
 export default function MyEventsScreen({ navigation }: any) {
   const { user } = useAuth();
@@ -57,7 +59,18 @@ export default function MyEventsScreen({ navigation }: any) {
         .from('sport_sessions')
         .select(`
           *,
-          creator:profiles!sport_sessions_creator_id_fkey(*),
+          creator:profiles!sport_sessions_creator_id_fkey(
+            id,
+            email,
+            full_name,
+            phone,
+            bio,
+            avatar_url,
+            created_at,
+            average_rating,
+            total_ratings,
+            positive_reviews_count
+          ),
           sport:sports(*),
           participants:session_participants(*)
         `)
@@ -97,60 +110,75 @@ export default function MyEventsScreen({ navigation }: any) {
 
     return (
       <Card style={styles.card} mode="elevated" onPress={() => navigation.navigate('SessionDetail', { sessionId: item.id })}>
-        <Card.Content>
-          <View style={styles.cardHeader}>
-            <Text style={[styles.title, { color: theme.colors.onSurface }]} numberOfLines={1}>{item.title}</Text>
-            <Chip icon="account-multiple" style={styles.chip} compact>
-              {participantCount}/{item.max_participants}
-            </Chip>
+        {/* Gradient Header */}
+        <LinearGradient
+          colors={
+            theme.dark
+              ? [theme.colors.primaryContainer, theme.colors.secondaryContainer]
+              : ['#6200ee', '#9c27b0']
+          }
+          start={{ x: 0, y: 0 }}
+          end={{ x: 1, y: 0 }}
+          style={styles.gradientHeader}
+        >
+          <View style={styles.headerRow}>
+            <Text style={styles.cardTitle} numberOfLines={1}>{item.title}</Text>
+            <View style={styles.participantBadge}>
+              <MaterialCommunityIcons name="account-multiple" size={14} color="white" />
+              <Text style={styles.participantCount}>
+                {participantCount}/{item.max_participants}
+              </Text>
+            </View>
           </View>
 
+          {/* Status Badges */}
           <View style={styles.badges}>
             {isCreator && (
-              <Chip icon="crown" style={[styles.creatorChip, { backgroundColor: theme.colors.primaryContainer }]} textStyle={[styles.creatorChipText, { color: theme.colors.onPrimaryContainer }]} compact>
-                Oluşturduğum
-              </Chip>
+              <View style={styles.statusBadge}>
+                <MaterialCommunityIcons name="crown" size={10} color="white" />
+                <Text style={styles.badgeText}>Oluşturduğum</Text>
+              </View>
             )}
             {!isCreator && (
-              <Chip icon="account-check" style={[styles.participantChip, { backgroundColor: theme.colors.secondaryContainer }]} textStyle={[styles.participantChipText, { color: theme.colors.onSecondaryContainer }]} compact>
-                Katıldığım
-              </Chip>
+              <View style={[styles.statusBadge, { backgroundColor: 'rgba(255, 255, 255, 0.2)' }]}>
+                <MaterialCommunityIcons name="account-check" size={10} color="white" />
+                <Text style={styles.badgeText}>Katıldığım</Text>
+              </View>
             )}
             {isFull && !isPast && (
-              <Chip icon="close-circle" style={[styles.fullChip, { backgroundColor: theme.colors.errorContainer }]} textStyle={[styles.fullChipText, { color: theme.colors.onErrorContainer }]} compact>
-                Dolu
-              </Chip>
+              <View style={[styles.statusBadge, { backgroundColor: '#F44336' }]}>
+                <MaterialCommunityIcons name="close-circle" size={10} color="white" />
+                <Text style={styles.badgeText}>Dolu</Text>
+              </View>
             )}
             {isPast && (
-              <Chip icon="clock-outline" style={[styles.pastChip, { backgroundColor: theme.colors.surfaceVariant }]} textStyle={[styles.pastChipText, { color: theme.colors.onSurfaceVariant }]} compact>
-                Geçmiş
-              </Chip>
+              <View style={[styles.statusBadge, { backgroundColor: 'rgba(255, 255, 255, 0.15)' }]}>
+                <MaterialCommunityIcons name="clock-outline" size={10} color="white" />
+                <Text style={styles.badgeText}>Geçmiş</Text>
+              </View>
             )}
           </View>
+        </LinearGradient>
 
+        {/* Card Content */}
+        <Card.Content style={styles.cardContent}>
           <View style={styles.infoRow}>
-            <MaterialCommunityIcons name="soccer" size={18} color={theme.colors.primary} />
-            <Text style={[styles.infoText, { color: theme.colors.onSurfaceVariant }]}>{item.sport?.name}</Text>
+            <MaterialCommunityIcons name="soccer" size={16} color={theme.colors.primary} />
+            <Text style={[styles.infoText, { color: theme.colors.onSurface }]}>{item.sport?.name}</Text>
+            <Text style={[styles.skillLevel, { color: theme.colors.onSurfaceVariant }]}>• {getSkillLevelLabel(item.skill_level)}</Text>
           </View>
 
           <View style={styles.infoRow}>
-            <MaterialCommunityIcons name="calendar" size={18} color={theme.colors.primary} />
-            <Text style={[styles.infoText, { color: theme.colors.onSurfaceVariant }]}>
+            <MaterialCommunityIcons name="calendar-clock" size={16} color={theme.colors.primary} />
+            <Text style={[styles.infoText, { color: theme.colors.onSurface }]}>
               {format(new Date(item.session_date), 'dd MMM yyyy, HH:mm', { locale: tr })}
             </Text>
           </View>
 
           <View style={styles.infoRow}>
-            <MaterialCommunityIcons name="map-marker" size={18} color={theme.colors.primary} />
-            <Text style={[styles.infoText, { color: theme.colors.onSurfaceVariant }]} numberOfLines={1}>
+            <MaterialCommunityIcons name="map-marker-outline" size={16} color={theme.colors.primary} />
+            <Text style={[styles.infoText, { color: theme.colors.onSurface }]} numberOfLines={1}>
               {item.city ? `${item.city} - ${item.location}` : item.location}
-            </Text>
-          </View>
-
-          <View style={styles.infoRow}>
-            <MaterialCommunityIcons name="star" size={18} color={theme.colors.primary} />
-            <Text style={[styles.infoText, { color: theme.colors.onSurfaceVariant }]}>
-              {item.skill_level} • {item.status}
             </Text>
           </View>
         </Card.Content>
@@ -218,59 +246,77 @@ const styles = StyleSheet.create({
   },
   card: {
     marginBottom: 10,
+    borderRadius: 12,
+    overflow: 'hidden',
   },
-  cardHeader: {
+  gradientHeader: {
+    padding: 10,
+    paddingBottom: 8,
+  },
+  headerRow: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
     marginBottom: 6,
   },
-  title: {
+  cardTitle: {
     fontSize: 16,
-    fontWeight: 'bold',
+    fontWeight: '700',
+    color: 'white',
     flex: 1,
     marginRight: 8,
   },
-  chip: {
-    marginLeft: 10,
+  participantBadge: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: 'rgba(255, 255, 255, 0.25)',
+    paddingHorizontal: 8,
+    paddingVertical: 3,
+    borderRadius: 12,
+    gap: 4,
+  },
+  participantCount: {
+    color: 'white',
+    fontSize: 12,
+    fontWeight: '600',
   },
   badges: {
     flexDirection: 'row',
     flexWrap: 'wrap',
-    marginBottom: 8,
     gap: 5,
   },
-  creatorChip: {
+  statusBadge: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: 'rgba(255, 255, 255, 0.25)',
+    paddingHorizontal: 6,
+    paddingVertical: 2,
+    borderRadius: 8,
+    gap: 3,
   },
-  creatorChipText: {
-    fontWeight: 'bold',
-    fontSize: 12,
+  badgeText: {
+    color: 'white',
+    fontSize: 10,
+    fontWeight: '600',
   },
-  participantChip: {
-  },
-  participantChipText: {
-    fontWeight: 'bold',
-    fontSize: 12,
-  },
-  fullChip: {
-  },
-  fullChipText: {
-    fontSize: 12,
-  },
-  pastChip: {
-  },
-  pastChipText: {
-    fontSize: 12,
+  cardContent: {
+    paddingTop: 8,
+    paddingBottom: 8,
   },
   infoRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    marginBottom: 4,
+    marginBottom: 6,
+    gap: 6,
   },
   infoText: {
     fontSize: 13,
-    marginLeft: 8,
+    fontWeight: '500',
     flex: 1,
+  },
+  skillLevel: {
+    fontSize: 12,
+    fontWeight: '500',
   },
   emptyContainer: {
     padding: 20,

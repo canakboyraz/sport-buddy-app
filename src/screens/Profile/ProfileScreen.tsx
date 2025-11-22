@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { View, ScrollView, StyleSheet, Alert, TouchableOpacity, ActionSheetIOS, Platform } from 'react-native';
-import { Card, Text, Button, Avatar, Divider, ActivityIndicator, Switch, Menu, useTheme as usePaperTheme } from 'react-native-paper';
+import { Card, Text, Button, Avatar, Divider, ActivityIndicator, Switch, Menu, useTheme as usePaperTheme, List, Surface } from 'react-native-paper';
+import { LinearGradient } from 'expo-linear-gradient';
 import { supabase } from '../../services/supabase';
 import { Profile, Rating } from '../../types';
 import { useAuth } from '../../hooks/useAuth';
@@ -159,14 +160,24 @@ export default function ProfileScreen() {
   return (
     <ScrollView style={[styles.container, { backgroundColor: theme.colors.background }]}>
       <Card style={styles.card}>
-        <Card.Content>
+        {/* Gradient Header */}
+        <LinearGradient
+          colors={
+            isDarkMode
+              ? [theme.colors.primaryContainer, theme.colors.secondaryContainer]
+              : ['#6200ee', '#9c27b0']
+          }
+          start={{ x: 0, y: 0 }}
+          end={{ x: 1, y: 0 }}
+          style={styles.gradientHeader}
+        >
           <View style={styles.header}>
             <View>
               <TouchableOpacity onPress={handlePhotoSelection} disabled={uploadingPhoto}>
                 {profile.avatar_url ? (
-                  <Avatar.Image size={80} source={{ uri: profile.avatar_url }} />
+                  <Avatar.Image size={90} source={{ uri: profile.avatar_url }} style={styles.avatar} />
                 ) : (
-                  <Avatar.Text size={80} label={profile.full_name?.charAt(0) || 'U'} />
+                  <Avatar.Text size={90} label={profile.full_name?.charAt(0) || 'U'} style={styles.avatar} />
                 )}
                 {uploadingPhoto && (
                   <View style={styles.uploadingOverlay}>
@@ -184,119 +195,127 @@ export default function ProfileScreen() {
             </View>
 
             <View style={styles.headerInfo}>
-              <Text style={[styles.name, { color: theme.colors.onSurface }]}>{profile.full_name}</Text>
-              <Text style={[styles.email, { color: theme.colors.onSurfaceVariant }]}>{profile.email}</Text>
-              {profile.phone && <Text style={[styles.phone, { color: theme.colors.onSurfaceVariant }]}>{profile.phone}</Text>}
+              <Text style={styles.name}>{profile.full_name}</Text>
+              <Text style={styles.email}>{profile.email}</Text>
+              {profile.phone && <Text style={styles.phone}>{profile.phone}</Text>}
+
+              {/* Rating Badge */}
+              {ratings.length > 0 && (
+                <View style={styles.ratingBadge}>
+                  <MaterialCommunityIcons name="star" size={16} color="#FFD700" />
+                  <Text style={styles.ratingBadgeText}>
+                    {averageRating.toFixed(1)} ({ratings.length})
+                  </Text>
+                </View>
+              )}
             </View>
           </View>
+        </LinearGradient>
 
-          {ratings.length > 0 && (
-            <View style={[styles.ratingContainer, { backgroundColor: theme.dark ? theme.colors.surfaceVariant : '#fff9e6' }]}>
-              <MaterialCommunityIcons name="star" size={24} color="#FFD700" />
-              <Text style={[styles.ratingText, { color: theme.colors.onSurface }]}>
-                {averageRating.toFixed(1)} ({ratings.length} değerlendirme)
-              </Text>
-            </View>
-          )}
-
+        <Card.Content style={styles.cardContent}>
           {profile.bio && (
             <>
-              <Divider style={styles.divider} />
-              <Text style={[styles.bioLabel, { color: theme.colors.onSurface }]}>Hakkında:</Text>
+              <Text style={[styles.bioLabel, { color: theme.colors.onSurface }]}>Hakkında</Text>
               <Text style={[styles.bio, { color: theme.colors.onSurfaceVariant }]}>{profile.bio}</Text>
+              <Divider style={styles.divider} />
             </>
           )}
 
-          <Divider style={styles.divider} />
+          {/* Hızlı Erişim Butonları */}
+          <View style={styles.quickActions}>
+            <TouchableOpacity
+              style={[styles.quickActionButton, { backgroundColor: theme.colors.primaryContainer }]}
+              onPress={() => navigation.navigate('EditProfile')}
+            >
+              <MaterialCommunityIcons name="pencil" size={24} color={theme.colors.primary} />
+              <Text style={[styles.quickActionText, { color: theme.colors.onSurface }]}>Düzenle</Text>
+            </TouchableOpacity>
 
-          <Button
-            mode="outlined"
-            icon="pencil"
-            onPress={() => navigation.navigate('EditProfile')}
-            style={styles.actionButton}
-          >
-            Profili Düzenle
-          </Button>
+            <TouchableOpacity
+              style={[styles.quickActionButton, { backgroundColor: theme.colors.secondaryContainer }]}
+              onPress={() => navigation.navigate('CreateSession')}
+            >
+              <MaterialCommunityIcons name="plus-circle" size={24} color={theme.colors.secondary} />
+              <Text style={[styles.quickActionText, { color: theme.colors.onSurface }]}>Yeni Seans</Text>
+            </TouchableOpacity>
 
-          <Button
-            mode="outlined"
-            icon="chart-box"
-            onPress={() => navigation.navigate('ProfileStats')}
-            style={styles.actionButton}
-          >
-            İstatistiklerim
-          </Button>
-
-          <Button
-            mode="outlined"
-            icon="trophy"
-            onPress={() => navigation.navigate('Achievements')}
-            style={styles.actionButton}
-          >
-            Başarılarım
-          </Button>
-
-          <Button
-            mode="outlined"
-            icon="account-multiple"
-            onPress={() => navigation.navigate('Friends')}
-            style={styles.actionButton}
-          >
-            Arkadaşlarım
-          </Button>
-
-          <Button
-            mode="outlined"
-            icon="account-off"
-            onPress={() => navigation.navigate('BlockedUsers')}
-            style={styles.actionButton}
-          >
-            Engellenenler
-          </Button>
-
-          <Button
-            mode="outlined"
-            icon="cog"
-            onPress={() => navigation.navigate('Settings')}
-            style={styles.actionButton}
-          >
-            Ayarlar
-          </Button>
-
-          <Button
-            mode="outlined"
-            icon="heart"
-            onPress={() => navigation.navigate('Favorites')}
-            style={styles.actionButton}
-          >
-            Favorilerim
-          </Button>
-
-          <Button
-            mode="contained"
-            icon="plus-circle"
-            onPress={() => navigation.navigate('CreateSession')}
-            style={styles.actionButton}
-          >
-            Yeni Seans Oluştur
-          </Button>
-
-          <Divider style={styles.divider} />
-
-          <View style={styles.settingsRow}>
-            <View style={styles.settingItem}>
-              <MaterialCommunityIcons
-                name={isDarkMode ? "weather-night" : "weather-sunny"}
-                size={24}
-                color={theme.colors.primary}
-              />
-              <Text style={[styles.settingLabel, { color: theme.colors.onSurface }]}>Koyu Tema</Text>
-            </View>
-            <Switch value={isDarkMode} onValueChange={toggleTheme} />
+            <TouchableOpacity
+              style={[styles.quickActionButton, { backgroundColor: theme.colors.tertiaryContainer }]}
+              onPress={() => navigation.navigate('Favorites')}
+            >
+              <MaterialCommunityIcons name="heart" size={24} color={theme.colors.tertiary} />
+              <Text style={[styles.quickActionText, { color: theme.colors.onSurface }]}>Favoriler</Text>
+            </TouchableOpacity>
           </View>
         </Card.Content>
       </Card>
 
+      {/* İstatistikler & Başarılar */}
+      <Surface style={[styles.menuCard, { backgroundColor: theme.colors.surface }]} elevation={1}>
+        <Text style={[styles.menuTitle, { color: theme.colors.onSurface }]}>İstatistikler & Başarılar</Text>
+        <List.Item
+          title="İstatistiklerim"
+          description="Aktivite geçmişini gör"
+          left={props => <List.Icon {...props} icon="chart-box" color={theme.colors.primary} />}
+          right={props => <List.Icon {...props} icon="chevron-right" />}
+          onPress={() => navigation.navigate('ProfileStats')}
+          style={styles.menuItem}
+        />
+        <Divider />
+        <List.Item
+          title="Başarılarım"
+          description="Kazandığın rozetleri keşfet"
+          left={props => <List.Icon {...props} icon="trophy" color="#FFD700" />}
+          right={props => <List.Icon {...props} icon="chevron-right" />}
+          onPress={() => navigation.navigate('Achievements')}
+          style={styles.menuItem}
+        />
+      </Surface>
+
+      {/* Sosyal */}
+      <Surface style={[styles.menuCard, { backgroundColor: theme.colors.surface }]} elevation={1}>
+        <Text style={[styles.menuTitle, { color: theme.colors.onSurface }]}>Sosyal</Text>
+        <List.Item
+          title="Arkadaşlarım"
+          description="Arkadaş listeni yönet"
+          left={props => <List.Icon {...props} icon="account-multiple" color={theme.colors.primary} />}
+          right={props => <List.Icon {...props} icon="chevron-right" />}
+          onPress={() => navigation.navigate('Friends')}
+          style={styles.menuItem}
+        />
+        <Divider />
+        <List.Item
+          title="Engellenenler"
+          description="Engellenen kullanıcılar"
+          left={props => <List.Icon {...props} icon="account-off" color="#F44336" />}
+          right={props => <List.Icon {...props} icon="chevron-right" />}
+          onPress={() => navigation.navigate('BlockedUsers')}
+          style={styles.menuItem}
+        />
+      </Surface>
+
+      {/* Ayarlar */}
+      <Surface style={[styles.menuCard, { backgroundColor: theme.colors.surface }]} elevation={1}>
+        <Text style={[styles.menuTitle, { color: theme.colors.onSurface }]}>Ayarlar</Text>
+        <List.Item
+          title="Koyu Tema"
+          description={isDarkMode ? "Açık" : "Kapalı"}
+          left={props => <List.Icon {...props} icon={isDarkMode ? "weather-night" : "weather-sunny"} color={theme.colors.primary} />}
+          right={() => <Switch value={isDarkMode} onValueChange={toggleTheme} />}
+          style={styles.menuItem}
+        />
+        <Divider />
+        <List.Item
+          title="Genel Ayarlar"
+          description="Uygulama tercihlerini düzenle"
+          left={props => <List.Icon {...props} icon="cog" color={theme.colors.primary} />}
+          right={props => <List.Icon {...props} icon="chevron-right" />}
+          onPress={() => navigation.navigate('Settings')}
+          style={styles.menuItem}
+        />
+      </Surface>
+
+      {/* Değerlendirmeler */}
       {ratings.length > 0 && (
         <Card style={styles.card}>
           <Card.Content>
@@ -373,38 +392,68 @@ const styles = StyleSheet.create({
   },
   card: {
     margin: 15,
+    borderRadius: 16,
+    overflow: 'hidden',
+  },
+  gradientHeader: {
+    padding: 20,
+    paddingBottom: 24,
   },
   header: {
     flexDirection: 'row',
     alignItems: 'center',
-    marginBottom: 15,
+  },
+  avatar: {
+    borderWidth: 3,
+    borderColor: 'rgba(255, 255, 255, 0.3)',
   },
   headerInfo: {
-    marginLeft: 15,
+    marginLeft: 16,
     flex: 1,
   },
   name: {
     fontSize: 24,
-    fontWeight: 'bold',
-    marginBottom: 5,
+    fontWeight: '700',
+    color: 'white',
+    marginBottom: 4,
   },
   email: {
-    fontSize: 16,
-    marginBottom: 3,
+    fontSize: 14,
+    color: 'rgba(255, 255, 255, 0.9)',
+    marginBottom: 2,
   },
   phone: {
-    fontSize: 16,
+    fontSize: 14,
+    color: 'rgba(255, 255, 255, 0.9)',
+    marginBottom: 8,
+  },
+  ratingBadge: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: 'rgba(255, 255, 255, 0.25)',
+    paddingHorizontal: 10,
+    paddingVertical: 4,
+    borderRadius: 12,
+    alignSelf: 'flex-start',
+    gap: 4,
+  },
+  ratingBadgeText: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: 'white',
   },
   cameraButton: {
     position: 'absolute',
     bottom: 0,
     right: 0,
-    backgroundColor: '#6200ee',
-    borderRadius: 15,
-    width: 30,
-    height: 30,
+    backgroundColor: 'rgba(255, 255, 255, 0.3)',
+    borderRadius: 18,
+    width: 36,
+    height: 36,
     justifyContent: 'center',
     alignItems: 'center',
+    borderWidth: 2,
+    borderColor: 'white',
   },
   uploadingOverlay: {
     position: 'absolute',
@@ -413,48 +462,62 @@ const styles = StyleSheet.create({
     right: 0,
     bottom: 0,
     backgroundColor: 'rgba(0,0,0,0.5)',
-    borderRadius: 40,
+    borderRadius: 45,
     justifyContent: 'center',
     alignItems: 'center',
   },
-  ratingContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginTop: 10,
-    padding: 10,
-    borderRadius: 8,
-  },
-  ratingText: {
-    fontSize: 18,
-    fontWeight: 'bold',
-    marginLeft: 8,
+  cardContent: {
+    paddingTop: 16,
   },
   divider: {
     marginVertical: 15,
   },
   bioLabel: {
-    fontSize: 16,
-    fontWeight: 'bold',
-    marginBottom: 5,
+    fontSize: 14,
+    fontWeight: '700',
+    marginBottom: 8,
+    textTransform: 'uppercase',
+    letterSpacing: 0.5,
   },
   bio: {
-    fontSize: 16,
+    fontSize: 15,
+    lineHeight: 22,
+    marginBottom: 8,
   },
-  settingsRow: {
+  quickActions: {
     flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    paddingVertical: 10,
+    gap: 12,
+    marginTop: 8,
   },
-  settingItem: {
-    flexDirection: 'row',
+  quickActionButton: {
+    flex: 1,
     alignItems: 'center',
+    padding: 16,
+    borderRadius: 12,
+    gap: 8,
   },
-  settingLabel: {
-    fontSize: 16,
-    marginLeft: 12,
-    fontWeight: '500',
+  quickActionText: {
+    fontSize: 12,
+    fontWeight: '600',
+  },
+  menuCard: {
+    marginHorizontal: 15,
+    marginBottom: 12,
+    borderRadius: 12,
+    overflow: 'hidden',
+  },
+  menuTitle: {
+    fontSize: 13,
+    fontWeight: '700',
+    textTransform: 'uppercase',
+    letterSpacing: 0.5,
+    paddingHorizontal: 16,
+    paddingTop: 16,
+    paddingBottom: 8,
+    opacity: 0.6,
+  },
+  menuItem: {
+    paddingVertical: 4,
   },
   sectionTitle: {
     fontSize: 18,
@@ -492,8 +555,5 @@ const styles = StyleSheet.create({
   logoutButton: {
     margin: 15,
     marginTop: 5,
-  },
-  actionButton: {
-    marginTop: 10,
   },
 });

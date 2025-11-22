@@ -17,76 +17,12 @@ import { cacheService, CACHE_KEYS, CACHE_TTL } from '../../services/cacheService
 import { OfflineIndicator } from '../../components/OfflineIndicator';
 import { errorLogger } from '../../services/errorLogger';
 import EmptyState from '../../components/EmptyState';
+import { getSportIcon } from '../../utils/sportIcons';
 
 type HomeScreenNavigationProp = StackNavigationProp<RootStackParamList>;
 
 type Props = {
   navigation: HomeScreenNavigationProp;
-};
-
-// Spor türlerine göre simge eşleştirme
-const getSportIcon = (sportName: string): string => {
-  const iconMap: { [key: string]: string } = {
-    // Takım Sporları
-    'Futbol': 'soccer',
-    'Basketbol': 'basketball',
-    'Voleybol': 'volleyball',
-    'Hentbol': 'handball',
-    'Rugby': 'rugby',
-    'Beyzbol': 'baseball',
-
-    // Raket Sporları
-    'Tenis': 'tennis',
-    'Badminton': 'badminton',
-    'Masa Tenisi': 'table-tennis',
-    'Squash': 'racquetball',
-
-    // Su Sporları
-    'Yüzme': 'swim',
-    'Su Topu': 'water',
-    'Sörf': 'surfing',
-
-    // Bireysel Sporlar
-    'Koşu': 'run',
-    'Bisiklet': 'bike',
-    'Yürüyüş': 'walk',
-    'Atletizm': 'run',
-
-    // Fitness & Gym
-    'Gym': 'weight-lifter',
-    'Fitness': 'dumbbell',
-    'CrossFit': 'run-fast',
-    'Yoga': 'yoga',
-    'Pilates': 'pilates',
-
-    // Dövüş Sanatları
-    'Boks': 'boxing-glove',
-    'Dövüş Sanatları': 'karate',
-    'Kickboks': 'kickboxing',
-    'Judo': 'judo',
-    'Taekwondo': 'taekwondo',
-    'Güreş': 'wrestling',
-    'Eskrim': 'fencing',
-
-    // Dans ve Hareket
-    'Dans': 'dance-ballroom',
-    'Zumba': 'music',
-    'Jimnastik': 'gymnastics',
-
-    // Kış Sporları
-    'Kayak': 'ski',
-    'Snowboard': 'snowboard',
-    'Paten': 'rollerblade',
-
-    // Outdoor
-    'Dağ Tırmanışı': 'image-filter-hdr',
-    'Kaya Tırmanışı': 'climbing',
-    'Golf': 'golf',
-
-    // Diğer
-    'Triatlon': 'triathlon',
-  };
-  return iconMap[sportName] || 'trophy';
 };
 
 const PAGE_SIZE = 20;
@@ -142,12 +78,11 @@ export default function HomeScreen({ navigation }: Props) {
   const filteredSessions = useMemo(() => {
     let filtered = [...sessions];
 
-    // Filter out sessions that started more than 1 hour ago
-    const oneHourAgo = new Date();
-    oneHourAgo.setHours(oneHourAgo.getHours() - 1);
+    // Filter out past sessions - only show future sessions
+    const now = new Date();
     filtered = filtered.filter((session) => {
       const sessionDate = new Date(session.session_date);
-      return sessionDate >= oneHourAgo;
+      return sessionDate >= now;
     });
 
     // Distance filter
@@ -280,8 +215,7 @@ export default function HomeScreen({ navigation }: Props) {
       setHasMore(true);
     }
 
-    const oneHourAgo = new Date();
-    oneHourAgo.setHours(oneHourAgo.getHours() - 1);
+    const now = new Date();
 
     const from = pageNum * PAGE_SIZE;
     const to = from + PAGE_SIZE - 1;
@@ -290,12 +224,23 @@ export default function HomeScreen({ navigation }: Props) {
       .from('sport_sessions')
       .select(`
         *,
-        creator:profiles!sport_sessions_creator_id_fkey(*),
+        creator:profiles!sport_sessions_creator_id_fkey(
+          id,
+          email,
+          full_name,
+          phone,
+          bio,
+          avatar_url,
+          created_at,
+          average_rating,
+          total_ratings,
+          positive_reviews_count
+        ),
         sport:sports(*),
         participants:session_participants(*)
       `, { count: 'exact' })
       .eq('status', 'open')
-      .gte('session_date', oneHourAgo.toISOString())
+      .gte('session_date', now.toISOString())
       .order('session_date', { ascending: true })
       .range(from, to);
 

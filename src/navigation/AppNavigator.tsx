@@ -1,7 +1,9 @@
 import React from 'react';
+import { View, StyleSheet, Platform } from 'react-native';
 import { createStackNavigator } from '@react-navigation/stack';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
+import { useTheme } from 'react-native-paper';
 import HomeScreen from '../screens/Home/HomeScreen';
 import MapViewScreen from '../screens/Map/MapViewScreen';
 import FavoritesScreen from '../screens/Favorites/FavoritesScreen';
@@ -18,6 +20,7 @@ import FriendsScreen from '../screens/Friends/FriendsScreen';
 import BlockedUsersScreen from '../screens/Blocked/BlockedUsersScreen';
 import ReportUserScreen from '../screens/Report/ReportUserScreen';
 import UserProfileScreen from '../screens/Profile/UserProfileScreen';
+import ProfileDetailScreen from '../screens/ProfileDetail/ProfileDetailScreen';
 import SettingsScreen from '../screens/Settings/SettingsScreen';
 import LanguageSelectionScreen from '../screens/Settings/LanguageSelectionScreen';
 import NotificationSettingsScreen from '../screens/Settings/NotificationSettingsScreen';
@@ -43,6 +46,7 @@ export type RootStackParamList = {
   BlockedUsers: undefined;
   ReportUser: { userId: string; userName: string };
   UserProfile: { userId: string };
+  ProfileDetail: { userId: string };
   Settings: undefined;
   LanguageSelection: undefined;
   NotificationSettings: undefined;
@@ -52,33 +56,71 @@ const MainTab = createBottomTabNavigator<MainTabParamList>();
 const RootStack = createStackNavigator<RootStackParamList>();
 
 function MainTabNavigator() {
+  const theme = useTheme();
+
   return (
     <MainTab.Navigator
-      screenOptions={{
+      screenOptions={({ route }) => ({
         tabBarActiveTintColor: '#6200ee',
-        tabBarInactiveTintColor: 'gray',
+        tabBarInactiveTintColor: theme.dark ? 'rgba(255, 255, 255, 0.5)' : 'rgba(0, 0, 0, 0.4)',
         tabBarStyle: {
-          height: 70,
-          paddingBottom: 10,
-          paddingTop: 10,
+          height: Platform.OS === 'ios' ? 85 : 70,
+          paddingBottom: Platform.OS === 'ios' ? 25 : 12,
+          paddingTop: 8,
+          backgroundColor: theme.colors.surface,
+          borderTopWidth: 0,
+          elevation: 8,
+          shadowColor: '#000',
+          shadowOffset: { width: 0, height: -2 },
+          shadowOpacity: 0.1,
+          shadowRadius: 8,
         },
         tabBarLabelStyle: {
-          fontSize: 13,
+          fontSize: 12,
           fontWeight: '600',
+          marginTop: 2,
         },
-        tabBarIconStyle: {
-          marginTop: 5,
+        tabBarItemStyle: {
+          paddingVertical: 4,
         },
-      }}
+        tabBarIcon: ({ focused, color, size }) => {
+          let iconName: string;
+          let iconSize = focused ? 32 : 26;
+
+          if (route.name === 'Home') {
+            iconName = focused ? 'home' : 'home-outline';
+          } else if (route.name === 'MapView') {
+            iconName = focused ? 'map' : 'map-outline';
+          } else if (route.name === 'MyEvents') {
+            iconName = focused ? 'calendar-check' : 'calendar-check-outline';
+          } else if (route.name === 'Profile') {
+            iconName = focused ? 'account-circle' : 'account-circle-outline';
+          } else {
+            iconName = 'help-circle-outline';
+          }
+
+          return (
+            <View style={[
+              styles.iconContainer,
+              focused && {
+                backgroundColor: theme.dark ? 'rgba(98, 0, 238, 0.2)' : 'rgba(98, 0, 238, 0.1)',
+              }
+            ]}>
+              <MaterialCommunityIcons
+                name={iconName as any}
+                size={iconSize}
+                color={focused ? '#6200ee' : color}
+              />
+            </View>
+          );
+        },
+      })}
     >
       <MainTab.Screen
         name="Home"
         component={HomeScreen}
         options={{
           title: 'Seanslar',
-          tabBarIcon: ({ color, size }) => (
-            <MaterialCommunityIcons name="view-list" size={28} color={color} />
-          ),
         }}
       />
       <MainTab.Screen
@@ -86,9 +128,6 @@ function MainTabNavigator() {
         component={MapViewScreen}
         options={{
           title: 'Harita',
-          tabBarIcon: ({ color, size }) => (
-            <MaterialCommunityIcons name="map" size={28} color={color} />
-          ),
         }}
       />
       <MainTab.Screen
@@ -96,9 +135,6 @@ function MainTabNavigator() {
         component={MyEventsScreen}
         options={{
           title: 'Seanslarım',
-          tabBarIcon: ({ color, size }) => (
-            <MaterialCommunityIcons name="calendar-check" size={28} color={color} />
-          ),
         }}
       />
       <MainTab.Screen
@@ -106,9 +142,6 @@ function MainTabNavigator() {
         component={ProfileScreen}
         options={{
           title: 'Profil',
-          tabBarIcon: ({ color, size }) => (
-            <MaterialCommunityIcons name="account" size={28} color={color} />
-          ),
         }}
       />
     </MainTab.Navigator>
@@ -187,6 +220,11 @@ export default function AppNavigator() {
         options={{ title: 'Kullanıcı Profili' }}
       />
       <RootStack.Screen
+        name="ProfileDetail"
+        component={ProfileDetailScreen}
+        options={{ title: 'Kullanıcı Profili' }}
+      />
+      <RootStack.Screen
         name="Settings"
         component={SettingsScreen}
         options={{ title: 'Ayarlar' }}
@@ -204,3 +242,13 @@ export default function AppNavigator() {
     </RootStack.Navigator>
   );
 }
+
+const styles = StyleSheet.create({
+  iconContainer: {
+    width: 50,
+    height: 50,
+    borderRadius: 25,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+});

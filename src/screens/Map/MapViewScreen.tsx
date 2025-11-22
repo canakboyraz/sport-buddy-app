@@ -10,24 +10,12 @@ import * as Location from 'expo-location';
 import { StackNavigationProp } from '@react-navigation/stack';
 import { RootStackParamList } from '../../navigation/AppNavigator';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
+import { getSportIcon } from '../../utils/sportIcons';
 
 type MapViewScreenNavigationProp = StackNavigationProp<RootStackParamList>;
 
 type Props = {
   navigation: MapViewScreenNavigationProp;
-};
-
-const getSportIcon = (sportName: string): string => {
-  const iconMap: { [key: string]: string } = {
-    'Futbol': 'soccer',
-    'Basketbol': 'basketball',
-    'Tenis': 'tennis',
-    'Voleybol': 'volleyball',
-    'Yüzme': 'swim',
-    'Koşu': 'run',
-    'Bisiklet': 'bike',
-  };
-  return iconMap[sportName] || 'trophy';
 };
 
 export default function MapViewScreen({ navigation }: Props) {
