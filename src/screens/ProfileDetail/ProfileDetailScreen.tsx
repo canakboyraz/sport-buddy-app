@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { View, ScrollView, StyleSheet, Image, Dimensions } from 'react-native';
-import { Text, Surface, ActivityIndicator, Card, Divider, Chip } from 'react-native-paper';
+import { Text, Surface, ActivityIndicator, Card, Divider, Chip, Button } from 'react-native-paper';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 import { supabase } from '../../services/supabase';
@@ -40,6 +40,8 @@ export default function ProfileDetailScreen({ route, navigation }: any) {
   const [profile, setProfile] = useState<Profile | null>(null);
   const [ratings, setRatings] = useState<Rating[]>([]);
   const [loading, setLoading] = useState(true);
+  const [friendshipStatus, setFriendshipStatus] = useState<'none' | 'pending' | 'accepted' | 'rejected'>('none');
+  const [friendshipLoading, setFriendshipLoading] = useState(false);
   const [stats, setStats] = useState({
     sessionsCreated: 0,
     sessionsAttended: 0,
@@ -71,7 +73,7 @@ export default function ProfileDetailScreen({ route, navigation }: any) {
           rating,
           comment,
           created_at,
-          rater:profiles!ratings_rater_id_fkey(
+          rater:profiles!ratings_rater_user_id_fkey(
             id,
             full_name,
             email,
@@ -102,10 +104,55 @@ export default function ProfileDetailScreen({ route, navigation }: any) {
         sessionsCreated: createdCount || 0,
         sessionsAttended: attendedCount || 0,
       });
+
+      // Load friendship status
+      const { data: { user } } = await supabase.auth.getUser();
+      if (user) {
+        const { data: friendship } = await supabase
+          .from('friendships')
+          .select('status, user_id, friend_id')
+          .or(`user_id.eq.${user.id},friend_id.eq.${user.id}`)
+          .or(`user_id.eq.${userId},friend_id.eq.${userId}`)
+          .single();
+
+        if (friendship) {
+          setFriendshipStatus(friendship.status as any);
+        } else {
+          setFriendshipStatus('none');
+        }
+      }
     } catch (error) {
       console.error('Error loading profile:', error);
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleFriendRequest = async () => {
+    setFriendshipLoading(true);
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) return;
+
+      const { error } = await supabase
+        .from('friendships')
+        .insert({
+          user_id: user.id,
+          friend_id: userId,
+          status: 'pending',
+        });
+
+      if (error) {
+        console.error('Error sending friend request:', error);
+        alert('Arkadaşlık isteği gönderilemedi');
+      } else {
+        setFriendshipStatus('pending');
+        alert('Arkadaşlık isteği gönderildi!');
+      }
+    } catch (error) {
+      console.error('Error:', error);
+    } finally {
+      setFriendshipLoading(false);
     }
   };
 
@@ -169,6 +216,31 @@ export default function ProfileDetailScreen({ route, navigation }: any) {
         <Text style={styles.memberSince}>
           Üyelik: {format(new Date(profile.created_at), 'MMM yyyy', { locale: tr })}
         </Text>
+
+        {/* Friend Request Button */}
+        {friendshipStatus === 'none' && (
+          <Button
+            mode="contained"
+            icon="account-plus"
+            onPress={handleFriendRequest}
+            loading={friendshipLoading}
+            disabled={friendshipLoading}
+            style={styles.friendButton}
+            labelStyle={{ color: '#fff' }}
+          >
+            Arkadaş Ekle
+          </Button>
+        )}
+        {friendshipStatus === 'pending' && (
+          <Chip icon="clock-outline" style={styles.pendingChip}>
+            İstek Gönderildi
+          </Chip>
+        )}
+        {friendshipStatus === 'accepted' && (
+          <Chip icon="check" style={styles.acceptedChip}>
+            Arkadaş
+          </Chip>
+        )}
 
         {/* Rating */}
         <View style={styles.ratingContainer}>
@@ -338,6 +410,22 @@ const styles = StyleSheet.create({
     fontSize: 14,
     color: 'rgba(255, 255, 255, 0.9)',
     marginBottom: 16,
+  },
+  friendButton: {
+    marginTop: 12,
+    marginBottom: 12,
+    backgroundColor: '#4CAF50',
+    borderRadius: 24,
+  },
+  pendingChip: {
+    marginTop: 12,
+    marginBottom: 12,
+    backgroundColor: '#FFC107',
+  },
+  acceptedChip: {
+    marginTop: 12,
+    marginBottom: 12,
+    backgroundColor: '#4CAF50',
   },
   ratingContainer: {
     flexDirection: 'row',

@@ -11,7 +11,6 @@ import { RouteProp } from '@react-navigation/native';
 import { RootStackParamList } from '../../navigation/AppNavigator';
 import { useAuth } from '../../hooks/useAuth';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
-import UserQuickActionsModal from '../../components/UserQuickActionsModal';
 import WeatherCard from '../../components/WeatherCard';
 import { scheduleSessionReminders, cancelSessionReminders, sendParticipantJoinedNotification, scheduleLocalNotification } from '../../services/notificationService';
 import { getBadgeLevel } from '../../services/ratingService';
@@ -43,8 +42,6 @@ export default function SessionDetailScreen({ navigation, route }: Props) {
   const [loading, setLoading] = useState(true);
   const [actionLoading, setActionLoading] = useState(false);
   const [mapVisible, setMapVisible] = useState(false);
-  const [quickActionsVisible, setQuickActionsVisible] = useState(false);
-  const [selectedUser, setSelectedUser] = useState<{ id: string; name: string } | null>(null);
   const [myRatings, setMyRatings] = useState<{ [userId: string]: { rating: number; comment: string | null } }>({});
 
   useEffect(() => {
@@ -102,23 +99,40 @@ export default function SessionDetailScreen({ navigation, route }: Props) {
         setSession(data as SportSession);
 
         // Load user's ratings for this session
-        if (user) {
-          const { data: ratingsData } = await supabase
+        const { data: { user: authUser } } = await supabase.auth.getUser();
+        if (authUser) {
+          console.log('[SessionDetail] Loading ratings for user:', authUser.id, 'session:', sessionId);
+
+          const { data: ratingsData, error: ratingsError } = await supabase
             .from('ratings')
             .select('rated_user_id, rating, comment')
             .eq('session_id', sessionId)
-            .eq('rater_id', user.id);
+            .eq('rater_user_id', authUser.id);
 
-          if (ratingsData) {
+          if (ratingsError) {
+            console.error('[SessionDetail] Error loading ratings:', ratingsError);
+          } else {
+            console.log('[SessionDetail] Loaded ratings data:', ratingsData);
+            console.log('[SessionDetail] Number of ratings found:', ratingsData?.length || 0);
+          }
+
+          if (ratingsData && ratingsData.length > 0) {
             const ratingsMap: { [userId: string]: { rating: number; comment: string | null } } = {};
             ratingsData.forEach((r: any) => {
+              console.log('[SessionDetail] Processing rating for user:', r.rated_user_id);
               ratingsMap[r.rated_user_id] = {
                 rating: r.rating,
                 comment: r.comment,
               };
             });
+            console.log('[SessionDetail] Final ratings map:', ratingsMap);
             setMyRatings(ratingsMap);
+          } else {
+            console.log('[SessionDetail] No ratings found, setting empty map');
+            setMyRatings({});
           }
+        } else {
+          console.log('[SessionDetail] No authenticated user found');
         }
       }
     } catch (err) {
@@ -282,15 +296,15 @@ export default function SessionDetailScreen({ navigation, route }: Props) {
   };
 
   const handleUserClick = (userId: string, userName?: string) => {
-    if (userId === user?.id) return; // Don't show modal for current user
+    if (userId === user?.id) return; // Don't navigate for current user
 
     if (!userId) {
       Alert.alert('Hata', 'Kullanıcı bilgileri yüklenemedi');
       return;
     }
 
-    setSelectedUser({ id: userId, name: userName || 'Kullanıcı' });
-    setQuickActionsVisible(true);
+    // Navigate directly to user profile
+    navigation.navigate('ProfileDetail', { userId });
   };
 
   if (loading) {
@@ -315,6 +329,31 @@ export default function SessionDetailScreen({ navigation, route }: Props) {
   const userParticipant = session.participants?.find(p => p.user_id === user?.id);
   const isFull = approvedParticipants.length >= session.max_participants;
   const isPast = new Date(session.session_date) < new Date();
+
+  // Include creator in the list of people that can be rated (if not already a participant)
+  const allRatableParticipants = [...approvedParticipants];
+  const creatorIsAlsoParticipant = approvedParticipants.some(p => p.user_id === session.creator_id);
+  if (!creatorIsAlsoParticipant && session.creator) {
+    // Add creator as a pseudo-participant for display and rating purposes
+    allRatableParticipants.unshift({
+      id: `creator-${session.creator_id}`,
+      session_id: session.id,
+      user_id: session.creator_id,
+      status: 'approved' as const,
+      user: session.creator,
+      created_at: session.created_at,
+    } as any);
+  }
+
+  // Debug logging for rating display issue
+  console.log('[SessionDetail] Debug Info:');
+  console.log('  - isPast:', isPast);
+  console.log('  - session_date:', session.session_date);
+  console.log('  - current date:', new Date());
+  console.log('  - userParticipant:', userParticipant);
+  console.log('  - userParticipant status:', userParticipant?.status);
+  console.log('  - myRatings:', myRatings);
+  console.log('  - approvedParticipants count:', approvedParticipants.length);
 
   return (
     <ScrollView style={[styles.container, { backgroundColor: theme.colors.background }]}>
@@ -473,8 +512,8 @@ export default function SessionDetailScreen({ navigation, route }: Props) {
 
       <Card style={styles.card}>
         <Card.Content>
-          <Text style={styles.sectionTitle}>Katılımcılar ({approvedParticipants.length})</Text>
-          {approvedParticipants.map((participant) => {
+          <Text style={styles.sectionTitle}>Katılımcılar ({allRatableParticipants.length})</Text>
+          {allRatableParticipants.map((participant) => {
             const userProfile = participant.user;
             const averageRating = userProfile?.average_rating || 0;
             const totalRatings = userProfile?.total_ratings || 0;
@@ -482,6 +521,7 @@ export default function SessionDetailScreen({ navigation, route }: Props) {
             const badgeInfo = getBadgeLevel(positiveReviews);
             const displayName = participant.user?.full_name || participant.user?.email || 'Katılımcı';
             const avatarLabel = (participant.user?.full_name || participant.user?.email || 'U').charAt(0).toUpperCase();
+            const isSessionCreator = participant.user_id === session.creator_id;
 
             return (
               <View key={participant.id} style={styles.participantRow}>
@@ -497,6 +537,17 @@ export default function SessionDetailScreen({ navigation, route }: Props) {
                   <View style={styles.participantDetails}>
                     <View style={styles.participantNameRow}>
                       <Text style={styles.participantName}>{displayName}</Text>
+                      {isSessionCreator && (
+                        <Chip
+                          icon="crown"
+                          mode="flat"
+                          compact
+                          style={{ backgroundColor: theme.colors.primaryContainer, height: 20, marginLeft: 6 }}
+                          textStyle={{ color: theme.colors.primary, fontSize: 10, marginVertical: 0 }}
+                        >
+                          Organizatör
+                        </Chip>
+                      )}
                       {positiveReviews >= 3 && (
                         <MaterialCommunityIcons
                           name={badgeInfo.icon}
@@ -521,7 +572,7 @@ export default function SessionDetailScreen({ navigation, route }: Props) {
                     )}
                   </View>
                 </TouchableOpacity>
-                {isPast && participant.user_id !== user?.id && userParticipant?.status === 'approved' && (
+                {isPast && participant.user_id !== user?.id && (isCreator || userParticipant?.status === 'approved') && (
                   myRatings[participant.user_id] ? (
                     <View style={styles.ratedBadgeContainer}>
                       <Chip
@@ -647,26 +698,6 @@ export default function SessionDetailScreen({ navigation, route }: Props) {
             </View>
           </Modal>
         </Portal>
-      )}
-
-      {selectedUser && (
-        <UserQuickActionsModal
-          visible={quickActionsVisible}
-          onDismiss={() => {
-            setQuickActionsVisible(false);
-            setSelectedUser(null);
-          }}
-          userId={selectedUser.id}
-          userName={selectedUser.name}
-          onNavigateToProfile={() => {
-            setQuickActionsVisible(false);
-            navigation.navigate('ProfileDetail', { userId: selectedUser.id });
-          }}
-          onNavigateToReport={() => {
-            // TODO: Navigate to report screen when implemented
-            Alert.alert('Şikayet', `${selectedUser.name} kullanıcısı şikayet ediliyor...`);
-          }}
-        />
       )}
     </ScrollView>
   );

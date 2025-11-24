@@ -104,14 +104,13 @@ export async function submitRating(params: {
     // Determine if positive (4+ stars is considered positive)
     const isPosReview = isPositive !== undefined ? isPositive : rating >= 4;
 
-    // Insert rating
+    // Insert rating (without is_positive for now - will be calculated via trigger)
     const { error: insertError } = await supabase.from('ratings').insert({
       session_id: sessionId,
       rated_user_id: ratedUserId,
       rater_user_id: raterUserId,
       rating,
       comment: comment?.trim() || null,
-      is_positive: isPosReview,
     });
 
     if (insertError) {

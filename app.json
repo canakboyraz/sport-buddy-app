@@ -5,19 +5,42 @@
     "version": "1.0.0",
     "orientation": "portrait",
     "userInterfaceStyle": "light",
+    "icon": "./assets/icon.png",
     "splash": {
+      "image": "./assets/splash.png",
       "resizeMode": "contain",
       "backgroundColor": "#6200ee"
     },
+    "updates": {
+      "fallbackToCacheTimeout": 0
+    },
+    "assetBundlePatterns": [
+      "**/*"
+    ],
     "ios": {
       "supportsTablet": true,
-      "bundleIdentifier": "com.sportbuddy.app"
+      "bundleIdentifier": "com.sportbuddy.app",
+      "buildNumber": "1.0.0",
+      "infoPlist": {
+        "NSLocationWhenInUseUsageDescription": "Spor etkinliklerinizin konumunu belirlemek için konum erişimine ihtiyacımız var.",
+        "NSCameraUsageDescription": "Profil fotoğrafı eklemek için kamera erişimine ihtiyacımız var.",
+        "NSPhotoLibraryUsageDescription": "Profil fotoğrafı seçmek için fotoğraf kütüphanesine erişim gerekiyor."
+      }
     },
     "android": {
       "package": "com.sportbuddy.app",
+      "versionCode": 1,
       "adaptiveIcon": {
+        "foregroundImage": "./assets/adaptive-icon.png",
         "backgroundColor": "#6200ee"
       },
+      "permissions": [
+        "ACCESS_COARSE_LOCATION",
+        "ACCESS_FINE_LOCATION",
+        "CAMERA",
+        "READ_EXTERNAL_STORAGE",
+        "WRITE_EXTERNAL_STORAGE"
+      ],
       "config": {
         "googleMaps": {
           "apiKey": "YOUR_GOOGLE_MAPS_API_KEY"

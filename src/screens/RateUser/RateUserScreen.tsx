@@ -183,7 +183,7 @@ export default function RateUserScreen({ navigation, route }: Props) {
                   >
                     <MaterialCommunityIcons
                       name={isSelected ? 'star' : 'star-outline'}
-                      size={60}
+                      size={36}
                       color={isSelected ? '#FFD700' : theme.colors.onSurfaceDisabled}
                       style={isSelected && styles.starShadow}
                     />
@@ -515,9 +515,10 @@ const styles = StyleSheet.create({
   starsContainer: {
     flexDirection: 'row',
     justifyContent: 'center',
-    gap: 4,
+    gap: 12,
     marginBottom: 20,
     paddingVertical: 8,
+    paddingHorizontal: 16,
   },
   starButton: {
     padding: 8,
