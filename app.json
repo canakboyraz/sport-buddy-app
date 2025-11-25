@@ -17,6 +17,7 @@
     "assetBundlePatterns": [
       "**/*"
     ],
+    "scheme": "sportbuddy",
     "ios": {
       "supportsTablet": true,
       "bundleIdentifier": "com.sportbuddy.app",
@@ -68,7 +69,8 @@
         }
       ],
       "expo-asset",
-      "expo-secure-store"
+      "expo-secure-store",
+      "expo-apple-authentication"
     ]
   }
 }

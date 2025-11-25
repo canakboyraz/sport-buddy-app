@@ -147,6 +147,42 @@ export default function ProfileDetailScreen({ route, navigation }: any) {
         alert('Arkadaşlık isteği gönderilemedi');
       } else {
         setFriendshipStatus('pending');
+
+        // Send notification to the friend
+        try {
+          const { data: senderProfile } = await supabase
+            .from('profiles')
+            .select('full_name')
+            .eq('id', user.id)
+            .single();
+
+          const { data: receiverProfile } = await supabase
+            .from('profiles')
+            .select('push_token')
+            .eq('id', userId)
+            .single();
+
+          if (receiverProfile?.push_token) {
+            await fetch('https://exp.host/--/api/v2/push/send', {
+              method: 'POST',
+              headers: {
+                'Content-Type': 'application/json',
+              },
+              body: JSON.stringify({
+                to: receiverProfile.push_token,
+                title: 'Yeni Arkadaşlık İsteği',
+                body: `${senderProfile?.full_name || 'Bir kullanıcı'} size arkadaşlık isteği gönderdi`,
+                data: {
+                  type: 'friend_request',
+                  userId: user.id,
+                },
+              }),
+            });
+          }
+        } catch (notifError) {
+          console.error('Error sending friend request notification:', notifError);
+        }
+
         alert('Arkadaşlık isteği gönderildi!');
       }
     } catch (error) {

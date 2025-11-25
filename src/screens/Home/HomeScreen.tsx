@@ -430,14 +430,12 @@ export default function HomeScreen({ navigation }: Props) {
                 actionLabel="Filtreleri Sıfırla"
                 onAction={() => {
                   setSelectedSport(null);
-                  setSelectedCity(null);
                   setAdvancedFilters({
-                    minDistance: 0,
-                    maxDistance: 100,
-                    minParticipants: 2,
-                    maxParticipants: 20,
-                    startDate: null,
-                    endDate: null,
+                    maxDistance: null,
+                    dateFrom: null,
+                    dateTo: null,
+                    onlyAvailable: false,
+                    skillLevel: null,
                   });
                 }}
                 secondaryActionLabel="Filtre Ayarları"

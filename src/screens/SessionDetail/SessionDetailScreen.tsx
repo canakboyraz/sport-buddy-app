@@ -159,7 +159,7 @@ export default function SessionDetailScreen({ navigation, route }: Props) {
     if (error) {
       Alert.alert('Hata', error.message);
     } else {
-      // Send notification to session creator
+      // Send push notification to session creator
       try {
         // Only send notification if current user is NOT the creator
         if (session.creator_id !== user.id) {
@@ -169,22 +169,32 @@ export default function SessionDetailScreen({ navigation, route }: Props) {
             .eq('id', user.id)
             .single();
 
+          const { data: creatorProfile } = await supabase
+            .from('profiles')
+            .select('push_token')
+            .eq('id', session.creator_id)
+            .single();
+
           const participantName = currentUserProfile?.full_name || currentUserProfile?.email || 'Bir kullanıcı';
 
-          // Note: This sends a local notification to the device that runs this code
-          // In a production app, you should use push notifications via a backend service
-          // to notify the session creator on their device
-          await scheduleLocalNotification(
-            '🔔 Yeni Katılım Talebi',
-            `${participantName} "${session.title}" seansına katılmak istiyor`,
-            {
-              type: 'join_request',
-              sessionId: session.id,
-              userId: user.id,
-              creatorId: session.creator_id,
-            },
-            0 // Immediate notification
-          );
+          if (creatorProfile?.push_token) {
+            await fetch('https://exp.host/--/api/v2/push/send', {
+              method: 'POST',
+              headers: {
+                'Content-Type': 'application/json',
+              },
+              body: JSON.stringify({
+                to: creatorProfile.push_token,
+                title: '🔔 Yeni Katılım Talebi',
+                body: `${participantName} "${session.title}" seansına katılmak istiyor`,
+                data: {
+                  type: 'join_request',
+                  sessionId: session.id,
+                  userId: user.id,
+                },
+              }),
+            });
+          }
         }
       } catch (notifError) {
         console.error('Notification error:', notifError);
@@ -232,33 +242,34 @@ export default function SessionDetailScreen({ navigation, route }: Props) {
         }
       }
 
-      // Notify the participant that their request was approved
+      // Send push notification to the approved participant
       if (session && participant && participant.user_id !== user?.id) {
         try {
-          const participantName = (participant as any).user?.full_name || 'Bir kullanıcı';
+          const { data: participantProfile } = await supabase
+            .from('profiles')
+            .select('push_token')
+            .eq('id', participant.user_id)
+            .single();
 
-          // Send approval notification to participant
-          // Note: This is a local notification and won't reach the participant's device
-          // In production, use push notifications via a backend service
-          await scheduleLocalNotification(
-            '✅ Katılım Onaylandı',
-            `"${session.title}" seansına katılımınız onaylandı!`,
-            {
-              type: 'join_approved',
-              sessionId: session.id,
-              participantId: participant.user_id,
-            },
-            0
-          );
-
-          // Also notify session creator about new participant joining
-          await sendParticipantJoinedNotification(
-            session.title,
-            participantName,
-            session.id
-          );
+          if (participantProfile?.push_token) {
+            await fetch('https://exp.host/--/api/v2/push/send', {
+              method: 'POST',
+              headers: {
+                'Content-Type': 'application/json',
+              },
+              body: JSON.stringify({
+                to: participantProfile.push_token,
+                title: '✅ Katılım Onaylandı',
+                body: `"${session.title}" seansına katılımınız onaylandı!`,
+                data: {
+                  type: 'join_approved',
+                  sessionId: session.id,
+                },
+              }),
+            });
+          }
         } catch (err) {
-          console.error('[SessionDetail] Failed to send notifications:', err);
+          console.error('[SessionDetail] Failed to send notification:', err);
         }
       }
 

@@ -60,8 +60,8 @@ export default function RegisterScreen({ navigation }: Props) {
       const { error: profileError } = await supabase.from('profiles').insert({
         id: authData.user.id,
         email,
-        full_name: fullName,
-        phone: phone || null,
+        full_name: fullName.trim() || null,
+        phone: phone.trim() || null,
       });
 
       setLoading(false);

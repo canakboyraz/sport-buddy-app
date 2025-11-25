@@ -1,12 +1,17 @@
 import React, { useState, useEffect } from 'react';
 import { View, StyleSheet, Alert, KeyboardAvoidingView, Platform } from 'react-native';
-import { TextInput, Button, Text, Checkbox, Surface, useTheme } from 'react-native-paper';
+import { TextInput, Button, Text, Checkbox, Surface, useTheme, Divider } from 'react-native-paper';
 import { LinearGradient } from 'expo-linear-gradient';
 import { supabase } from '../../services/supabase';
 import { validateEmail } from '../../utils/validation';
 import { StackNavigationProp } from '@react-navigation/stack';
 import { AuthStackParamList } from '../../navigation/AuthNavigator';
 import { secureStore } from '../../services/secureStore';
+import * as AppleAuthentication from 'expo-apple-authentication';
+import * as WebBrowser from 'expo-web-browser';
+import * as Linking from 'expo-linking';
+
+WebBrowser.maybeCompleteAuthSession();
 
 type LoginScreenNavigationProp = StackNavigationProp<AuthStackParamList, 'Login'>;
 
@@ -21,10 +26,17 @@ export default function LoginScreen({ navigation }: Props) {
   const [loading, setLoading] = useState(false);
   const [rememberMe, setRememberMe] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
+  const [appleAuthAvailable, setAppleAuthAvailable] = useState(false);
 
   useEffect(() => {
     loadSavedCredentials();
+    checkAppleAuthAvailability();
   }, []);
+
+  const checkAppleAuthAvailability = async () => {
+    const available = await AppleAuthentication.isAvailableAsync();
+    setAppleAuthAvailable(available);
+  };
 
   const loadSavedCredentials = async () => {
     try {
@@ -80,6 +92,79 @@ export default function LoginScreen({ navigation }: Props) {
           console.error('Error clearing credentials:', error);
         }
       }
+    }
+  };
+
+  const handleGoogleLogin = async () => {
+    try {
+      setLoading(true);
+
+      const redirectUrl = Linking.createURL('/');
+
+      const { data, error } = await supabase.auth.signInWithOAuth({
+        provider: 'google',
+        options: {
+          redirectTo: redirectUrl,
+          skipBrowserRedirect: Platform.OS !== 'web',
+        },
+      });
+
+      if (error) throw error;
+
+      if (Platform.OS !== 'web' && data?.url) {
+        const result = await WebBrowser.openAuthSessionAsync(
+          data.url,
+          redirectUrl
+        );
+
+        if (result.type === 'success') {
+          const { url } = result;
+          const params = new URLSearchParams(url.split('#')[1]);
+          const accessToken = params.get('access_token');
+          const refreshToken = params.get('refresh_token');
+
+          if (accessToken && refreshToken) {
+            await supabase.auth.setSession({
+              access_token: accessToken,
+              refresh_token: refreshToken,
+            });
+          }
+        }
+      }
+    } catch (error: any) {
+      Alert.alert('Hata', error.message || 'Google ile giriş yapılamadı');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleAppleLogin = async () => {
+    try {
+      setLoading(true);
+
+      const credential = await AppleAuthentication.signInAsync({
+        requestedScopes: [
+          AppleAuthentication.AppleAuthenticationScope.FULL_NAME,
+          AppleAuthentication.AppleAuthenticationScope.EMAIL,
+        ],
+      });
+
+      if (credential.identityToken) {
+        const { error } = await supabase.auth.signInWithIdToken({
+          provider: 'apple',
+          token: credential.identityToken,
+        });
+
+        if (error) throw error;
+      }
+    } catch (error: any) {
+      if (error.code === 'ERR_REQUEST_CANCELED') {
+        // User cancelled
+        return;
+      }
+      Alert.alert('Hata', error.message || 'Apple ile giriş yapılamadı');
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -147,6 +232,36 @@ export default function LoginScreen({ navigation }: Props) {
             Giriş Yap
           </Button>
 
+          <View style={styles.dividerContainer}>
+            <Divider style={styles.divider} />
+            <Text style={[styles.dividerText, { color: theme.colors.onSurfaceVariant }]}>veya</Text>
+            <Divider style={styles.divider} />
+          </View>
+
+          <Button
+            mode="outlined"
+            onPress={handleGoogleLogin}
+            disabled={loading}
+            style={styles.socialButton}
+            contentStyle={{ height: 48 }}
+            icon="google"
+          >
+            Google ile Giriş Yap
+          </Button>
+
+          {appleAuthAvailable && Platform.OS === 'ios' && (
+            <Button
+              mode="outlined"
+              onPress={handleAppleLogin}
+              disabled={loading}
+              style={styles.socialButton}
+              contentStyle={{ height: 48 }}
+              icon="apple"
+            >
+              Apple ile Giriş Yap
+            </Button>
+          )}
+
           <Button
             mode="text"
             onPress={() => navigation.navigate('Register')}
@@ -200,6 +315,22 @@ const styles = StyleSheet.create({
   button: {
     borderRadius: 8,
     marginBottom: 16,
+  },
+  dividerContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginVertical: 16,
+  },
+  divider: {
+    flex: 1,
+  },
+  dividerText: {
+    marginHorizontal: 16,
+    fontSize: 14,
+  },
+  socialButton: {
+    borderRadius: 8,
+    marginBottom: 12,
   },
   registerButton: {
     marginTop: 8,
