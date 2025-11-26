@@ -154,6 +154,9 @@ export default function LoginScreen({ navigation }: Props) {
           const firstName = credential.fullName.givenName || '';
           const lastName = credential.fullName.familyName || '';
           fullName = `${firstName} ${lastName}`.trim();
+          console.log('[LoginScreen] Apple fullName received:', fullName);
+        } else {
+          console.log('[LoginScreen] Apple did not provide fullName (user logged in before)');
         }
 
         const { data, error } = await supabase.auth.signInWithIdToken({
@@ -163,16 +166,38 @@ export default function LoginScreen({ navigation }: Props) {
 
         if (error) throw error;
 
-        // Kullanıcı profili oluşturulduysa ve ad-soyad varsa güncelle
-        if (data?.user && fullName) {
-          await supabase.from('profiles').upsert({
-            id: data.user.id,
-            full_name: fullName,
-            email: data.user.email,
-            updated_at: new Date().toISOString(),
-          }, {
-            onConflict: 'id'
-          });
+        console.log('[LoginScreen] Supabase user data:', data?.user);
+
+        // Check if profile already has a full_name
+        const { data: existingProfile } = await supabase
+          .from('profiles')
+          .select('full_name')
+          .eq('id', data.user.id)
+          .single();
+
+        console.log('[LoginScreen] Existing profile:', existingProfile);
+
+        // Only update if we have a new fullName OR if profile doesn't have a name yet
+        if (data?.user) {
+          if (fullName) {
+            // We got a name from Apple, save it
+            await supabase.from('profiles').upsert({
+              id: data.user.id,
+              full_name: fullName,
+              email: data.user.email,
+              updated_at: new Date().toISOString(),
+            }, {
+              onConflict: 'id'
+            });
+            console.log('[LoginScreen] Profile updated with Apple fullName');
+          } else if (!existingProfile?.full_name) {
+            // No name from Apple and profile has no name - prompt user
+            Alert.alert(
+              'Hoş Geldiniz!',
+              'Lütfen profil ayarlarından adınızı ve soyadınızı girin.',
+              [{ text: 'Tamam' }]
+            );
+          }
         }
       }
     } catch (error: any) {

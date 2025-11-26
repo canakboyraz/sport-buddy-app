@@ -1,6 +1,6 @@
 import React, { useEffect, useState, useRef } from 'react';
 import { View, FlatList, StyleSheet, KeyboardAvoidingView, Platform, Image, TouchableOpacity, Alert } from 'react-native';
-import { TextInput, Button, Text, Avatar, IconButton, ActivityIndicator } from 'react-native-paper';
+import { TextInput, Button, Text, Avatar, IconButton, ActivityIndicator, useTheme } from 'react-native-paper';
 import { supabase } from '../../services/supabase';
 import { Message } from '../../types';
 import { format } from 'date-fns';
@@ -23,6 +23,7 @@ type Props = {
 export default function EnhancedChatScreen({ navigation, route }: Props) {
   const { sessionId } = route.params;
   const { user } = useAuth();
+  const theme = useTheme();
   const [messages, setMessages] = useState<Message[]>([]);
   const [newMessage, setNewMessage] = useState('');
   const [sending, setSending] = useState(false);
@@ -252,11 +253,19 @@ export default function EnhancedChatScreen({ navigation, route }: Props) {
         <View
           style={[
             styles.messageBubble,
-            isOwnMessage ? styles.ownBubble : styles.otherBubble,
+            isOwnMessage
+              ? { backgroundColor: theme.colors.primary }
+              : {
+                  backgroundColor: theme.colors.surface,
+                  borderWidth: 1,
+                  borderColor: theme.colors.outline
+                },
           ]}
         >
           {!isOwnMessage && (
-            <Text style={styles.senderName}>{item.user?.full_name}</Text>
+            <Text style={[styles.senderName, { color: theme.colors.primary }]}>
+              {item.user?.full_name}
+            </Text>
           )}
 
           {hasImage && (
@@ -264,13 +273,19 @@ export default function EnhancedChatScreen({ navigation, route }: Props) {
           )}
 
           {item.content && (
-            <Text style={isOwnMessage ? styles.ownMessageText : styles.messageText}>
+            <Text style={[
+              styles.messageText,
+              { color: isOwnMessage ? theme.colors.onPrimary : theme.colors.onSurface }
+            ]}>
               {item.content}
             </Text>
           )}
 
           <View style={styles.messageFooter}>
-            <Text style={[styles.messageTime, isOwnMessage && { color: 'rgba(255, 255, 255, 0.8)' }]}>
+            <Text style={[
+              styles.messageTime,
+              { color: isOwnMessage ? 'rgba(255, 255, 255, 0.8)' : theme.colors.onSurfaceVariant }
+            ]}>
               {format(new Date(item.created_at), 'HH:mm', { locale: tr })}
             </Text>
             {isOwnMessage && item.is_read && (
@@ -289,7 +304,7 @@ export default function EnhancedChatScreen({ navigation, route }: Props) {
 
   return (
     <KeyboardAvoidingView
-      style={styles.container}
+      style={[styles.container, { backgroundColor: theme.colors.background }]}
       behavior={Platform.OS === 'ios' ? 'padding' : undefined}
       keyboardVerticalOffset={90}
     >
@@ -303,8 +318,8 @@ export default function EnhancedChatScreen({ navigation, route }: Props) {
         ListFooterComponent={
           typingUsers.length > 0 ? (
             <View style={styles.typingIndicator}>
-              <ActivityIndicator size="small" color="#6200ee" />
-              <Text style={styles.typingText}>
+              <ActivityIndicator size="small" color={theme.colors.primary} />
+              <Text style={[styles.typingText, { color: theme.colors.onSurfaceVariant }]}>
                 {typingUsers.join(', ')} yazıyor...
               </Text>
             </View>
@@ -312,7 +327,13 @@ export default function EnhancedChatScreen({ navigation, route }: Props) {
         }
       />
 
-      <View style={styles.inputContainer}>
+      <View style={[
+        styles.inputContainer,
+        {
+          backgroundColor: theme.colors.surface,
+          borderTopColor: theme.colors.outline
+        }
+      ]}>
         <IconButton
           icon="image"
           size={24}
@@ -333,13 +354,13 @@ export default function EnhancedChatScreen({ navigation, route }: Props) {
           size={24}
           onPress={handleSend}
           disabled={sending || (!newMessage.trim() && !uploadingImage)}
-          iconColor="#6200ee"
+          iconColor={theme.colors.primary}
         />
       </View>
 
       {uploadingImage && (
-        <View style={styles.uploadingOverlay}>
-          <ActivityIndicator size="large" color="#6200ee" />
+        <View style={[styles.uploadingOverlay, { backgroundColor: 'rgba(0, 0, 0, 0.7)' }]}>
+          <ActivityIndicator size="large" color={theme.colors.primary} />
           <Text style={styles.uploadingText}>Fotoğraf yükleniyor...</Text>
         </View>
       )}
@@ -350,7 +371,6 @@ export default function EnhancedChatScreen({ navigation, route }: Props) {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#f5f5f5',
   },
   messagesList: {
     padding: 10,
@@ -374,19 +394,10 @@ const styles = StyleSheet.create({
     padding: 10,
     borderRadius: 12,
   },
-  ownBubble: {
-    backgroundColor: '#B39DDB',
-  },
-  otherBubble: {
-    backgroundColor: '#fff',
-    borderWidth: 1,
-    borderColor: '#e0e0e0',
-  },
   senderName: {
     fontSize: 12,
     fontWeight: 'bold',
     marginBottom: 4,
-    color: '#6200ee',
   },
   messageImage: {
     width: 200,
@@ -396,11 +407,6 @@ const styles = StyleSheet.create({
   },
   messageText: {
     fontSize: 16,
-    color: '#333',
-  },
-  ownMessageText: {
-    fontSize: 16,
-    color: 'white',
   },
   messageFooter: {
     flexDirection: 'row',
@@ -409,7 +415,6 @@ const styles = StyleSheet.create({
   },
   messageTime: {
     fontSize: 11,
-    color: '#999',
   },
   readIcon: {
     marginLeft: 4,
@@ -422,15 +427,12 @@ const styles = StyleSheet.create({
   typingText: {
     marginLeft: 8,
     fontSize: 14,
-    color: '#666',
     fontStyle: 'italic',
   },
   inputContainer: {
     flexDirection: 'row',
     padding: 10,
-    backgroundColor: '#fff',
     borderTopWidth: 1,
-    borderTopColor: '#e0e0e0',
     alignItems: 'center',
   },
   input: {
