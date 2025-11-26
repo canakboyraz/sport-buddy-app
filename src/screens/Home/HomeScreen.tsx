@@ -47,17 +47,29 @@ export default function HomeScreen({ navigation }: Props) {
     skillLevel: null,
   });
 
+  // Load initial data on mount
   useEffect(() => {
     loadSports();
     loadSessions();
     getUserLocation();
+  }, []);
+
+  // Reload sessions when selectedSport changes
+  useEffect(() => {
+    if (selectedSport !== null || sessions.length > 0) {
+      loadSessions();
+    }
   }, [selectedSport]);
 
-  // Debug: Force reload sports on mount
+  // Listen for new sessions added (focus event)
   useEffect(() => {
-    console.log('[HomeScreen] Component mounted - forcing sports reload');
-    loadSports(true); // Force refresh on first load
-  }, []);
+    const unsubscribe = navigation.addListener('focus', () => {
+      // Refresh sessions when coming back from CreateSession
+      loadSessions(0, false);
+    });
+
+    return unsubscribe;
+  }, [navigation]);
 
   const getUserLocation = async () => {
     try {
@@ -266,7 +278,6 @@ export default function HomeScreen({ navigation }: Props) {
 
     setLoading(false);
     setLoadingMore(false);
-    setRefreshing(false);
 
     if (error) {
       console.error('[HomeScreen] loadSessions error (page ' + pageNum + '):', error);
@@ -297,10 +308,19 @@ export default function HomeScreen({ navigation }: Props) {
     performanceMonitor.end('loadSessions');
   };
 
-  const onRefresh = () => {
+  const onRefresh = async () => {
     setRefreshing(true);
-    loadSports(true); // Force refresh sports from database
-    loadSessions(0, false);
+    try {
+      // Load sports and sessions in parallel
+      await Promise.all([
+        loadSports(true), // Force refresh sports from database
+        loadSessions(0, false)
+      ]);
+    } catch (error) {
+      console.error('[HomeScreen] onRefresh error:', error);
+    } finally {
+      setRefreshing(false);
+    }
   };
 
   const loadMore = () => {
