@@ -88,26 +88,32 @@ export interface Friendship {
 export type MaterialIconName = string;
 export type SkillLevel = 'Başlangıç' | 'Orta' | 'İleri' | 'Profesyonel' | 'beginner' | 'intermediate' | 'advanced' | 'any';
 
-export type AchievementCategory = 'participation' | 'social' | 'creation' | 'special';
+export type AchievementCategory = 'sessions' | 'social' | 'ratings' | 'activity';
 export type AchievementRarity = 'common' | 'rare' | 'epic' | 'legendary';
 
 export interface Achievement {
-  id: string;
-  code: string;
+  id: number;
   name: string;
   description: string;
   icon: string;
   category: AchievementCategory;
+  requirement_type: string;
+  requirement_value: number;
   points: number;
-  rarity: AchievementRarity;
+  color: string;
   created_at: string;
+  // Optional fields for UI compatibility
+  rarity?: AchievementRarity;
+  code?: string;
 }
 
 export interface UserAchievement {
-  id: string;
+  id: number;
   user_id: string;
-  achievement_id: string;
-  unlocked_at: string;
-  progress: number;
+  achievement_id: number;
+  earned_at: string;
   achievement?: Achievement;
+  // Optional for backward compatibility
+  unlocked_at?: string;
+  progress?: number;
 }

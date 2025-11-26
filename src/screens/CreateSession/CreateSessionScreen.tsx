@@ -11,6 +11,13 @@ import WeatherCard from '../../components/WeatherCard';
 import { useAuth } from '../../hooks/useAuth';
 import { format } from 'date-fns';
 import { tr } from 'date-fns/locale';
+import {
+  validateSessionTitle,
+  validateSessionDescription,
+  validateMaxParticipants,
+  validateLocation,
+  validateCoordinates
+} from '../../utils/validation';
 
 // Spor türlerine göre simge eşleştirme
 const getSportIcon = (sportName: string): string => {
@@ -210,6 +217,7 @@ export default function CreateSessionScreen({ navigation }: any) {
   };
 
   const handleCreate = async () => {
+    // Validate required fields
     if (!selectedSport || !title || !location || !maxParticipants) {
       Alert.alert('Hata', 'Lütfen zorunlu alanları doldurun');
       return;
@@ -220,10 +228,43 @@ export default function CreateSessionScreen({ navigation }: any) {
       return;
     }
 
+    // Validate title
+    const titleValidation = validateSessionTitle(title);
+    if (!titleValidation.isValid) {
+      Alert.alert('Hata', titleValidation.message);
+      return;
+    }
+
+    // Validate description
+    if (description) {
+      const descValidation = validateSessionDescription(description);
+      if (!descValidation.isValid) {
+        Alert.alert('Hata', descValidation.message);
+        return;
+      }
+    }
+
+    // Validate location
+    const locationValidation = validateLocation(location);
+    if (!locationValidation.isValid) {
+      Alert.alert('Hata', locationValidation.message);
+      return;
+    }
+
+    // Validate coordinates if provided
+    if (latitude !== null && longitude !== null) {
+      const coordValidation = validateCoordinates(latitude, longitude);
+      if (!coordValidation.isValid) {
+        Alert.alert('Hata', coordValidation.message);
+        return;
+      }
+    }
+
     // Validate max participants
     const maxParticipantsNum = parseInt(maxParticipants);
-    if (isNaN(maxParticipantsNum) || maxParticipantsNum < 2) {
-      Alert.alert('Hata', 'Maksimum katılımcı sayısı en az 2 olmalıdır');
+    const participantsValidation = validateMaxParticipants(maxParticipantsNum);
+    if (!participantsValidation.isValid) {
+      Alert.alert('Hata', participantsValidation.message);
       return;
     }
 

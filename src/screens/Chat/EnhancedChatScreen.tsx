@@ -23,7 +23,7 @@ type Props = {
 export default function EnhancedChatScreen({ navigation, route }: Props) {
   const { sessionId } = route.params;
   const { user } = useAuth();
-  const [messages, setMessages] = useState<any[]>([]);
+  const [messages, setMessages] = useState<Message[]>([]);
   const [newMessage, setNewMessage] = useState('');
   const [sending, setSending] = useState(false);
   const [uploadingImage, setUploadingImage] = useState(false);

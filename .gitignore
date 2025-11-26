@@ -9,9 +9,30 @@ npm-debug.*
 *.mobileprovision
 *.orig.*
 web-build/
+
+# Environment variables
 .env
 .env.local
+.env.production
+.env.development
+
+# OS files
 .DS_Store
-node_modules
-node_modules
+
+# Backup files
+*.old.*
+*.backup
+*.bak
+*.tmp
+
+# Logs
+*.log
+
+# Claude AI
+.claude/
+
+# Apple Private Keys (sensitive)
+generate-apple-secret.js
+
+# Build artifacts
 nul

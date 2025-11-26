@@ -1,10 +1,12 @@
-import React, { useEffect, useState } from 'react';
-import { View, FlatList, StyleSheet, RefreshControl, Alert } from 'react-native';
+import React, { useEffect, useState, useCallback } from 'react';
+import { View, FlatList, StyleSheet, RefreshControl, Alert, TouchableOpacity } from 'react-native';
 import { Card, Text, Button, Avatar, ActivityIndicator, Searchbar, Chip, Divider, IconButton } from 'react-native-paper';
 import { supabase } from '../../services/supabase';
 import { useAuth } from '../../hooks/useAuth';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { friendService, FriendshipStatus } from '../../services/friendService';
+import { StackNavigationProp } from '@react-navigation/stack';
+import { RootStackParamList } from '../../navigation/AppNavigator';
 
 interface Friend {
   id: string;
@@ -26,7 +28,13 @@ interface FriendRequest {
 
 type TabType = 'friends' | 'requests' | 'sent' | 'search';
 
-export default function FriendsScreen() {
+type FriendsScreenNavigationProp = StackNavigationProp<RootStackParamList, 'Friends'>;
+
+interface Props {
+  navigation: FriendsScreenNavigationProp;
+}
+
+export default function FriendsScreen({ navigation }: Props) {
   const { user } = useAuth();
   const [activeTab, setActiveTab] = useState<TabType>('friends');
   const [friends, setFriends] = useState<Friend[]>([]);
@@ -81,13 +89,13 @@ export default function FriendsScreen() {
   const loadFriendRequests = async () => {
     if (!user) return;
     const data = await friendService.getFriendRequests(user.id);
-    setFriendRequests(data as any);
+    setFriendRequests(data as FriendRequest[]);
   };
 
   const loadSentRequests = async () => {
     if (!user) return;
     const data = await friendService.getSentRequests(user.id);
-    setSentRequests(data as any);
+    setSentRequests(data as FriendRequest[]);
   };
 
   const searchUsers = async () => {
@@ -232,77 +240,95 @@ export default function FriendsScreen() {
 
   const renderFriend = ({ item }: { item: Friend }) => (
     <Card style={styles.card} mode="elevated">
-      <Card.Content style={styles.cardContent}>
-        {item.avatar_url ? (
-          <Avatar.Image size={50} source={{ uri: item.avatar_url }} />
-        ) : (
-          <Avatar.Text size={50} label={item.full_name?.charAt(0) || 'U'} />
-        )}
-        <View style={styles.friendInfo}>
-          <Text style={styles.friendName}>{item.full_name}</Text>
-          {item.bio && <Text style={styles.friendBio} numberOfLines={1}>{item.bio}</Text>}
-        </View>
-        <IconButton
-          icon="account-remove"
-          size={24}
-          onPress={() => removeFriend(item.id)}
-          disabled={processingIds.has(item.id)}
-        />
-      </Card.Content>
+      <TouchableOpacity onPress={() => navigation.navigate('ProfileDetail', { userId: item.id })}>
+        <Card.Content style={styles.cardContent}>
+          {item.avatar_url ? (
+            <Avatar.Image size={50} source={{ uri: item.avatar_url }} />
+          ) : (
+            <Avatar.Text size={50} label={item.full_name?.charAt(0) || 'U'} />
+          )}
+          <View style={styles.friendInfo}>
+            <Text style={styles.friendName}>{item.full_name}</Text>
+            {item.bio && <Text style={styles.friendBio} numberOfLines={1}>{item.bio}</Text>}
+          </View>
+          <IconButton
+            icon="account-remove"
+            size={24}
+            onPress={(e) => {
+              e?.stopPropagation();
+              removeFriend(item.id);
+            }}
+            disabled={processingIds.has(item.id)}
+          />
+        </Card.Content>
+      </TouchableOpacity>
     </Card>
   );
 
   const renderFriendRequest = ({ item }: { item: FriendRequest }) => (
     <Card style={styles.card} mode="elevated">
-      <Card.Content style={styles.cardContent}>
-        {item.requester.avatar_url ? (
-          <Avatar.Image size={50} source={{ uri: item.requester.avatar_url }} />
-        ) : (
-          <Avatar.Text size={50} label={item.requester.full_name?.charAt(0) || 'U'} />
-        )}
-        <View style={styles.friendInfo}>
-          <Text style={styles.friendName}>{item.requester.full_name}</Text>
-          {item.requester.bio && <Text style={styles.friendBio} numberOfLines={1}>{item.requester.bio}</Text>}
-        </View>
-        <View style={styles.requestActions}>
-          <IconButton
-            icon="check"
-            size={24}
-            iconColor="#4CAF50"
-            onPress={() => acceptFriendRequest(item.id)}
-            disabled={processingIds.has(item.id)}
-          />
-          <IconButton
-            icon="close"
-            size={24}
-            iconColor="#F44336"
-            onPress={() => rejectFriendRequest(item.id)}
-            disabled={processingIds.has(item.id)}
-          />
-        </View>
-      </Card.Content>
+      <TouchableOpacity onPress={() => navigation.navigate('ProfileDetail', { userId: item.requester.id })}>
+        <Card.Content style={styles.cardContent}>
+          {item.requester.avatar_url ? (
+            <Avatar.Image size={50} source={{ uri: item.requester.avatar_url }} />
+          ) : (
+            <Avatar.Text size={50} label={item.requester.full_name?.charAt(0) || 'U'} />
+          )}
+          <View style={styles.friendInfo}>
+            <Text style={styles.friendName}>{item.requester.full_name}</Text>
+            {item.requester.bio && <Text style={styles.friendBio} numberOfLines={1}>{item.requester.bio}</Text>}
+          </View>
+          <View style={styles.requestActions}>
+            <IconButton
+              icon="check"
+              size={24}
+              iconColor="#4CAF50"
+              onPress={(e) => {
+                e?.stopPropagation();
+                acceptFriendRequest(item.id);
+              }}
+              disabled={processingIds.has(item.id)}
+            />
+            <IconButton
+              icon="close"
+              size={24}
+              iconColor="#F44336"
+              onPress={(e) => {
+                e?.stopPropagation();
+                rejectFriendRequest(item.id);
+              }}
+              disabled={processingIds.has(item.id)}
+            />
+          </View>
+        </Card.Content>
+      </TouchableOpacity>
     </Card>
   );
 
   const renderSentRequest = ({ item }: { item: FriendRequest }) => (
     <Card style={styles.card} mode="elevated">
-      <Card.Content style={styles.cardContent}>
-        {item.target.avatar_url ? (
-          <Avatar.Image size={50} source={{ uri: item.target.avatar_url }} />
-        ) : (
-          <Avatar.Text size={50} label={item.target.full_name?.charAt(0) || 'U'} />
-        )}
-        <View style={styles.friendInfo}>
-          <Text style={styles.friendName}>{item.target.full_name}</Text>
-          <Chip icon="clock" compact style={styles.pendingChip}>Bekliyor</Chip>
-        </View>
-        <IconButton
-          icon="close"
-          size={24}
-          onPress={() => cancelFriendRequest(item.id)}
-          disabled={processingIds.has(item.id)}
-        />
-      </Card.Content>
+      <TouchableOpacity onPress={() => navigation.navigate('ProfileDetail', { userId: item.target.id })}>
+        <Card.Content style={styles.cardContent}>
+          {item.target.avatar_url ? (
+            <Avatar.Image size={50} source={{ uri: item.target.avatar_url }} />
+          ) : (
+            <Avatar.Text size={50} label={item.target.full_name?.charAt(0) || 'U'} />
+          )}
+          <View style={styles.friendInfo}>
+            <Text style={styles.friendName}>{item.target.full_name}</Text>
+            <Chip icon="clock" compact style={styles.pendingChip}>Bekliyor</Chip>
+          </View>
+          <IconButton
+            icon="close"
+            size={24}
+            onPress={(e) => {
+              e?.stopPropagation();
+              cancelFriendRequest(item.id);
+            }}
+            disabled={processingIds.has(item.id)}
+          />
+        </Card.Content>
+      </TouchableOpacity>
     </Card>
   );
 
@@ -361,18 +387,22 @@ export default function FriendsScreen() {
 
     return (
       <Card style={styles.card} mode="elevated">
-        <Card.Content style={styles.cardContent}>
-          {item.avatar_url ? (
-            <Avatar.Image size={50} source={{ uri: item.avatar_url }} />
-          ) : (
-            <Avatar.Text size={50} label={item.full_name?.charAt(0) || 'U'} />
-          )}
-          <View style={styles.friendInfo}>
-            <Text style={styles.friendName}>{item.full_name}</Text>
-            {item.bio && <Text style={styles.friendBio} numberOfLines={1}>{item.bio}</Text>}
-          </View>
-          {renderActionButton()}
-        </Card.Content>
+        <TouchableOpacity onPress={() => navigation.navigate('ProfileDetail', { userId: item.id })}>
+          <Card.Content style={styles.cardContent}>
+            {item.avatar_url ? (
+              <Avatar.Image size={50} source={{ uri: item.avatar_url }} />
+            ) : (
+              <Avatar.Text size={50} label={item.full_name?.charAt(0) || 'U'} />
+            )}
+            <View style={styles.friendInfo}>
+              <Text style={styles.friendName}>{item.full_name}</Text>
+              {item.bio && <Text style={styles.friendBio} numberOfLines={1}>{item.bio}</Text>}
+            </View>
+            <View onStartShouldSetResponder={() => true}>
+              {renderActionButton()}
+            </View>
+          </Card.Content>
+        </TouchableOpacity>
       </Card>
     );
   };

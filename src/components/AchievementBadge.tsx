@@ -21,7 +21,18 @@ export default function AchievementBadge({
   showLocked = true,
 }: AchievementBadgeProps) {
   const isUnlocked = !!userAchievement;
-  const colors = getAchievementRarityColor(achievement.rarity);
+
+  // Calculate rarity from points if not provided
+  let rarity = achievement.rarity || 'common';
+  if (!achievement.rarity) {
+    const points = achievement.points || 0;
+    if (points >= 100) rarity = 'legendary';
+    else if (points >= 50) rarity = 'epic';
+    else if (points >= 25) rarity = 'rare';
+    else rarity = 'common';
+  }
+
+  const colors = getAchievementRarityColor(rarity);
 
   const sizeConfig = {
     small: { iconSize: 32, containerSize: 60, fontSize: 10 },

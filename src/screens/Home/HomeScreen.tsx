@@ -1,5 +1,5 @@
 import React, { useEffect, useState, useMemo } from 'react';
-import { View, FlatList, StyleSheet, RefreshControl, Platform, Linking, StatusBar } from 'react-native';
+import { View, FlatList, StyleSheet, RefreshControl, Platform, Linking, StatusBar, Alert } from 'react-native';
 import { Text, Button, Chip, ActivityIndicator, FAB, Badge, useTheme } from 'react-native-paper';
 import { LinearGradient } from 'expo-linear-gradient';
 import { supabase } from '../../services/supabase';
@@ -62,15 +62,29 @@ export default function HomeScreen({ navigation }: Props) {
   const getUserLocation = async () => {
     try {
       const { status } = await Location.requestForegroundPermissionsAsync();
+
       if (status === 'granted') {
         const location = await Location.getCurrentPositionAsync({});
         setUserLocation({
           latitude: location.coords.latitude,
           longitude: location.coords.longitude,
         });
+      } else if (status === 'denied') {
+        Alert.alert(
+          'Konum İzni Gerekli',
+          'Yakınınızdaki etkinlikleri görmek için konum erişimine izin verin. Ayarlar\'dan izni etkinleştirebilirsiniz.',
+          [
+            { text: 'İptal', style: 'cancel' },
+            {
+              text: 'Ayarları Aç',
+              onPress: () => Linking.openSettings()
+            }
+          ]
+        );
       }
     } catch (error) {
       console.error('[HomeScreen] getUserLocation error:', error);
+      Alert.alert('Hata', 'Konum bilgisi alınamadı. Lütfen konum servislerinizin açık olduğundan emin olun.');
     }
   };
 
@@ -275,7 +289,7 @@ export default function HomeScreen({ navigation }: Props) {
 
       // Cache the first page results
       if (pageNum === 0 && !append) {
-        const cacheKey = `${CACHE_KEYS.SESSIONS}_${selectedSport || 'all'}_${selectedCity || 'all'}`;
+        const cacheKey = `${CACHE_KEYS.SESSIONS}_${selectedSport || 'all'}`;
         await cacheService.set(cacheKey, newSessions, CACHE_TTL.MEDIUM);
       }
     }

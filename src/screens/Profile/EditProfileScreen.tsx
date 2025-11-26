@@ -5,6 +5,7 @@ import { supabase } from '../../services/supabase';
 import { useAuth } from '../../hooks/useAuth';
 import { Profile } from '../../types';
 import { useNavigation } from '@react-navigation/native';
+import { validateBio, validateName } from '../../utils/validation';
 
 export default function EditProfileScreen() {
   const navigation = useNavigation();
@@ -24,6 +25,7 @@ export default function EditProfileScreen() {
   const [errors, setErrors] = useState({
     fullName: '',
     phone: '',
+    bio: '',
   });
 
   useEffect(() => {
@@ -59,18 +61,31 @@ export default function EditProfileScreen() {
     const newErrors = {
       fullName: '',
       phone: '',
+      bio: '',
     };
 
+    // Validate full name
     if (!fullName.trim()) {
       newErrors.fullName = 'Ad Soyad gereklidir';
+    } else if (!validateName(fullName)) {
+      newErrors.fullName = 'Ad Soyad en az 2 karakter olmalıdır';
     }
 
+    // Validate phone
     if (phone && !/^[0-9]{10,11}$/.test(phone.replace(/\s/g, ''))) {
       newErrors.phone = 'Geçerli bir telefon numarası girin (10-11 rakam)';
     }
 
+    // Validate bio
+    if (bio) {
+      const bioValidation = validateBio(bio);
+      if (!bioValidation.isValid) {
+        newErrors.bio = bioValidation.message || '';
+      }
+    }
+
     setErrors(newErrors);
-    return !newErrors.fullName && !newErrors.phone;
+    return !newErrors.fullName && !newErrors.phone && !newErrors.bio;
   };
 
   const handleSave = async () => {

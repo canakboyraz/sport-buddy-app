@@ -34,7 +34,7 @@ export async function getUserAchievements(userId: string): Promise<UserAchieveme
       achievement:achievements(*)
     `)
     .eq('user_id', userId)
-    .order('unlocked_at', { ascending: false });
+    .order('earned_at', { ascending: false });
 
   if (error) {
     console.error('[achievementService] Error fetching user achievements:', error);
@@ -59,7 +59,13 @@ export async function getUserAchievementStats(userId: string) {
   );
 
   const achievementsByRarity = userAchievements.reduce((acc, ua) => {
-    const rarity = ua.achievement?.rarity || 'common';
+    // Calculate rarity based on points since rarity column doesn't exist
+    const points = ua.achievement?.points || 0;
+    let rarity = 'common';
+    if (points >= 100) rarity = 'legendary';
+    else if (points >= 50) rarity = 'epic';
+    else if (points >= 25) rarity = 'rare';
+
     acc[rarity] = (acc[rarity] || 0) + 1;
     return acc;
   }, {} as Record<string, number>);
@@ -80,13 +86,13 @@ export async function getUserAchievementStats(userId: string) {
  */
 export async function hasAchievement(
   userId: string,
-  achievementCode: string
+  achievementId: number
 ): Promise<boolean> {
   const { data, error } = await supabase
     .from('user_achievements')
-    .select('id, achievement:achievements!inner(code)')
+    .select('id')
     .eq('user_id', userId)
-    .eq('achievement.code', achievementCode)
+    .eq('achievement_id', achievementId)
     .maybeSingle();
 
   if (error) {
@@ -144,14 +150,14 @@ export function getAchievementRarityColor(
  */
 export function getCategoryIcon(category: string): string {
   switch (category) {
-    case 'participation':
-      return 'run';
+    case 'sessions':
+      return 'calendar-check';
     case 'social':
       return 'account-group';
-    case 'creation':
-      return 'calendar-plus';
-    case 'special':
-      return 'star-circle';
+    case 'ratings':
+      return 'star';
+    case 'activity':
+      return 'run';
     default:
       return 'trophy';
   }

@@ -41,7 +41,7 @@ export default function ChatScreen({ navigation, route }: Props) {
         {
           event: 'INSERT',
           schema: 'public',
-          table: 'messages',
+          table: 'chat_messages',
           filter: `session_id=eq.${sessionId}`,
         },
         (payload) => {
@@ -57,7 +57,7 @@ export default function ChatScreen({ navigation, route }: Props) {
 
   const loadMessages = async () => {
     const { data, error } = await supabase
-      .from('messages')
+      .from('chat_messages')
       .select(`
         *,
         user:profiles(*)
@@ -78,7 +78,7 @@ export default function ChatScreen({ navigation, route }: Props) {
 
     setSending(true);
 
-    const { error } = await supabase.from('messages').insert({
+    const { error } = await supabase.from('chat_messages').insert({
       session_id: sessionId,
       user_id: user.id,
       content: newMessage.trim(),

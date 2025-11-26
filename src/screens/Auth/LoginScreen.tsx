@@ -41,12 +41,12 @@ export default function LoginScreen({ navigation }: Props) {
   const loadSavedCredentials = async () => {
     try {
       const savedEmail = await secureStore.getItem('rememberedEmail');
-      const savedPassword = await secureStore.getItem('rememberedPassword');
-      if (savedEmail && savedPassword) {
+      if (savedEmail) {
         setEmail(savedEmail);
-        setPassword(savedPassword);
         setRememberMe(true);
       }
+      // Clean up any old saved passwords (security fix)
+      await secureStore.deleteItem('rememberedPassword');
     } catch (error) {
       console.error('Error loading credentials:', error);
     }
@@ -75,21 +75,19 @@ export default function LoginScreen({ navigation }: Props) {
     if (error) {
       Alert.alert('Giriş Hatası', error.message);
     } else {
-      // Save credentials if "Remember Me" is checked
+      // Save only email if "Remember Me" is checked (NEVER save password)
       if (rememberMe) {
         try {
           await secureStore.setItem('rememberedEmail', email);
-          await secureStore.setItem('rememberedPassword', password);
         } catch (error) {
-          console.error('Error saving credentials:', error);
+          console.error('Error saving email:', error);
         }
       } else {
-        // Clear saved credentials if "Remember Me" is unchecked
+        // Clear saved email if "Remember Me" is unchecked
         try {
           await secureStore.deleteItem('rememberedEmail');
-          await secureStore.deleteItem('rememberedPassword');
         } catch (error) {
-          console.error('Error clearing credentials:', error);
+          console.error('Error clearing email:', error);
         }
       }
     }
@@ -150,12 +148,32 @@ export default function LoginScreen({ navigation }: Props) {
       });
 
       if (credential.identityToken) {
-        const { error } = await supabase.auth.signInWithIdToken({
+        // Apple'dan gelen ad-soyad bilgisini hazırla
+        let fullName = '';
+        if (credential.fullName) {
+          const firstName = credential.fullName.givenName || '';
+          const lastName = credential.fullName.familyName || '';
+          fullName = `${firstName} ${lastName}`.trim();
+        }
+
+        const { data, error } = await supabase.auth.signInWithIdToken({
           provider: 'apple',
           token: credential.identityToken,
         });
 
         if (error) throw error;
+
+        // Kullanıcı profili oluşturulduysa ve ad-soyad varsa güncelle
+        if (data?.user && fullName) {
+          await supabase.from('profiles').upsert({
+            id: data.user.id,
+            full_name: fullName,
+            email: data.user.email,
+            updated_at: new Date().toISOString(),
+          }, {
+            onConflict: 'id'
+          });
+        }
       }
     } catch (error: any) {
       if (error.code === 'ERR_REQUEST_CANCELED') {
