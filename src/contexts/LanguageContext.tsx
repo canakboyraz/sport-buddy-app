@@ -40,20 +40,17 @@ const getDeviceLanguage = (): LanguageCode => {
 // IMPORTANT: Initialize i18n synchronously RIGHT NOW, before anything else
 const defaultLanguage = getDeviceLanguage();
 
-// Force immediate synchronous i18n initialization
 console.log('[LanguageContext MODULE] Starting i18n initialization...');
 console.log('[LanguageContext MODULE] defaultLanguage:', defaultLanguage);
-console.log('[LanguageContext MODULE] Available resources:', Object.keys(resources));
-console.log('[LanguageContext MODULE] tr translations sample:', {
-  login: tr.auth.login,
-  email: tr.auth.email,
-  appName: tr.common.appName
-});
 
-// Initialize i18n instance
-i18n
-  .use(initReactI18next)
-  .init({
+// Check if i18n is already initialized (hot reload case)
+if (!i18n.isInitialized) {
+  console.log('[LanguageContext MODULE] Initializing i18n for the first time');
+  // Initialize synchronously
+  i18n.use(initReactI18next);
+
+  // Use the init method synchronously - it's actually sync despite returning a promise
+  i18n.init({
     resources,
     lng: defaultLanguage,
     fallbackLng: 'en',
@@ -65,15 +62,16 @@ i18n
       useSuspense: false,
     },
   });
+} else {
+  console.log('[LanguageContext MODULE] i18n already initialized (hot reload)');
+}
 
 console.log('[LanguageContext MODULE] After init():');
-console.log('[LanguageContext MODULE] - i18n.isInitialized:', i18n.isInitialized);
-console.log('[LanguageContext MODULE] - i18n.language:', i18n.language);
-console.log('[LanguageContext MODULE] - i18n.languages:', i18n.languages);
-console.log('[LanguageContext MODULE] - hasResourceBundle("tr", "translation"):', i18n.hasResourceBundle('tr', 'translation'));
-console.log('[LanguageContext MODULE] - hasResourceBundle("en", "translation"):', i18n.hasResourceBundle('en', 'translation'));
+console.log('[LanguageContext MODULE] - isInitialized:', i18n.isInitialized);
+console.log('[LanguageContext MODULE] - language:', i18n.language);
 console.log('[LanguageContext MODULE] - t("auth.login"):', i18n.t('auth.login'));
-console.log('[LanguageContext MODULE] - getResource("tr", "translation", "auth.login"):', i18n.getResource('tr', 'translation', 'auth.login'));
+console.log('[LanguageContext MODULE] - t("auth.email"):', i18n.t('auth.email'));
+console.log('[LanguageContext MODULE] - t("common.appName"):', i18n.t('common.appName'));
 
 type LanguageContextType = {
   currentLanguage: LanguageCode;
