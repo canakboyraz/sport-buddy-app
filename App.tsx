@@ -16,8 +16,9 @@ import {
 import { ThemeProvider, useTheme } from './src/contexts/ThemeContext';
 import { LanguageProvider } from './src/contexts/LanguageContext';
 import ErrorBoundary from './src/components/ErrorBoundary';
-import './src/i18n'; // Initialize i18n
+import i18n from './src/i18n'; // Initialize i18n
 import * as Sentry from '@sentry/react-native';
+import { ActivityIndicator, View } from 'react-native';
 
 // Initialize Sentry (only if DSN is configured)
 const sentryDsn = process.env.EXPO_PUBLIC_SENTRY_DSN;
@@ -40,10 +41,38 @@ if (sentryDsn && !sentryDsn.includes('your-sentry-dsn')) {
 function AppContent() {
   const [session, setSession] = useState<Session | null>(null);
   const [loading, setLoading] = useState(true);
+  const [i18nReady, setI18nReady] = useState(false);
   const notificationListener = useRef<any>();
   const responseListener = useRef<any>();
   const navigationRef = useRef<NavigationContainerRef<any>>(null);
   const { theme } = useTheme();
+
+  // Wait for i18n to be initialized
+  useEffect(() => {
+    // Check if i18n is already initialized
+    if (i18n.isInitialized) {
+      setI18nReady(true);
+    } else {
+      // Wait for initialization
+      const checkI18n = setInterval(() => {
+        if (i18n.isInitialized) {
+          setI18nReady(true);
+          clearInterval(checkI18n);
+        }
+      }, 100);
+
+      // Timeout after 3 seconds
+      const timeout = setTimeout(() => {
+        setI18nReady(true);
+        clearInterval(checkI18n);
+      }, 3000);
+
+      return () => {
+        clearInterval(checkI18n);
+        clearTimeout(timeout);
+      };
+    }
+  }, []);
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data: { session } }) => {
@@ -110,8 +139,13 @@ function AppContent() {
     }
   }, [session]);
 
-  if (loading) {
-    return null;
+  // Show loading while i18n or auth is initializing
+  if (!i18nReady || loading) {
+    return (
+      <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: theme.colors.background }}>
+        <ActivityIndicator size="large" color={theme.colors.primary} />
+      </View>
+    );
   }
 
   return (
