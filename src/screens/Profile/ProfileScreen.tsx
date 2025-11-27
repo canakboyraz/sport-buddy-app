@@ -161,209 +161,269 @@ export default function ProfileScreen() {
 
   return (
     <ScrollView style={[styles.container, { backgroundColor: theme.colors.background }]}>
-      <Card style={styles.card}>
-        {/* Gradient Header */}
-        <LinearGradient
-          colors={
-            isDarkMode
-              ? [theme.colors.primaryContainer, theme.colors.secondaryContainer]
-              : ['#6200ee', '#9c27b0']
-          }
-          start={{ x: 0, y: 0 }}
-          end={{ x: 1, y: 0 }}
-          style={styles.gradientHeader}
-        >
-          <View style={styles.header}>
-            <View>
-              <TouchableOpacity onPress={handlePhotoSelection} disabled={uploadingPhoto}>
-                {profile.avatar_url ? (
-                  <Avatar.Image size={90} source={{ uri: profile.avatar_url }} style={styles.avatar} />
-                ) : (
-                  <Avatar.Text size={90} label={profile.full_name?.charAt(0) || 'U'} style={styles.avatar} />
-                )}
-                {uploadingPhoto && (
-                  <View style={styles.uploadingOverlay}>
-                    <ActivityIndicator size="small" color="#fff" />
-                  </View>
-                )}
-              </TouchableOpacity>
-              <TouchableOpacity
-                style={styles.cameraButton}
-                onPress={handlePhotoSelection}
-                disabled={uploadingPhoto}
-              >
-                <MaterialCommunityIcons name="camera" size={20} color="#fff" />
-              </TouchableOpacity>
-            </View>
-
-            <View style={styles.headerInfo}>
-              <Text style={styles.name}>{profile.full_name}</Text>
-              <Text style={styles.email}>{profile.email}</Text>
-              {profile.phone && <Text style={styles.phone}>{profile.phone}</Text>}
-
-              {/* Rating Badge */}
-              {ratings.length > 0 && (
-                <View style={styles.ratingBadge}>
-                  <MaterialCommunityIcons name="star" size={16} color="#FFD700" />
-                  <Text style={styles.ratingBadgeText}>
-                    {averageRating.toFixed(1)} ({ratings.length})
-                  </Text>
+      {/* Modern Profile Header */}
+      <LinearGradient
+        colors={
+          isDarkMode
+            ? ['#6200ee', '#9c27b0']
+            : ['#6200ee', '#9c27b0']
+        }
+        start={{ x: 0, y: 0 }}
+        end={{ x: 1, y: 1 }}
+        style={styles.gradientHeader}
+      >
+        <View style={styles.headerContent}>
+          <View style={styles.avatarContainer}>
+            <TouchableOpacity onPress={handlePhotoSelection} disabled={uploadingPhoto}>
+              {profile.avatar_url ? (
+                <Avatar.Image size={100} source={{ uri: profile.avatar_url }} style={styles.avatar} />
+              ) : (
+                <Avatar.Text size={100} label={profile.full_name?.charAt(0) || 'U'} style={styles.avatar} />
+              )}
+              {uploadingPhoto && (
+                <View style={styles.uploadingOverlay}>
+                  <ActivityIndicator size="small" color="#fff" />
                 </View>
               )}
+            </TouchableOpacity>
+            <TouchableOpacity
+              style={styles.cameraButton}
+              onPress={handlePhotoSelection}
+              disabled={uploadingPhoto}
+            >
+              <MaterialCommunityIcons name="camera" size={18} color="#6200ee" />
+            </TouchableOpacity>
+          </View>
+
+          <Text style={styles.name}>{profile.full_name}</Text>
+          <Text style={styles.email}>{profile.email}</Text>
+
+          {/* Rating Badge */}
+          {ratings.length > 0 && (
+            <View style={styles.ratingBadge}>
+              <MaterialCommunityIcons name="star" size={18} color="#FFD700" />
+              <Text style={styles.ratingBadgeText}>
+                {averageRating.toFixed(1)} ({ratings.length} {t('rating.reviews')})
+              </Text>
             </View>
-          </View>
-        </LinearGradient>
-
-        <Card.Content style={styles.cardContent}>
-          {profile.bio && (
-            <>
-              <Text style={[styles.bioLabel, { color: theme.colors.onSurface }]}>{t('profile.bio')}</Text>
-              <Text style={[styles.bio, { color: theme.colors.onSurfaceVariant }]}>{profile.bio}</Text>
-              <Divider style={styles.divider} />
-            </>
           )}
+        </View>
+      </LinearGradient>
 
-          {/* Quick Actions */}
-          <View style={styles.quickActions}>
-            <TouchableOpacity
-              style={[styles.quickActionButton, { backgroundColor: theme.colors.primaryContainer }]}
-              onPress={() => navigation.navigate('EditProfile')}
-            >
-              <MaterialCommunityIcons name="pencil" size={24} color={theme.colors.primary} />
-              <Text style={[styles.quickActionText, { color: theme.colors.onSurface }]}>{t('common.edit')}</Text>
-            </TouchableOpacity>
-
-            <TouchableOpacity
-              style={[styles.quickActionButton, { backgroundColor: theme.colors.secondaryContainer }]}
-              onPress={() => navigation.navigate('CreateSession')}
-            >
-              <MaterialCommunityIcons name="plus-circle" size={24} color={theme.colors.secondary} />
-              <Text style={[styles.quickActionText, { color: theme.colors.onSurface }]}>{t('profile.newSession')}</Text>
-            </TouchableOpacity>
-
-            <TouchableOpacity
-              style={[styles.quickActionButton, { backgroundColor: theme.colors.tertiaryContainer }]}
-              onPress={() => navigation.navigate('Favorites')}
-            >
-              <MaterialCommunityIcons name="heart" size={24} color={theme.colors.tertiary} />
-              <Text style={[styles.quickActionText, { color: theme.colors.onSurface }]}>{t('navigation.favorites')}</Text>
-            </TouchableOpacity>
+      {/* Bio Section */}
+      {profile.bio && (
+        <Surface style={[styles.bioCard, { backgroundColor: theme.colors.surface }]} elevation={1}>
+          <View style={styles.bioHeader}>
+            <MaterialCommunityIcons name="information" size={20} color={theme.colors.primary} />
+            <Text style={[styles.bioLabel, { color: theme.colors.primary }]}>{t('profile.bio')}</Text>
           </View>
-        </Card.Content>
-      </Card>
+          <Text style={[styles.bio, { color: theme.colors.onSurface }]}>{profile.bio}</Text>
+        </Surface>
+      )}
+
+      {/* Quick Actions */}
+      <View style={styles.quickActionsContainer}>
+        <TouchableOpacity
+          style={[styles.quickActionCard, { backgroundColor: theme.colors.primaryContainer }]}
+          onPress={() => navigation.navigate('EditProfile')}
+        >
+          <View style={[styles.quickActionIcon, { backgroundColor: theme.colors.primary + '20' }]}>
+            <MaterialCommunityIcons name="pencil" size={26} color={theme.colors.primary} />
+          </View>
+          <Text style={[styles.quickActionText, { color: theme.colors.onSurface }]}>{t('common.edit')}</Text>
+        </TouchableOpacity>
+
+        <TouchableOpacity
+          style={[styles.quickActionCard, { backgroundColor: theme.colors.tertiaryContainer }]}
+          onPress={() => navigation.navigate('Favorites')}
+        >
+          <View style={[styles.quickActionIcon, { backgroundColor: theme.colors.tertiary + '20' }]}>
+            <MaterialCommunityIcons name="heart" size={26} color={theme.colors.tertiary} />
+          </View>
+          <Text style={[styles.quickActionText, { color: theme.colors.onSurface }]}>{t('navigation.favorites')}</Text>
+        </TouchableOpacity>
+
+        <TouchableOpacity
+          style={[styles.quickActionCard, { backgroundColor: theme.colors.secondaryContainer }]}
+          onPress={() => navigation.navigate('ProfileStats')}
+        >
+          <View style={[styles.quickActionIcon, { backgroundColor: theme.colors.secondary + '20' }]}>
+            <MaterialCommunityIcons name="chart-line" size={26} color={theme.colors.secondary} />
+          </View>
+          <Text style={[styles.quickActionText, { color: theme.colors.onSurface }]}>{t('profile.myStats')}</Text>
+        </TouchableOpacity>
+      </View>
 
       {/* Statistics & Achievements */}
-      <Surface style={[styles.menuCard, { backgroundColor: theme.colors.surface }]} elevation={1}>
-        <Text style={[styles.menuTitle, { color: theme.colors.onSurface }]}>{t('profile.statsAndAchievements')}</Text>
-        <List.Item
-          title={t('profile.myStats')}
-          description={t('profile.viewActivityHistory')}
-          left={props => <List.Icon {...props} icon="chart-box" color={theme.colors.primary} />}
-          right={props => <List.Icon {...props} icon="chevron-right" />}
+      <Surface style={[styles.menuCard, { backgroundColor: theme.colors.surface }]} elevation={2}>
+        <View style={styles.cardHeader}>
+          <MaterialCommunityIcons name="trophy-variant" size={22} color={theme.colors.primary} />
+          <Text style={[styles.cardTitle, { color: theme.colors.onSurface }]}>{t('profile.statsAndAchievements')}</Text>
+        </View>
+        <TouchableOpacity
+          style={styles.modernMenuItem}
           onPress={() => navigation.navigate('ProfileStats')}
-          style={styles.menuItem}
-        />
-        <Divider />
-        <List.Item
-          title={t('profile.myAchievements')}
-          description={t('profile.discoverBadges')}
-          left={props => <List.Icon {...props} icon="trophy" color="#FFD700" />}
-          right={props => <List.Icon {...props} icon="chevron-right" />}
+        >
+          <View style={styles.menuItemLeft}>
+            <View style={[styles.menuIconContainer, { backgroundColor: theme.colors.primaryContainer }]}>
+              <MaterialCommunityIcons name="chart-box" size={24} color={theme.colors.primary} />
+            </View>
+            <View style={styles.menuTextContainer}>
+              <Text style={[styles.menuItemTitle, { color: theme.colors.onSurface }]}>{t('profile.myStats')}</Text>
+              <Text style={[styles.menuItemSubtitle, { color: theme.colors.onSurfaceVariant }]}>{t('profile.viewActivityHistory')}</Text>
+            </View>
+          </View>
+          <MaterialCommunityIcons name="chevron-right" size={24} color={theme.colors.onSurfaceVariant} />
+        </TouchableOpacity>
+        <Divider style={styles.divider} />
+        <TouchableOpacity
+          style={styles.modernMenuItem}
           onPress={() => navigation.navigate('Achievements')}
-          style={styles.menuItem}
-        />
+        >
+          <View style={styles.menuItemLeft}>
+            <View style={[styles.menuIconContainer, { backgroundColor: '#FFD70020' }]}>
+              <MaterialCommunityIcons name="trophy" size={24} color="#FFD700" />
+            </View>
+            <View style={styles.menuTextContainer}>
+              <Text style={[styles.menuItemTitle, { color: theme.colors.onSurface }]}>{t('profile.myAchievements')}</Text>
+              <Text style={[styles.menuItemSubtitle, { color: theme.colors.onSurfaceVariant }]}>{t('profile.discoverBadges')}</Text>
+            </View>
+          </View>
+          <MaterialCommunityIcons name="chevron-right" size={24} color={theme.colors.onSurfaceVariant} />
+        </TouchableOpacity>
       </Surface>
 
       {/* Social */}
-      <Surface style={[styles.menuCard, { backgroundColor: theme.colors.surface }]} elevation={1}>
-        <Text style={[styles.menuTitle, { color: theme.colors.onSurface }]}>{t('profile.social')}</Text>
-        <List.Item
-          title={t('friends.myFriends')}
-          description={t('profile.manageFriendsList')}
-          left={props => <List.Icon {...props} icon="account-multiple" color={theme.colors.primary} />}
-          right={props => <List.Icon {...props} icon="chevron-right" />}
+      <Surface style={[styles.menuCard, { backgroundColor: theme.colors.surface }]} elevation={2}>
+        <View style={styles.cardHeader}>
+          <MaterialCommunityIcons name="account-group" size={22} color={theme.colors.primary} />
+          <Text style={[styles.cardTitle, { color: theme.colors.onSurface }]}>{t('profile.social')}</Text>
+        </View>
+        <TouchableOpacity
+          style={styles.modernMenuItem}
           onPress={() => navigation.navigate('Friends')}
-          style={styles.menuItem}
-        />
-        <Divider />
-        <List.Item
-          title={t('profile.blockedUsers')}
-          description={t('profile.blockedUsersDesc')}
-          left={props => <List.Icon {...props} icon="account-off" color="#F44336" />}
-          right={props => <List.Icon {...props} icon="chevron-right" />}
+        >
+          <View style={styles.menuItemLeft}>
+            <View style={[styles.menuIconContainer, { backgroundColor: theme.colors.secondaryContainer }]}>
+              <MaterialCommunityIcons name="account-multiple" size={24} color={theme.colors.secondary} />
+            </View>
+            <View style={styles.menuTextContainer}>
+              <Text style={[styles.menuItemTitle, { color: theme.colors.onSurface }]}>{t('friends.myFriends')}</Text>
+              <Text style={[styles.menuItemSubtitle, { color: theme.colors.onSurfaceVariant }]}>{t('profile.manageFriendsList')}</Text>
+            </View>
+          </View>
+          <MaterialCommunityIcons name="chevron-right" size={24} color={theme.colors.onSurfaceVariant} />
+        </TouchableOpacity>
+        <Divider style={styles.divider} />
+        <TouchableOpacity
+          style={styles.modernMenuItem}
           onPress={() => navigation.navigate('BlockedUsers')}
-          style={styles.menuItem}
-        />
+        >
+          <View style={styles.menuItemLeft}>
+            <View style={[styles.menuIconContainer, { backgroundColor: '#F4433620' }]}>
+              <MaterialCommunityIcons name="account-off" size={24} color="#F44336" />
+            </View>
+            <View style={styles.menuTextContainer}>
+              <Text style={[styles.menuItemTitle, { color: theme.colors.onSurface }]}>{t('profile.blockedUsers')}</Text>
+              <Text style={[styles.menuItemSubtitle, { color: theme.colors.onSurfaceVariant }]}>{t('profile.blockedUsersDesc')}</Text>
+            </View>
+          </View>
+          <MaterialCommunityIcons name="chevron-right" size={24} color={theme.colors.onSurfaceVariant} />
+        </TouchableOpacity>
       </Surface>
 
       {/* Settings */}
-      <Surface style={[styles.menuCard, { backgroundColor: theme.colors.surface }]} elevation={1}>
-        <Text style={[styles.menuTitle, { color: theme.colors.onSurface }]}>{t('navigation.settings')}</Text>
-        <List.Item
-          title={t('settings.darkMode')}
-          description={isDarkMode ? t('profile.themeOn') : t('profile.themeOff')}
-          left={props => <List.Icon {...props} icon={isDarkMode ? "weather-night" : "weather-sunny"} color={theme.colors.primary} />}
-          right={() => <Switch value={isDarkMode} onValueChange={toggleTheme} />}
-          style={styles.menuItem}
-        />
-        <Divider />
-        <List.Item
-          title={t('profile.generalSettings')}
-          description={t('profile.editAppPreferences')}
-          left={props => <List.Icon {...props} icon="cog" color={theme.colors.primary} />}
-          right={props => <List.Icon {...props} icon="chevron-right" />}
+      <Surface style={[styles.menuCard, { backgroundColor: theme.colors.surface }]} elevation={2}>
+        <View style={styles.cardHeader}>
+          <MaterialCommunityIcons name="cog" size={22} color={theme.colors.primary} />
+          <Text style={[styles.cardTitle, { color: theme.colors.onSurface }]}>{t('navigation.settings')}</Text>
+        </View>
+        <View style={styles.modernMenuItem}>
+          <View style={styles.menuItemLeft}>
+            <View style={[styles.menuIconContainer, { backgroundColor: theme.colors.tertiaryContainer }]}>
+              <MaterialCommunityIcons name={isDarkMode ? "weather-night" : "weather-sunny"} size={24} color={theme.colors.tertiary} />
+            </View>
+            <View style={styles.menuTextContainer}>
+              <Text style={[styles.menuItemTitle, { color: theme.colors.onSurface }]}>{t('settings.darkMode')}</Text>
+              <Text style={[styles.menuItemSubtitle, { color: theme.colors.onSurfaceVariant }]}>
+                {isDarkMode ? t('profile.themeOn') : t('profile.themeOff')}
+              </Text>
+            </View>
+          </View>
+          <Switch value={isDarkMode} onValueChange={toggleTheme} />
+        </View>
+        <Divider style={styles.divider} />
+        <TouchableOpacity
+          style={styles.modernMenuItem}
           onPress={() => navigation.navigate('Settings')}
-          style={styles.menuItem}
-        />
+        >
+          <View style={styles.menuItemLeft}>
+            <View style={[styles.menuIconContainer, { backgroundColor: theme.colors.primaryContainer }]}>
+              <MaterialCommunityIcons name="tune" size={24} color={theme.colors.primary} />
+            </View>
+            <View style={styles.menuTextContainer}>
+              <Text style={[styles.menuItemTitle, { color: theme.colors.onSurface }]}>{t('profile.generalSettings')}</Text>
+              <Text style={[styles.menuItemSubtitle, { color: theme.colors.onSurfaceVariant }]}>{t('profile.editAppPreferences')}</Text>
+            </View>
+          </View>
+          <MaterialCommunityIcons name="chevron-right" size={24} color={theme.colors.onSurfaceVariant} />
+        </TouchableOpacity>
       </Surface>
 
       {/* Ratings */}
       {ratings.length > 0 && (
-        <Card style={styles.card}>
-          <Card.Content>
-            <Text style={[styles.sectionTitle, { color: theme.colors.onSurface }]}>{t('rating.ratingsAndReviews')}</Text>
-            {ratings.map((rating) => (
-              <Card key={rating.id} style={styles.ratingCard} mode="outlined">
-                <Card.Content>
-                  <View style={styles.ratingHeader}>
-                    <View style={styles.raterInfo}>
-                      <Avatar.Text
-                        size={32}
-                        label={rating.rater?.full_name?.charAt(0) || 'U'}
-                      />
+        <Surface style={[styles.ratingsCard, { backgroundColor: theme.colors.surface }]} elevation={2}>
+          <View style={styles.cardHeader}>
+            <MaterialCommunityIcons name="star-box" size={22} color={theme.colors.primary} />
+            <Text style={[styles.cardTitle, { color: theme.colors.onSurface }]}>{t('rating.ratingsAndReviews')}</Text>
+          </View>
+          {ratings.map((rating, index) => (
+            <View key={rating.id}>
+              {index > 0 && <Divider style={styles.ratingDivider} />}
+              <View style={styles.ratingItem}>
+                <View style={styles.ratingHeader}>
+                  <View style={styles.raterInfo}>
+                    <Avatar.Text
+                      size={36}
+                      label={rating.rater?.full_name?.charAt(0) || 'U'}
+                      style={{ backgroundColor: theme.colors.primaryContainer }}
+                      color={theme.colors.primary}
+                    />
+                    <View style={styles.raterDetails}>
                       <Text style={[styles.raterName, { color: theme.colors.onSurface }]}>
                         {rating.rater?.full_name || t('profile.anonymous')}
                       </Text>
-                    </View>
-                    <View style={styles.starsRow}>
-                      {[1, 2, 3, 4, 5].map((star) => (
-                        <MaterialCommunityIcons
-                          key={star}
-                          name={star <= rating.rating ? 'star' : 'star-outline'}
-                          size={16}
-                          color={star <= rating.rating ? '#FFD700' : theme.colors.outlineVariant}
-                        />
-                      ))}
+                      <View style={styles.starsRow}>
+                        {[1, 2, 3, 4, 5].map((star) => (
+                          <MaterialCommunityIcons
+                            key={star}
+                            name={star <= rating.rating ? 'star' : 'star-outline'}
+                            size={14}
+                            color={star <= rating.rating ? '#FFD700' : theme.colors.outlineVariant}
+                          />
+                        ))}
+                      </View>
                     </View>
                   </View>
-                  {rating.comment && (
-                    <Text style={[styles.comment, { color: theme.colors.onSurface }]}>{rating.comment}</Text>
-                  )}
                   <Text style={[styles.ratingDate, { color: theme.colors.onSurfaceVariant }]}>
                     {new Date(rating.created_at).toLocaleDateString('tr-TR')}
                   </Text>
-                </Card.Content>
-              </Card>
-            ))}
-          </Card.Content>
-        </Card>
+                </View>
+                {rating.comment && (
+                  <Text style={[styles.comment, { color: theme.colors.onSurface }]}>{rating.comment}</Text>
+                )}
+              </View>
+            </View>
+          ))}
+        </Surface>
       )}
 
       <Button
         mode="contained"
         onPress={handleLogout}
         style={styles.logoutButton}
-        buttonColor="#d32f2f"
+        buttonColor={theme.colors.error}
+        icon="logout"
       >
         {t('auth.logout')}
       </Button>
@@ -392,70 +452,34 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
   },
-  card: {
-    margin: 15,
-    borderRadius: 16,
-    overflow: 'hidden',
-  },
   gradientHeader: {
-    padding: 20,
-    paddingBottom: 24,
+    paddingTop: 40,
+    paddingBottom: 30,
+    paddingHorizontal: 20,
   },
-  header: {
-    flexDirection: 'row',
+  headerContent: {
     alignItems: 'center',
+  },
+  avatarContainer: {
+    position: 'relative',
+    marginBottom: 16,
   },
   avatar: {
-    borderWidth: 3,
+    borderWidth: 4,
     borderColor: 'rgba(255, 255, 255, 0.3)',
-  },
-  headerInfo: {
-    marginLeft: 16,
-    flex: 1,
-  },
-  name: {
-    fontSize: 24,
-    fontWeight: '700',
-    color: 'white',
-    marginBottom: 4,
-  },
-  email: {
-    fontSize: 14,
-    color: 'rgba(255, 255, 255, 0.9)',
-    marginBottom: 2,
-  },
-  phone: {
-    fontSize: 14,
-    color: 'rgba(255, 255, 255, 0.9)',
-    marginBottom: 8,
-  },
-  ratingBadge: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: 'rgba(255, 255, 255, 0.25)',
-    paddingHorizontal: 10,
-    paddingVertical: 4,
-    borderRadius: 12,
-    alignSelf: 'flex-start',
-    gap: 4,
-  },
-  ratingBadgeText: {
-    fontSize: 14,
-    fontWeight: '600',
-    color: 'white',
   },
   cameraButton: {
     position: 'absolute',
     bottom: 0,
     right: 0,
-    backgroundColor: 'rgba(255, 255, 255, 0.3)',
-    borderRadius: 18,
-    width: 36,
-    height: 36,
+    backgroundColor: 'white',
+    borderRadius: 20,
+    width: 40,
+    height: 40,
     justifyContent: 'center',
     alignItems: 'center',
-    borderWidth: 2,
-    borderColor: 'white',
+    borderWidth: 3,
+    borderColor: '#6200ee',
   },
   uploadingOverlay: {
     position: 'absolute',
@@ -464,98 +488,182 @@ const styles = StyleSheet.create({
     right: 0,
     bottom: 0,
     backgroundColor: 'rgba(0,0,0,0.5)',
-    borderRadius: 45,
+    borderRadius: 50,
     justifyContent: 'center',
     alignItems: 'center',
   },
-  cardContent: {
-    paddingTop: 16,
+  name: {
+    fontSize: 26,
+    fontWeight: '700',
+    color: 'white',
+    marginBottom: 4,
+    textAlign: 'center',
   },
-  divider: {
-    marginVertical: 15,
+  email: {
+    fontSize: 15,
+    color: 'rgba(255, 255, 255, 0.9)',
+    marginBottom: 12,
+    textAlign: 'center',
+  },
+  ratingBadge: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: 'rgba(255, 255, 255, 0.3)',
+    paddingHorizontal: 14,
+    paddingVertical: 6,
+    borderRadius: 20,
+    gap: 6,
+    marginTop: 8,
+  },
+  ratingBadgeText: {
+    fontSize: 15,
+    fontWeight: '600',
+    color: 'white',
+  },
+  bioCard: {
+    marginHorizontal: 16,
+    marginTop: 16,
+    borderRadius: 16,
+    padding: 16,
+  },
+  bioHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 10,
+    gap: 8,
   },
   bioLabel: {
-    fontSize: 14,
+    fontSize: 15,
     fontWeight: '700',
-    marginBottom: 8,
     textTransform: 'uppercase',
     letterSpacing: 0.5,
   },
   bio: {
     fontSize: 15,
     lineHeight: 22,
-    marginBottom: 8,
   },
-  quickActions: {
+  quickActionsContainer: {
     flexDirection: 'row',
+    paddingHorizontal: 16,
+    paddingTop: 16,
     gap: 12,
-    marginTop: 8,
   },
-  quickActionButton: {
+  quickActionCard: {
     flex: 1,
     alignItems: 'center',
     padding: 16,
-    borderRadius: 12,
-    gap: 8,
+    borderRadius: 16,
+    gap: 10,
+  },
+  quickActionIcon: {
+    width: 52,
+    height: 52,
+    borderRadius: 26,
+    alignItems: 'center',
+    justifyContent: 'center',
   },
   quickActionText: {
     fontSize: 12,
-    fontWeight: '600',
+    fontWeight: '700',
+    textAlign: 'center',
   },
   menuCard: {
-    marginHorizontal: 15,
+    marginHorizontal: 16,
+    marginTop: 16,
+    borderRadius: 16,
+    padding: 16,
+  },
+  cardHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
     marginBottom: 12,
-    borderRadius: 12,
-    overflow: 'hidden',
+    gap: 10,
   },
-  menuTitle: {
-    fontSize: 13,
+  cardTitle: {
+    fontSize: 16,
     fontWeight: '700',
-    textTransform: 'uppercase',
-    letterSpacing: 0.5,
-    paddingHorizontal: 16,
-    paddingTop: 16,
-    paddingBottom: 8,
-    opacity: 0.6,
   },
-  menuItem: {
-    paddingVertical: 4,
+  modernMenuItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingVertical: 12,
   },
-  sectionTitle: {
-    fontSize: 18,
-    fontWeight: 'bold',
-    marginBottom: 15,
+  menuItemLeft: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    flex: 1,
   },
-  ratingCard: {
-    marginBottom: 10,
+  menuIconContainer: {
+    width: 48,
+    height: 48,
+    borderRadius: 12,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginRight: 14,
+  },
+  menuTextContainer: {
+    flex: 1,
+  },
+  menuItemTitle: {
+    fontSize: 16,
+    fontWeight: '600',
+    marginBottom: 2,
+  },
+  menuItemSubtitle: {
+    fontSize: 13,
+  },
+  divider: {
+    marginVertical: 8,
+  },
+  ratingsCard: {
+    marginHorizontal: 16,
+    marginTop: 16,
+    borderRadius: 16,
+    padding: 16,
+  },
+  ratingItem: {
+    paddingVertical: 12,
+  },
+  ratingDivider: {
+    marginVertical: 0,
   },
   ratingHeader: {
     flexDirection: 'row',
     justifyContent: 'space-between',
-    alignItems: 'center',
+    alignItems: 'flex-start',
     marginBottom: 10,
   },
   raterInfo: {
     flexDirection: 'row',
     alignItems: 'center',
+    flex: 1,
+  },
+  raterDetails: {
+    marginLeft: 12,
+    flex: 1,
   },
   raterName: {
-    fontSize: 14,
-    fontWeight: 'bold',
-    marginLeft: 8,
+    fontSize: 15,
+    fontWeight: '600',
+    marginBottom: 4,
   },
   starsRow: {
     flexDirection: 'row',
+    gap: 2,
   },
   comment: {
     fontSize: 14,
+    lineHeight: 20,
     marginBottom: 8,
   },
   ratingDate: {
     fontSize: 12,
   },
   logoutButton: {
-    margin: 15,
-    marginTop: 5,
+    marginHorizontal: 16,
+    marginTop: 16,
+    marginBottom: 24,
+    borderRadius: 12,
   },
 });

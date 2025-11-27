@@ -207,6 +207,7 @@
     "poor": "Poor",
     "veryPoor": "Very Poor",
     "ratingsAndReviews": "Ratings and Reviews",
+    "reviews": "reviews",
     "noRatings": "No ratings yet",
     "viewAllRatings": "View All Ratings"
   },
@@ -390,6 +391,7 @@
 
   "settings": {
     "title": "Settings",
+    "subtitle": "Manage your preferences",
     "account": "Account",
     "preferences": "Preferences",
     "language": "Language",
@@ -413,7 +415,8 @@
     "privacyPolicy": "Privacy Policy",
     "deleteAccount": "Delete Account",
     "deleteAccountConfirm": "Are you sure you want to delete your account? This action cannot be undone.",
-    "openSettings": "Open Settings"
+    "openSettings": "Open Settings",
+    "madeWithLove": "Made with ❤️ for sports enthusiasts"
   },
 
   "language": {

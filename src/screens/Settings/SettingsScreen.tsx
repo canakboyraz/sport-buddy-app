@@ -1,6 +1,6 @@
 import React from 'react';
 import { View, StyleSheet, ScrollView, TouchableOpacity, Linking } from 'react-native';
-import { Text, Surface, Switch, Divider } from 'react-native-paper';
+import { Text, Surface, Switch, Divider, useTheme as usePaperTheme } from 'react-native-paper';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useNavigation } from '@react-navigation/native';
@@ -14,7 +14,8 @@ type NavigationProp = StackNavigationProp<RootStackParamList>;
 export default function SettingsScreen() {
   const navigation = useNavigation<NavigationProp>();
   const { t, currentLanguage, languages } = useLanguage();
-  const { theme, isDarkMode, toggleTheme } = useTheme();
+  const { isDarkMode, toggleTheme } = useTheme();
+  const theme = usePaperTheme();
 
   const settingsSections = [
     {
@@ -98,38 +99,34 @@ export default function SettingsScreen() {
 
   return (
     <ScrollView style={[styles.container, { backgroundColor: theme.colors.background }]}>
-      <View style={styles.content}>
-        {/* Header Card */}
-        <Surface style={styles.headerCard} elevation={3}>
-          <LinearGradient
-            colors={isDarkMode ? ['#6200ee', '#9c27b0'] : ['#6200ee', '#9c27b0']}
-            start={{ x: 0, y: 0 }}
-            end={{ x: 1, y: 1 }}
-            style={styles.headerGradient}
-          >
-            <View style={styles.iconCircle}>
-              <MaterialCommunityIcons name="cog" size={56} color="white" />
-            </View>
-            <Text variant="headlineMedium" style={styles.headerTitle}>
-              {t('settings.title')}
-            </Text>
-            <Text variant="bodyMedium" style={styles.headerSubtitle}>
-              Tercihlerinizi yönetin
-            </Text>
-          </LinearGradient>
-        </Surface>
+      {/* Modern Header */}
+      <LinearGradient
+        colors={['#6200ee', '#9c27b0']}
+        start={{ x: 0, y: 0 }}
+        end={{ x: 1, y: 1 }}
+        style={styles.headerGradient}
+      >
+        <View style={styles.headerContent}>
+          <View style={styles.iconCircle}>
+            <MaterialCommunityIcons name="tune-variant" size={48} color="white" />
+          </View>
+          <Text style={styles.headerTitle}>{t('settings.title')}</Text>
+          <Text style={styles.headerSubtitle}>{t('settings.subtitle')}</Text>
+        </View>
+      </LinearGradient>
 
+      <View style={styles.content}>
         {/* Settings Sections */}
         {settingsSections.map((section, sectionIndex) => (
-          <View key={sectionIndex} style={styles.section}>
-            <Text variant="titleSmall" style={[styles.sectionTitle, { color: theme.colors.onSurface }]}>
+          <View key={sectionIndex}>
+            <Text style={[styles.sectionTitle, { color: theme.colors.onSurfaceVariant }]}>
               {section.title}
             </Text>
 
-            <Surface style={styles.sectionCard} elevation={2}>
+            <Surface style={[styles.sectionCard, { backgroundColor: theme.colors.surface }]} elevation={2}>
               {section.items.map((item, itemIndex) => (
                 <React.Fragment key={itemIndex}>
-                  {itemIndex > 0 && <Divider />}
+                  {itemIndex > 0 && <Divider style={styles.divider} />}
                   <SettingItem
                     icon={item.icon}
                     title={item.title}
@@ -145,6 +142,16 @@ export default function SettingsScreen() {
             </Surface>
           </View>
         ))}
+
+        {/* App Info Footer */}
+        <View style={styles.footer}>
+          <Text style={[styles.footerText, { color: theme.colors.onSurfaceVariant }]}>
+            Sport Buddy
+          </Text>
+          <Text style={[styles.footerSubtext, { color: theme.colors.onSurfaceVariant }]}>
+            {t('settings.madeWithLove')}
+          </Text>
+        </View>
       </View>
     </ScrollView>
   );
@@ -209,52 +216,55 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
   },
-  content: {
-    padding: 16,
-  },
-  headerCard: {
-    borderRadius: 20,
-    marginBottom: 20,
-    overflow: 'hidden',
-  },
   headerGradient: {
-    padding: 36,
+    paddingTop: 50,
+    paddingBottom: 40,
+    paddingHorizontal: 24,
+  },
+  headerContent: {
     alignItems: 'center',
   },
   iconCircle: {
-    width: 110,
-    height: 110,
-    borderRadius: 55,
-    backgroundColor: 'rgba(255, 255, 255, 0.2)',
+    width: 96,
+    height: 96,
+    borderRadius: 48,
+    backgroundColor: 'rgba(255, 255, 255, 0.25)',
     alignItems: 'center',
     justifyContent: 'center',
-    marginBottom: 16,
+    marginBottom: 20,
   },
   headerTitle: {
+    fontSize: 28,
     fontWeight: '700',
-    textAlign: 'center',
     color: 'white',
-    marginBottom: 4,
+    marginBottom: 6,
+    textAlign: 'center',
   },
   headerSubtitle: {
+    fontSize: 15,
     color: 'rgba(255, 255, 255, 0.9)',
     textAlign: 'center',
   },
-  section: {
-    marginBottom: 20,
+  content: {
+    padding: 16,
+    paddingTop: 24,
   },
   sectionTitle: {
-    fontWeight: '700',
-    marginBottom: 10,
-    marginLeft: 6,
-    textTransform: 'uppercase',
-    letterSpacing: 0.5,
     fontSize: 13,
-    opacity: 0.7,
+    fontWeight: '700',
+    textTransform: 'uppercase',
+    letterSpacing: 1,
+    marginBottom: 10,
+    marginLeft: 4,
+    marginTop: 8,
   },
   sectionCard: {
     borderRadius: 16,
     overflow: 'hidden',
+    marginBottom: 16,
+  },
+  divider: {
+    marginLeft: 72,
   },
   settingRow: {
     flexDirection: 'row',
@@ -280,13 +290,26 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   settingTitle: {
+    fontSize: 16,
     fontWeight: '600',
-    marginBottom: 2,
+    marginBottom: 3,
   },
   settingSubtitle: {
     fontSize: 14,
   },
   settingRight: {
     marginLeft: 12,
+  },
+  footer: {
+    alignItems: 'center',
+    paddingVertical: 32,
+  },
+  footerText: {
+    fontSize: 16,
+    fontWeight: '600',
+    marginBottom: 4,
+  },
+  footerSubtext: {
+    fontSize: 13,
   },
 });

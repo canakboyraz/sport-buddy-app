@@ -207,6 +207,7 @@
     "poor": "Kötü",
     "veryPoor": "Çok Kötü",
     "ratingsAndReviews": "Değerlendirmeler ve Yorumlar",
+    "reviews": "değerlendirme",
     "noRatings": "Henüz değerlendirme yok",
     "viewAllRatings": "Tüm Değerlendirmeleri Gör"
   },
@@ -390,6 +391,7 @@
 
   "settings": {
     "title": "Ayarlar",
+    "subtitle": "Tercihlerinizi yönetin",
     "account": "Hesap",
     "preferences": "Tercihler",
     "language": "Dil",
@@ -413,7 +415,8 @@
     "privacyPolicy": "Gizlilik Politikası",
     "deleteAccount": "Hesabı Sil",
     "deleteAccountConfirm": "Hesabınızı silmek istediğinizden emin misiniz? Bu işlem geri alınamaz.",
-    "openSettings": "Ayarları Aç"
+    "openSettings": "Ayarları Aç",
+    "madeWithLove": "Spor tutkunları için ❤️ ile yapıldı"
   },
 
   "language": {
