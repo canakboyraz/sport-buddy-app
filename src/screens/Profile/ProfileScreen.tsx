@@ -223,35 +223,63 @@ export default function ProfileScreen() {
 
       {/* Quick Actions */}
       <View style={styles.quickActionsContainer}>
+        {/* Edit Profile - Full Width */}
         <TouchableOpacity
-          style={[styles.quickActionCard, { backgroundColor: theme.colors.primaryContainer }]}
+          style={[styles.quickActionCardLarge, { backgroundColor: theme.colors.primaryContainer }]}
           onPress={() => navigation.navigate('EditProfile')}
         >
-          <View style={[styles.quickActionIcon, { backgroundColor: theme.colors.primary + '20' }]}>
-            <MaterialCommunityIcons name="pencil" size={26} color={theme.colors.primary} />
-          </View>
-          <Text style={[styles.quickActionText, { color: theme.colors.onPrimaryContainer }]}>{t('common.edit')}</Text>
+          <LinearGradient
+            colors={
+              isDarkMode
+                ? [theme.colors.primary + 'DD', theme.colors.primary + '99']
+                : [theme.colors.primary + 'EE', theme.colors.primary + 'BB']
+            }
+            start={{ x: 0, y: 0 }}
+            end={{ x: 1, y: 1 }}
+            style={styles.quickActionGradient}
+          >
+            <View style={styles.quickActionContent}>
+              <View>
+                <Text style={[styles.quickActionTitle, { color: '#FFFFFF' }]}>{t('common.edit')}</Text>
+                <Text style={[styles.quickActionSubtitle, { color: 'rgba(255, 255, 255, 0.9)' }]}>
+                  {t('profile.editProfileSubtitle')}
+                </Text>
+              </View>
+              <View style={[styles.quickActionIconLarge, { backgroundColor: 'rgba(255, 255, 255, 0.2)' }]}>
+                <MaterialCommunityIcons name="pencil" size={32} color="#FFFFFF" />
+              </View>
+            </View>
+          </LinearGradient>
         </TouchableOpacity>
 
-        <TouchableOpacity
-          style={[styles.quickActionCard, { backgroundColor: theme.colors.tertiaryContainer }]}
-          onPress={() => navigation.navigate('Favorites')}
-        >
-          <View style={[styles.quickActionIcon, { backgroundColor: theme.colors.tertiary + '20' }]}>
-            <MaterialCommunityIcons name="heart" size={26} color={theme.colors.tertiary} />
-          </View>
-          <Text style={[styles.quickActionText, { color: theme.colors.onTertiaryContainer }]}>{t('navigation.favorites')}</Text>
-        </TouchableOpacity>
+        {/* Favorites and Stats - Side by Side */}
+        <View style={styles.quickActionRow}>
+          <TouchableOpacity
+            style={[styles.quickActionCardSmall, { backgroundColor: theme.colors.tertiaryContainer }]}
+            onPress={() => navigation.navigate('Favorites')}
+          >
+            <View style={[styles.quickActionIconSmall, { backgroundColor: theme.colors.tertiary + '30' }]}>
+              <MaterialCommunityIcons name="heart" size={28} color={theme.colors.tertiary} />
+            </View>
+            <Text style={[styles.quickActionTextSmall, { color: theme.colors.onTertiaryContainer }]}>
+              {t('navigation.favorites')}
+            </Text>
+            <MaterialCommunityIcons name="chevron-right" size={20} color={theme.colors.onTertiaryContainer} />
+          </TouchableOpacity>
 
-        <TouchableOpacity
-          style={[styles.quickActionCard, { backgroundColor: theme.colors.secondaryContainer }]}
-          onPress={() => navigation.navigate('ProfileStats')}
-        >
-          <View style={[styles.quickActionIcon, { backgroundColor: theme.colors.secondary + '20' }]}>
-            <MaterialCommunityIcons name="chart-line" size={26} color={theme.colors.secondary} />
-          </View>
-          <Text style={[styles.quickActionText, { color: theme.colors.onSecondaryContainer }]}>{t('profile.myStats')}</Text>
-        </TouchableOpacity>
+          <TouchableOpacity
+            style={[styles.quickActionCardSmall, { backgroundColor: theme.colors.secondaryContainer }]}
+            onPress={() => navigation.navigate('ProfileStats')}
+          >
+            <View style={[styles.quickActionIconSmall, { backgroundColor: theme.colors.secondary + '30' }]}>
+              <MaterialCommunityIcons name="chart-line" size={28} color={theme.colors.secondary} />
+            </View>
+            <Text style={[styles.quickActionTextSmall, { color: theme.colors.onSecondaryContainer }]}>
+              {t('profile.myStats')}
+            </Text>
+            <MaterialCommunityIcons name="chevron-right" size={20} color={theme.colors.onSecondaryContainer} />
+          </TouchableOpacity>
+        </View>
       </View>
 
       {/* Statistics & Achievements */}
@@ -543,29 +571,70 @@ const styles = StyleSheet.create({
     lineHeight: 22,
   },
   quickActionsContainer: {
-    flexDirection: 'row',
     paddingHorizontal: 16,
     paddingTop: 16,
     gap: 12,
   },
-  quickActionCard: {
-    flex: 1,
-    alignItems: 'center',
-    padding: 16,
-    borderRadius: 16,
-    gap: 10,
+  quickActionCardLarge: {
+    borderRadius: 20,
+    overflow: 'hidden',
+    elevation: 4,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 8,
   },
-  quickActionIcon: {
-    width: 52,
-    height: 52,
-    borderRadius: 26,
+  quickActionGradient: {
+    borderRadius: 20,
+    padding: 20,
+  },
+  quickActionContent: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+  },
+  quickActionTitle: {
+    fontSize: 20,
+    fontWeight: '700',
+    marginBottom: 4,
+  },
+  quickActionSubtitle: {
+    fontSize: 13,
+    fontWeight: '500',
+  },
+  quickActionIconLarge: {
+    width: 64,
+    height: 64,
+    borderRadius: 32,
     alignItems: 'center',
     justifyContent: 'center',
   },
-  quickActionText: {
-    fontSize: 12,
+  quickActionRow: {
+    flexDirection: 'row',
+    gap: 12,
+  },
+  quickActionCardSmall: {
+    flex: 1,
+    borderRadius: 16,
+    padding: 16,
+    elevation: 2,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.08,
+    shadowRadius: 4,
+  },
+  quickActionIconSmall: {
+    width: 56,
+    height: 56,
+    borderRadius: 28,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginBottom: 12,
+  },
+  quickActionTextSmall: {
+    fontSize: 14,
     fontWeight: '700',
-    textAlign: 'center',
+    marginBottom: 4,
   },
   menuCard: {
     marginHorizontal: 16,
