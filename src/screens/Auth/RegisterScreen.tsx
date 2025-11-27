@@ -6,6 +6,7 @@ import { supabase } from '../../services/supabase';
 import { validateEmail, validatePassword, validateName } from '../../utils/validation';
 import { StackNavigationProp } from '@react-navigation/stack';
 import { AuthStackParamList } from '../../navigation/AuthNavigator';
+import { useTranslation } from 'react-i18next';
 
 type RegisterScreenNavigationProp = StackNavigationProp<AuthStackParamList, 'Register'>;
 

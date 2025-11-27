@@ -4,13 +4,14 @@ import { TextInput, Button, Text, Avatar, IconButton, ActivityIndicator, useThem
 import { supabase } from '../../services/supabase';
 import { Message } from '../../types';
 import { format } from 'date-fns';
-import { tr } from 'date-fns/locale';
 import { StackNavigationProp } from '@react-navigation/stack';
+import { getDateLocale } from '../../utils/dateLocale';
 import { RouteProp } from '@react-navigation/native';
 import { RootStackParamList } from '../../navigation/AppNavigator';
 import { useAuth } from '../../hooks/useAuth';
 import { pickImageFromGallery } from '../../services/imageService';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
+import { useTranslation } from 'react-i18next';
 
 type ChatScreenNavigationProp = StackNavigationProp<RootStackParamList, 'Chat'>;
 type ChatScreenRouteProp = RouteProp<RootStackParamList, 'Chat'>;
@@ -23,6 +24,7 @@ type Props = {
 export default function EnhancedChatScreen({ navigation, route }: Props) {
   const { sessionId } = route.params;
   const { user } = useAuth();
+  const { t } = useTranslation();
   const theme = useTheme();
   const [messages, setMessages] = useState<Message[]>([]);
   const [newMessage, setNewMessage] = useState('');
@@ -225,7 +227,7 @@ export default function EnhancedChatScreen({ navigation, route }: Props) {
 
       } catch (error) {
         console.error('Image upload error:', error);
-        Alert.alert('Hata', 'Fotoğraf yüklenirken bir hata oluştu');
+        Alert.alert(t('common.error'), t('chat.uploadError'));
       }
 
       setUploadingImage(false);
@@ -286,7 +288,7 @@ export default function EnhancedChatScreen({ navigation, route }: Props) {
               styles.messageTime,
               { color: isOwnMessage ? 'rgba(255, 255, 255, 0.8)' : theme.colors.onSurfaceVariant }
             ]}>
-              {format(new Date(item.created_at), 'HH:mm', { locale: tr })}
+              {format(new Date(item.created_at), 'HH:mm', { locale: getDateLocale() })}
             </Text>
             {isOwnMessage && item.is_read && (
               <MaterialCommunityIcons
@@ -320,7 +322,7 @@ export default function EnhancedChatScreen({ navigation, route }: Props) {
             <View style={styles.typingIndicator}>
               <ActivityIndicator size="small" color={theme.colors.primary} />
               <Text style={[styles.typingText, { color: theme.colors.onSurfaceVariant }]}>
-                {typingUsers.join(', ')} yazıyor...
+                {typingUsers.join(', ')} {t('chat.typing')}
               </Text>
             </View>
           ) : null
@@ -343,7 +345,7 @@ export default function EnhancedChatScreen({ navigation, route }: Props) {
         <TextInput
           value={newMessage}
           onChangeText={handleTextChange}
-          placeholder="Mesaj yaz..."
+          placeholder={t('chat.typeMessage')}
           mode="outlined"
           style={styles.input}
           multiline
@@ -361,7 +363,7 @@ export default function EnhancedChatScreen({ navigation, route }: Props) {
       {uploadingImage && (
         <View style={[styles.uploadingOverlay, { backgroundColor: 'rgba(0, 0, 0, 0.7)' }]}>
           <ActivityIndicator size="large" color={theme.colors.primary} />
-          <Text style={styles.uploadingText}>Fotoğraf yükleniyor...</Text>
+          <Text style={styles.uploadingText}>{t('chat.uploadingImage')}</Text>
         </View>
       )}
     </KeyboardAvoidingView>

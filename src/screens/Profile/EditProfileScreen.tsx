@@ -6,8 +6,10 @@ import { useAuth } from '../../hooks/useAuth';
 import { Profile } from '../../types';
 import { useNavigation } from '@react-navigation/native';
 import { validateBio, validateName } from '../../utils/validation';
+import { useTranslation } from 'react-i18next';
 
 export default function EditProfileScreen() {
+  const { t } = useTranslation();
   const navigation = useNavigation();
   const { user } = useAuth();
   const [loading, setLoading] = useState(true);
@@ -66,14 +68,14 @@ export default function EditProfileScreen() {
 
     // Validate full name
     if (!fullName.trim()) {
-      newErrors.fullName = 'Ad Soyad gereklidir';
+      newErrors.fullName = t('profile.fullNameRequired');
     } else if (!validateName(fullName)) {
-      newErrors.fullName = 'Ad Soyad en az 2 karakter olmalıdır';
+      newErrors.fullName = t('profile.fullNameMinLength');
     }
 
     // Validate phone
     if (phone && !/^[0-9]{10,11}$/.test(phone.replace(/\s/g, ''))) {
-      newErrors.phone = 'Geçerli bir telefon numarası girin (10-11 rakam)';
+      newErrors.phone = t('validation.phone');
     }
 
     // Validate bio
@@ -112,12 +114,12 @@ export default function EditProfileScreen() {
     setSaving(false);
 
     if (error) {
-      Alert.alert('Hata', 'Profil güncellenirken bir hata oluştu');
+      Alert.alert(t('common.error'), t('profile.updateError'));
       console.error('Profile update error:', error);
     } else {
-      Alert.alert('Başarılı', 'Profiliniz güncellendi', [
+      Alert.alert(t('common.success'), t('profile.updateSuccess'), [
         {
-          text: 'Tamam',
+          text: t('common.ok'),
           onPress: () => navigation.goBack(),
         },
       ]);
@@ -135,7 +137,7 @@ export default function EditProfileScreen() {
   return (
     <ScrollView style={styles.container} contentContainerStyle={styles.contentContainer}>
       <TextInput
-        label="Ad Soyad *"
+        label={`${t('profile.fullName')} *`}
         value={fullName}
         onChangeText={setFullName}
         mode="outlined"
@@ -147,13 +149,13 @@ export default function EditProfileScreen() {
       </HelperText>
 
       <TextInput
-        label="Telefon"
+        label={t('profile.phone')}
         value={phone}
         onChangeText={setPhone}
         mode="outlined"
         style={styles.input}
         keyboardType="phone-pad"
-        placeholder="5XX XXX XX XX"
+        placeholder={t('profile.phonePlaceholder')}
         error={!!errors.phone}
       />
       <HelperText type="error" visible={!!errors.phone}>
@@ -161,34 +163,34 @@ export default function EditProfileScreen() {
       </HelperText>
 
       <TextInput
-        label="Şehir"
+        label={t('profile.city')}
         value={city}
         onChangeText={setCity}
         mode="outlined"
         style={styles.input}
-        placeholder="İstanbul"
+        placeholder={t('profile.cityPlaceholder')}
       />
 
       <TextInput
-        label="Favori Sporlar"
+        label={t('profile.favoriteSports')}
         value={favoriteSports}
         onChangeText={setFavoriteSports}
         mode="outlined"
         style={styles.input}
-        placeholder="Futbol, Basketbol, Tenis"
+        placeholder={t('profile.favoriteSportsPlaceholder')}
         multiline
         numberOfLines={2}
       />
 
       <TextInput
-        label="Hakkımda"
+        label={t('profile.bio')}
         value={bio}
         onChangeText={setBio}
         mode="outlined"
         style={styles.input}
         multiline
         numberOfLines={4}
-        placeholder="Kendiniz hakkında birkaç kelime yazın..."
+        placeholder={t('profile.bioPlaceholder')}
       />
 
       <Button
@@ -198,7 +200,7 @@ export default function EditProfileScreen() {
         disabled={saving}
         style={styles.saveButton}
       >
-        Kaydet
+        {t('common.save')}
       </Button>
 
       <Button
@@ -207,7 +209,7 @@ export default function EditProfileScreen() {
         disabled={saving}
         style={styles.cancelButton}
       >
-        İptal
+        {t('common.cancel')}
       </Button>
     </ScrollView>
   );

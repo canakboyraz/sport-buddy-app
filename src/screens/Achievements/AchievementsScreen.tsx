@@ -5,6 +5,7 @@ import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { supabase } from '../../services/supabase';
 import { useAuth } from '../../hooks/useAuth';
 import { LinearGradient } from 'expo-linear-gradient';
+import { useTranslation } from 'react-i18next';
 
 interface Achievement {
   id: number;
@@ -41,6 +42,7 @@ interface AchievementProgress {
 const { width } = Dimensions.get('window');
 
 export default function AchievementsScreen() {
+  const { t } = useTranslation();
   const { user } = useAuth();
   const [loading, setLoading] = useState(true);
   const [userPoints, setUserPoints] = useState<UserPoints>({ total_points: 0, level: 1 });
@@ -192,11 +194,11 @@ export default function AchievementsScreen() {
   const getCategoryName = (category: string): string => {
     switch (category) {
       case 'sessions':
-        return 'Seanslar';
+        return t('achievement.category.sessions');
       case 'ratings':
-        return 'Değerlendirmeler';
+        return t('achievement.category.ratings');
       case 'activity':
-        return 'Aktivite';
+        return t('achievement.category.activity');
       default:
         return category;
     }
@@ -253,7 +255,7 @@ export default function AchievementsScreen() {
                 textStyle={styles.chipText}
                 compact
               >
-                {achievement.points} puan
+                {achievement.points} {t('achievement.points')}
               </Chip>
             </View>
           </View>
@@ -301,8 +303,8 @@ export default function AchievementsScreen() {
           <Card.Content>
             <View style={styles.levelHeader}>
               <View>
-                <Text style={styles.levelText}>Seviye {userPoints.level}</Text>
-                <Text style={styles.pointsText}>{userPoints.total_points} Puan</Text>
+                <Text style={styles.levelText}>{t('achievement.level')} {userPoints.level}</Text>
+                <Text style={styles.pointsText}>{userPoints.total_points} {t('achievement.points')}</Text>
               </View>
               <MaterialCommunityIcons name="trophy" size={64} color="#FFD700" />
             </View>
@@ -313,7 +315,7 @@ export default function AchievementsScreen() {
                 style={styles.levelProgressBar}
               />
               <Text style={styles.levelProgressText}>
-                Bir sonraki seviyeye {getPointsToNextLevel()} puan kaldı
+                {t('achievement.pointsToNextLevel', { points: getPointsToNextLevel() })}
               </Text>
             </View>
           </Card.Content>
@@ -323,19 +325,19 @@ export default function AchievementsScreen() {
       {/* Stats Card */}
       <Card style={styles.statsCard} mode="elevated">
         <Card.Content>
-          <Text style={styles.sectionTitle}>Başarı İstatistikleri</Text>
+          <Text style={styles.sectionTitle}>{t('achievement.statistics')}</Text>
           <View style={styles.statsRow}>
             <View style={styles.statItem}>
               <Text style={styles.statValue}>{earnedCount}</Text>
-              <Text style={styles.statLabel}>Kazanılan</Text>
+              <Text style={styles.statLabel}>{t('achievement.earned')}</Text>
             </View>
             <View style={styles.statItem}>
               <Text style={styles.statValue}>{totalAchievements - earnedCount}</Text>
-              <Text style={styles.statLabel}>Kalan</Text>
+              <Text style={styles.statLabel}>{t('achievement.remaining')}</Text>
             </View>
             <View style={styles.statItem}>
               <Text style={styles.statValue}>{completionPercentage.toFixed(0)}%</Text>
-              <Text style={styles.statLabel}>Tamamlanma</Text>
+              <Text style={styles.statLabel}>{t('achievement.completion')}</Text>
             </View>
           </View>
         </Card.Content>

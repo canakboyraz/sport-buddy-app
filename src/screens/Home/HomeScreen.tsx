@@ -18,6 +18,7 @@ import { OfflineIndicator } from '../../components/OfflineIndicator';
 import { errorLogger } from '../../services/errorLogger';
 import EmptyState from '../../components/EmptyState';
 import { getSportIcon } from '../../utils/sportIcons';
+import { useTranslation } from 'react-i18next';
 
 type HomeScreenNavigationProp = StackNavigationProp<RootStackParamList>;
 
@@ -28,6 +29,7 @@ type Props = {
 const PAGE_SIZE = 20;
 
 export default function HomeScreen({ navigation }: Props) {
+  const { t } = useTranslation();
   const theme = useTheme();
   const [sessions, setSessions] = useState<SportSession[]>([]);
   const [sports, setSports] = useState<Sport[]>([]);
@@ -83,12 +85,12 @@ export default function HomeScreen({ navigation }: Props) {
         });
       } else if (status === 'denied') {
         Alert.alert(
-          'Konum İzni Gerekli',
-          'Yakınınızdaki etkinlikleri görmek için konum erişimine izin verin. Ayarlar\'dan izni etkinleştirebilirsiniz.',
+          t('map.locationPermissionRequired'),
+          t('map.locationPermissionMessage'),
           [
-            { text: 'İptal', style: 'cancel' },
+            { text: t('common.cancel'), style: 'cancel' },
             {
-              text: 'Ayarları Aç',
+              text: t('settings.openSettings'),
               onPress: () => Linking.openSettings()
             }
           ]
@@ -96,7 +98,7 @@ export default function HomeScreen({ navigation }: Props) {
       }
     } catch (error) {
       console.error('[HomeScreen] getUserLocation error:', error);
-      Alert.alert('Hata', 'Konum bilgisi alınamadı. Lütfen konum servislerinizin açık olduğundan emin olun.');
+      Alert.alert(t('common.error'), t('map.locationError'));
     }
   };
 
@@ -367,7 +369,7 @@ export default function HomeScreen({ navigation }: Props) {
     return (
       <View style={[styles.container, { backgroundColor: theme.colors.background }]}>
         <View style={styles.filtersContainer}>
-          <Text style={[styles.filterTitle, { color: theme.colors.onBackground }]}>Spor Türü:</Text>
+          <Text style={[styles.filterTitle, { color: theme.colors.onBackground }]}>{t('home.filterBySport')}:</Text>
         </View>
         <SkeletonList count={5} type="session" />
       </View>
@@ -396,13 +398,13 @@ export default function HomeScreen({ navigation }: Props) {
             textColor="#6200ee"
             compact
           >
-            Yeni Seans Ekle
+            {t('session.createNew')}
           </Button>
 
-          <Text style={[styles.filterTitle, { color: 'white', marginBottom: 8, marginTop: 12 }]}>Spor Türü:</Text>
+          <Text style={[styles.filterTitle, { color: 'white', marginBottom: 8, marginTop: 12 }]}>{t('home.filterBySport')}:</Text>
           <FlatList
             horizontal
-            data={[{ id: null, name: 'Tümü', icon: 'trophy' }, ...sports.map(s => ({ ...s, icon: s.icon || getSportIcon(s.name) }))]}
+            data={[{ id: null, name: t('common.all'), icon: 'trophy' }, ...sports.map(s => ({ ...s, icon: s.icon || getSportIcon(s.name) }))]}
             keyExtractor={(item) => String(item.id)}
             renderItem={({ item }) => (
               <Chip
@@ -450,7 +452,7 @@ export default function HomeScreen({ navigation }: Props) {
           loadingMore ? (
             <View style={styles.footerLoader}>
               <ActivityIndicator size="small" color="#6200ee" />
-              <Text style={styles.footerText}>Yükleniyor...</Text>
+              <Text style={styles.footerText}>{t('common.loading')}</Text>
             </View>
           ) : null
         }
@@ -459,9 +461,9 @@ export default function HomeScreen({ navigation }: Props) {
             activeFilterCount > 0 ? (
               <EmptyState
                 icon="filter-off"
-                title="Filtrelerinize uygun seans bulunamadı"
-                description="Farklı filtreler deneyerek daha fazla seans bulabilirsiniz."
-                actionLabel="Filtreleri Sıfırla"
+                title={t('home.noSessionsMatchingFilters')}
+                description={t('home.tryDifferentFilters')}
+                actionLabel={t('home.resetFilters')}
                 onAction={() => {
                   setSelectedSport(null);
                   setAdvancedFilters({
@@ -472,15 +474,15 @@ export default function HomeScreen({ navigation }: Props) {
                     skillLevel: null,
                   });
                 }}
-                secondaryActionLabel="Filtre Ayarları"
+                secondaryActionLabel={t('home.filterSettings')}
                 onSecondaryAction={() => setShowAdvancedFilters(true)}
               />
             ) : (
               <EmptyState
                 icon="calendar-plus"
-                title="Henüz seans yok"
-                description="İlk spor seansını sen oluştur ve spor arkadaşlarını bul!"
-                actionLabel="Yeni Seans Oluştur"
+                title={t('home.noSessions')}
+                description={t('home.createFirst')}
+                actionLabel={t('session.create')}
                 onAction={() => navigation.navigate('CreateSession')}
               />
             )
@@ -492,7 +494,7 @@ export default function HomeScreen({ navigation }: Props) {
         icon={activeFilterCount > 0 ? 'filter-check' : 'filter-variant'}
         style={styles.fab}
         onPress={() => setShowAdvancedFilters(true)}
-        label="Filtreler"
+        label={t('common.filter')}
         color="#fff"
       />
 

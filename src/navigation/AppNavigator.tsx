@@ -4,6 +4,7 @@ import { createStackNavigator } from '@react-navigation/stack';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { useTheme } from 'react-native-paper';
+import { useTranslation } from 'react-i18next';
 import HomeScreen from '../screens/Home/HomeScreen';
 import MapViewScreen from '../screens/Map/MapViewScreen';
 import FavoritesScreen from '../screens/Favorites/FavoritesScreen';
@@ -57,6 +58,7 @@ const RootStack = createStackNavigator<RootStackParamList>();
 
 function MainTabNavigator() {
   const theme = useTheme();
+  const { t } = useTranslation();
 
   return (
     <MainTab.Navigator
@@ -120,28 +122,28 @@ function MainTabNavigator() {
         name="Home"
         component={HomeScreen}
         options={{
-          title: 'Seanslar',
+          title: t('navigation.sessions'),
         }}
       />
       <MainTab.Screen
         name="MapView"
         component={MapViewScreen}
         options={{
-          title: 'Harita',
+          title: t('navigation.map'),
         }}
       />
       <MainTab.Screen
         name="MyEvents"
         component={MyEventsScreen}
         options={{
-          title: 'Seanslarım',
+          title: t('navigation.myEvents'),
         }}
       />
       <MainTab.Screen
         name="Profile"
         component={ProfileScreen}
         options={{
-          title: 'Profil',
+          title: t('navigation.profile'),
         }}
       />
     </MainTab.Navigator>
@@ -149,6 +151,8 @@ function MainTabNavigator() {
 }
 
 export default function AppNavigator() {
+  const { t } = useTranslation();
+
   return (
     <RootStack.Navigator>
       <RootStack.Screen
@@ -156,88 +160,88 @@ export default function AppNavigator() {
         component={MainTabNavigator}
         options={{
           headerShown: false,
-          title: 'Ana Ekran'
+          title: t('navigation.home')
         }}
       />
       <RootStack.Screen
         name="SessionDetail"
         component={SessionDetailScreen}
-        options={{ title: 'Seans Detayı' }}
+        options={{ title: t('session.detail') }}
       />
       <RootStack.Screen
         name="Chat"
         component={EnhancedChatScreen}
-        options={{ title: 'Sohbet' }}
+        options={{ title: t('navigation.chat') }}
       />
       <RootStack.Screen
         name="RateUser"
         component={RateUserScreen}
-        options={{ title: 'Kullanıcıyı Değerlendir' }}
+        options={{ title: t('rating.rateUser') }}
       />
       <RootStack.Screen
         name="Favorites"
         component={FavoritesScreen}
-        options={{ title: 'Favorilerim' }}
+        options={{ title: t('navigation.favorites') }}
       />
       <RootStack.Screen
         name="CreateSession"
         component={CreateSessionScreen}
-        options={{ title: 'Seans Oluştur' }}
+        options={{ title: t('session.create') }}
       />
       <RootStack.Screen
         name="EditProfile"
         component={EditProfileScreen}
-        options={{ title: 'Profili Düzenle' }}
+        options={{ title: t('profile.editProfile') }}
       />
       <RootStack.Screen
         name="ProfileStats"
         component={ProfileStatsScreen}
-        options={{ title: 'İstatistiklerim' }}
+        options={{ title: t('profile.statistics') }}
       />
       <RootStack.Screen
         name="Achievements"
         component={AchievementsScreen}
-        options={{ title: 'Başarılarım' }}
+        options={{ title: t('navigation.achievements') }}
       />
       <RootStack.Screen
         name="Friends"
         component={FriendsScreen}
-        options={{ title: 'Arkadaşlarım' }}
+        options={{ title: t('navigation.friends') }}
       />
       <RootStack.Screen
         name="BlockedUsers"
         component={BlockedUsersScreen}
-        options={{ title: 'Engellenenler' }}
+        options={{ title: t('settings.blockedUsers') }}
       />
       <RootStack.Screen
         name="ReportUser"
         component={ReportUserScreen}
-        options={{ title: 'Kullanıcıyı Şikayet Et' }}
+        options={{ title: t('report.title') }}
       />
       <RootStack.Screen
         name="UserProfile"
         component={UserProfileScreen}
-        options={{ title: 'Kullanıcı Profili' }}
+        options={{ title: t('profile.viewProfile') }}
       />
       <RootStack.Screen
         name="ProfileDetail"
         component={ProfileDetailScreen}
-        options={{ title: 'Kullanıcı Profili' }}
+        options={{ title: t('profile.viewProfile') }}
       />
       <RootStack.Screen
         name="Settings"
         component={SettingsScreen}
-        options={{ title: 'Ayarlar' }}
+        options={{ title: t('navigation.settings') }}
       />
       <RootStack.Screen
         name="LanguageSelection"
         component={LanguageSelectionScreen}
-        options={{ title: 'Dil Seçimi' }}
+        options={{ title: t('language.title') }}
       />
       <RootStack.Screen
         name="NotificationSettings"
         component={NotificationSettingsScreen}
-        options={{ title: 'Bildirim Ayarları' }}
+        options={{ title: t('notifications.settings') }}
       />
     </RootStack.Navigator>
   );

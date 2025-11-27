@@ -4,7 +4,8 @@ import { Modal, Text, Button, Switch, Chip, useTheme, Card } from 'react-native-
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import Slider from '@react-native-community/slider';
 import { format } from 'date-fns';
-import { tr } from 'date-fns/locale';
+import { useTranslation } from 'react-i18next';
+import { getDateLocale } from '../utils/dateLocale';
 
 export interface AdvancedFilters {
   maxDistance: number | null;
@@ -22,7 +23,7 @@ interface Props {
   hasLocation: boolean;
 }
 
-const SKILL_LEVELS = ['Başlangıç', 'Orta', 'İleri', 'Profesyonel'];
+const SKILL_LEVELS = ['beginner', 'intermediate', 'advanced', 'professional'];
 const DISTANCE_OPTIONS = [1, 5, 10, 25, 50, 100];
 
 export default function AdvancedFiltersModal({
@@ -33,6 +34,7 @@ export default function AdvancedFiltersModal({
   hasLocation,
 }: Props) {
   const theme = useTheme();
+  const { t } = useTranslation();
   const [localFilters, setLocalFilters] = useState<AdvancedFilters>(filters);
 
   const handleApply = () => {
@@ -64,7 +66,7 @@ export default function AdvancedFiltersModal({
       <ScrollView showsVerticalScrollIndicator={false}>
         <View style={[styles.header, { backgroundColor: theme.colors.primaryContainer }]}>
           <MaterialCommunityIcons name="filter-variant" size={18} color={theme.colors.primary} />
-          <Text style={[styles.title, { color: theme.colors.primary }]}>Gelişmiş Filtreler</Text>
+          <Text style={[styles.title, { color: theme.colors.primary }]}>{t('filters.advancedFilters')}</Text>
           <Button
             mode="text"
             onPress={onDismiss}
@@ -78,13 +80,13 @@ export default function AdvancedFiltersModal({
         {/* Distance Filter */}
         {hasLocation ? (
           <View style={styles.section}>
-            <Text style={styles.sectionTitle}>Mesafe (km)</Text>
+            <Text style={styles.sectionTitle}>{t('filters.distance')}</Text>
             <Text style={styles.sectionSubtitle}>
-              Konumunuza olan maksimum mesafe
+              {t('filters.maxDistanceFromLocation')}
             </Text>
             <View style={styles.distanceControl}>
               <View style={styles.switchRow}>
-                <Text style={styles.switchTitle}>Mesafe Sınırı</Text>
+                <Text style={styles.switchTitle}>{t('filters.distanceLimit')}</Text>
                 <Switch
                   value={localFilters.maxDistance !== null}
                   onValueChange={(value) => updateFilter('maxDistance', value ? 50 : null)}
@@ -93,7 +95,7 @@ export default function AdvancedFiltersModal({
 
               {localFilters.maxDistance !== null && (
                 <View style={styles.sliderContainer}>
-                  <Text style={styles.sliderValue}>{localFilters.maxDistance} km</Text>
+                  <Text style={styles.sliderValue}>{localFilters.maxDistance} {t('map.km')}</Text>
                   <Slider
                     style={styles.slider}
                     minimumValue={1}
@@ -106,8 +108,8 @@ export default function AdvancedFiltersModal({
                     thumbTintColor="#6200ee"
                   />
                   <View style={styles.sliderLabels}>
-                    <Text style={styles.sliderLabel}>1 km</Text>
-                    <Text style={styles.sliderLabel}>100 km</Text>
+                    <Text style={styles.sliderLabel}>1 {t('map.km')}</Text>
+                    <Text style={styles.sliderLabel}>100 {t('map.km')}</Text>
                   </View>
                 </View>
               )}
@@ -118,7 +120,7 @@ export default function AdvancedFiltersModal({
             <View style={styles.disabledSection}>
               <MaterialCommunityIcons name="map-marker-off" size={32} color="#999" />
               <Text style={styles.disabledText}>
-                Mesafe filtresini kullanmak için konum erişimine izin verin
+                {t('filters.enableLocationForDistance')}
               </Text>
             </View>
           </View>
@@ -129,7 +131,7 @@ export default function AdvancedFiltersModal({
           <Card.Content>
             <View style={styles.cardHeader}>
               <MaterialCommunityIcons name="calendar-range" size={20} color={theme.colors.primary} />
-              <Text style={[styles.sectionTitle, { color: theme.colors.onSurface }]}>Tarih Aralığı</Text>
+              <Text style={[styles.sectionTitle, { color: theme.colors.onSurface }]}>{t('filters.dateRange')}</Text>
             </View>
 
             <View style={styles.quickDateButtons}>
@@ -143,7 +145,7 @@ export default function AdvancedFiltersModal({
                 compact
                 style={styles.quickDateChip}
               >
-                Bugün
+                {t('date.today')}
               </Chip>
               <Chip
                 selected={false}
@@ -156,7 +158,7 @@ export default function AdvancedFiltersModal({
                 compact
                 style={styles.quickDateChip}
               >
-                Bu Hafta
+                {t('date.thisWeek')}
               </Chip>
               <Chip
                 selected={false}
@@ -169,7 +171,7 @@ export default function AdvancedFiltersModal({
                 compact
                 style={styles.quickDateChip}
               >
-                Bu Ay
+                {t('date.thisMonth')}
               </Chip>
             </View>
 
@@ -178,14 +180,14 @@ export default function AdvancedFiltersModal({
                 <View style={styles.selectedDateRow}>
                   <MaterialCommunityIcons name="calendar-start" size={14} color={theme.colors.primary} />
                   <Text style={[styles.selectedDateText, { color: theme.colors.onSurface }]}>
-                    {localFilters.dateFrom ? format(localFilters.dateFrom, 'dd MMM yyyy', { locale: tr }) : 'Başlangıç yok'}
+                    {localFilters.dateFrom ? format(localFilters.dateFrom, 'dd MMM yyyy', { locale: getDateLocale() }) : t('filters.noStartDate')}
                   </Text>
                 </View>
                 <MaterialCommunityIcons name="arrow-right" size={14} color={theme.colors.onSurfaceVariant} />
                 <View style={styles.selectedDateRow}>
                   <MaterialCommunityIcons name="calendar-end" size={14} color={theme.colors.primary} />
                   <Text style={[styles.selectedDateText, { color: theme.colors.onSurface }]}>
-                    {localFilters.dateTo ? format(localFilters.dateTo, 'dd MMM yyyy', { locale: tr }) : 'Bitiş yok'}
+                    {localFilters.dateTo ? format(localFilters.dateTo, 'dd MMM yyyy', { locale: getDateLocale() }) : t('filters.noEndDate')}
                   </Text>
                 </View>
                 <Button
@@ -197,7 +199,7 @@ export default function AdvancedFiltersModal({
                   compact
                   textColor={theme.colors.error}
                 >
-                  Temizle
+                  {t('common.clear')}
                 </Button>
               </View>
             )}
@@ -209,7 +211,7 @@ export default function AdvancedFiltersModal({
           <Card.Content>
             <View style={styles.cardHeader}>
               <MaterialCommunityIcons name="account-star" size={20} color={theme.colors.primary} />
-              <Text style={[styles.sectionTitle, { color: theme.colors.onSurface }]}>Seviye</Text>
+              <Text style={[styles.sectionTitle, { color: theme.colors.onSurface }]}>{t('session.skillLevel')}</Text>
             </View>
             <View style={styles.chipContainer}>
             {SKILL_LEVELS.map((level) => (
@@ -226,7 +228,7 @@ export default function AdvancedFiltersModal({
                 textStyle={{ fontSize: 12 }}
                 compact
               >
-                {level}
+                {t(`skillLevel.${level}`)}
               </Chip>
             ))}
             </View>
@@ -240,9 +242,9 @@ export default function AdvancedFiltersModal({
             <View style={styles.switchLabel}>
               <MaterialCommunityIcons name="account-check" size={20} color={theme.colors.primary} />
               <View style={styles.switchTextContainer}>
-                <Text style={[styles.switchTitle, { color: theme.colors.onSurface }]}>Sadece Boş Etkinlikler</Text>
+                <Text style={[styles.switchTitle, { color: theme.colors.onSurface }]}>{t('filters.onlyAvailableSessions')}</Text>
                 <Text style={[styles.switchSubtitle, { color: theme.colors.onSurfaceVariant }]}>
-                  Katılımcı kotası dolu olan etkinlikleri gizle
+                  {t('filters.hideFullSessions')}
                 </Text>
               </View>
             </View>
@@ -261,14 +263,14 @@ export default function AdvancedFiltersModal({
             onPress={handleReset}
             style={styles.actionButton}
           >
-            Sıfırla
+            {t('filters.reset')}
           </Button>
           <Button
             mode="contained"
             onPress={handleApply}
             style={styles.actionButton}
           >
-            Uygula
+            {t('common.apply')}
           </Button>
         </View>
       </ScrollView>

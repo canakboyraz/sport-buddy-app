@@ -7,6 +7,7 @@ import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { friendService, FriendshipStatus } from '../../services/friendService';
 import { StackNavigationProp } from '@react-navigation/stack';
 import { RootStackParamList } from '../../navigation/AppNavigator';
+import { useTranslation } from 'react-i18next';
 
 interface Friend {
   id: string;
@@ -36,6 +37,7 @@ interface Props {
 
 export default function FriendsScreen({ navigation }: Props) {
   const { user } = useAuth();
+  const { t } = useTranslation();
   const [activeTab, setActiveTab] = useState<TabType>('friends');
   const [friends, setFriends] = useState<Friend[]>([]);
   const [friendRequests, setFriendRequests] = useState<FriendRequest[]>([]);
@@ -122,10 +124,10 @@ export default function FriendsScreen({ navigation }: Props) {
       await friendService.sendFriendRequest(targetId, user.id);
       // Refresh search results to update button states
       await searchUsers();
-      Alert.alert('Başarılı', 'Arkadaşlık isteği gönderildi');
+      Alert.alert(t('common.success'), t('friends.requestSent'));
     } catch (error: any) {
       console.error('Error sending friend request:', error);
-      Alert.alert('Hata', error.message || 'Arkadaşlık isteği gönderilemedi');
+      Alert.alert(t('common.error'), error.message || t('friends.errors.sendRequestFailed'));
     }
 
     setProcessingIds(prev => {
@@ -143,10 +145,10 @@ export default function FriendsScreen({ navigation }: Props) {
     try {
       await friendService.acceptFriendRequest(friendshipId, user.id);
       await loadFriendRequests();
-      Alert.alert('Başarılı', 'Arkadaşlık isteği kabul edildi');
+      Alert.alert(t('common.success'), t('friends.requestAccepted'));
     } catch (error: any) {
       console.error('Error accepting friend request:', error);
-      Alert.alert('Hata', 'İstek kabul edilemedi');
+      Alert.alert(t('common.error'), t('friends.errors.acceptFailed'));
     }
 
     setProcessingIds(prev => {
@@ -164,10 +166,10 @@ export default function FriendsScreen({ navigation }: Props) {
     try {
       await friendService.rejectFriendRequest(friendshipId, user.id);
       await loadFriendRequests();
-      Alert.alert('Başarılı', 'İstek reddedildi');
+      Alert.alert(t('common.success'), t('friends.requestRejected'));
     } catch (error: any) {
       console.error('Error rejecting friend request:', error);
-      Alert.alert('Hata', 'İstek reddedilemedi');
+      Alert.alert(t('common.error'), t('friends.errors.rejectFailed'));
     }
 
     setProcessingIds(prev => {
@@ -185,10 +187,10 @@ export default function FriendsScreen({ navigation }: Props) {
     try {
       await friendService.cancelFriendRequest(friendshipId);
       await loadSentRequests();
-      Alert.alert('Başarılı', 'İstek iptal edildi');
+      Alert.alert(t('common.success'), t('friends.requestCanceled'));
     } catch (error: any) {
       console.error('Error canceling friend request:', error);
-      Alert.alert('Hata', 'İstek iptal edilemedi');
+      Alert.alert(t('common.error'), t('friends.errors.cancelFailed'));
     }
 
     setProcessingIds(prev => {
@@ -201,10 +203,10 @@ export default function FriendsScreen({ navigation }: Props) {
   const removeFriend = async (friendId: string) => {
     if (!user) return;
 
-    Alert.alert('Arkadaşı Sil', 'Arkadaş listenden çıkarmak istiyor musun?', [
-      { text: 'İptal', style: 'cancel' },
+    Alert.alert(t('friends.removeFriend'), t('friends.confirmRemove'), [
+      { text: t('common.cancel'), style: 'cancel' },
       {
-        text: 'Sil',
+        text: t('common.delete'),
         style: 'destructive',
         onPress: async () => {
           setProcessingIds(prev => new Set(prev).add(friendId));
@@ -212,10 +214,10 @@ export default function FriendsScreen({ navigation }: Props) {
           try {
             await friendService.removeFriend(friendId, user.id);
             await loadFriends();
-            Alert.alert('Başarılı', 'Arkadaş silindi');
+            Alert.alert(t('common.success'), t('friends.friendRemoved'));
           } catch (error: any) {
             console.error('Error removing friend:', error);
-            Alert.alert('Hata', 'Arkadaş silinemedi');
+            Alert.alert(t('common.error'), t('friends.errors.removeFailed'));
           }
 
           setProcessingIds(prev => {
@@ -316,7 +318,7 @@ export default function FriendsScreen({ navigation }: Props) {
           )}
           <View style={styles.friendInfo}>
             <Text style={styles.friendName}>{item.target.full_name}</Text>
-            <Chip icon="clock" compact style={styles.pendingChip}>Bekliyor</Chip>
+            <Chip icon="clock" compact style={styles.pendingChip}>{t('friends.pending')}</Chip>
           </View>
           <IconButton
             icon="close"
@@ -356,20 +358,20 @@ export default function FriendsScreen({ navigation }: Props) {
             onPress={() => sendFriendRequest(item.id)}
             disabled={processingIds.has(item.id)}
           >
-            Arkadaş Ekle
+            {t('friends.addFriend')}
           </Button>
         );
       }
 
       if (friendshipStatus.status === 'accepted') {
-        return <Chip icon="check" compact>Arkadaş</Chip>;
+        return <Chip icon="check" compact>{t('friends.friend')}</Chip>;
       }
 
       if (friendshipStatus.status === 'pending') {
         if (friendshipStatus.is_requester) {
-          return <Chip icon="clock" compact>Gönderildi</Chip>;
+          return <Chip icon="clock" compact>{t('friends.sent')}</Chip>;
         } else {
-          return <Chip icon="clock" compact>İstek Var</Chip>;
+          return <Chip icon="clock" compact>{t('friends.requestPending')}</Chip>;
         }
       }
 
@@ -380,7 +382,7 @@ export default function FriendsScreen({ navigation }: Props) {
           onPress={() => sendFriendRequest(item.id)}
           disabled={processingIds.has(item.id)}
         >
-          Arkadaş Ekle
+          {t('friends.addFriend')}
         </Button>
       );
     };
@@ -413,19 +415,19 @@ export default function FriendsScreen({ navigation }: Props) {
 
     switch (activeTab) {
       case 'friends':
-        message = 'Henüz arkadaşınız yok';
+        message = t('friends.noFriends');
         icon = 'account-multiple';
         break;
       case 'requests':
-        message = 'Yeni arkadaşlık isteği yok';
+        message = t('friends.noRequests');
         icon = 'account-clock';
         break;
       case 'sent':
-        message = 'Gönderilen istek yok';
+        message = t('friends.noSentRequests');
         icon = 'send-clock';
         break;
       case 'search':
-        message = searchQuery ? 'Kullanıcı bulunamadı' : 'Kullanıcı aramak için yazın';
+        message = searchQuery ? t('friends.noUsersFound') : t('friends.searchPlaceholder');
         icon = 'magnify';
         break;
     }
@@ -478,7 +480,7 @@ export default function FriendsScreen({ navigation }: Props) {
           style={styles.tab}
           icon="account-multiple"
         >
-          Arkadaşlar
+          {t('friends.tabs.friends')}
         </Chip>
         <Chip
           selected={activeTab === 'requests'}
@@ -486,7 +488,7 @@ export default function FriendsScreen({ navigation }: Props) {
           style={styles.tab}
           icon="account-clock"
         >
-          İstekler {friendRequests.length > 0 && `(${friendRequests.length})`}
+          {t('friends.tabs.requests')} {friendRequests.length > 0 && `(${friendRequests.length})`}
         </Chip>
         <Chip
           selected={activeTab === 'sent'}
@@ -494,7 +496,7 @@ export default function FriendsScreen({ navigation }: Props) {
           style={styles.tab}
           icon="send-clock"
         >
-          Gönderilen
+          {t('friends.tabs.sent')}
         </Chip>
         <Chip
           selected={activeTab === 'search'}
@@ -502,7 +504,7 @@ export default function FriendsScreen({ navigation }: Props) {
           style={styles.tab}
           icon="magnify"
         >
-          Ara
+          {t('common.search')}
         </Chip>
       </View>
 
@@ -511,7 +513,7 @@ export default function FriendsScreen({ navigation }: Props) {
       {/* Search bar for search tab */}
       {activeTab === 'search' && (
         <Searchbar
-          placeholder="Kullanıcı ara..."
+          placeholder={t('friends.searchUsers')}
           onChangeText={setSearchQuery}
           value={searchQuery}
           onSubmitEditing={searchUsers}

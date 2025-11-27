@@ -10,6 +10,7 @@ import { secureStore } from '../../services/secureStore';
 import * as AppleAuthentication from 'expo-apple-authentication';
 import * as WebBrowser from 'expo-web-browser';
 import * as Linking from 'expo-linking';
+import { useTranslation } from 'react-i18next';
 
 WebBrowser.maybeCompleteAuthSession();
 
@@ -20,6 +21,7 @@ type Props = {
 };
 
 export default function LoginScreen({ navigation }: Props) {
+  const { t } = useTranslation();
   const theme = useTheme();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -54,12 +56,12 @@ export default function LoginScreen({ navigation }: Props) {
 
   const handleLogin = async () => {
     if (!email || !password) {
-      Alert.alert('Hata', 'Lütfen tüm alanları doldurun');
+      Alert.alert(t('common.error'), t('auth.fillAllFields'));
       return;
     }
 
     if (!validateEmail(email)) {
-      Alert.alert('Hata', 'Geçerli bir e-posta adresi giriniz');
+      Alert.alert(t('common.error'), t('auth.invalidEmail'));
       return;
     }
 
@@ -73,7 +75,7 @@ export default function LoginScreen({ navigation }: Props) {
     setLoading(false);
 
     if (error) {
-      Alert.alert('Giriş Hatası', error.message);
+      Alert.alert(t('auth.loginError'), error.message);
     } else {
       // Save only email if "Remember Me" is checked (NEVER save password)
       if (rememberMe) {
@@ -130,7 +132,7 @@ export default function LoginScreen({ navigation }: Props) {
         }
       }
     } catch (error: any) {
-      Alert.alert('Hata', error.message || 'Google ile giriş yapılamadı');
+      Alert.alert(t('common.error'), error.message || t('auth.googleLoginFailed'));
     } finally {
       setLoading(false);
     }
@@ -193,9 +195,9 @@ export default function LoginScreen({ navigation }: Props) {
           } else if (!existingProfile?.full_name) {
             // No name from Apple and profile has no name - prompt user
             Alert.alert(
-              'Hoş Geldiniz!',
-              'Lütfen profil ayarlarından adınızı ve soyadınızı girin.',
-              [{ text: 'Tamam' }]
+              t('auth.welcome'),
+              t('auth.pleaseEnterName'),
+              [{ text: t('common.ok') }]
             );
           }
         }
@@ -205,7 +207,7 @@ export default function LoginScreen({ navigation }: Props) {
         // User cancelled
         return;
       }
-      Alert.alert('Hata', error.message || 'Apple ile giriş yapılamadı');
+      Alert.alert(t('common.error'), error.message || t('auth.appleLoginFailed'));
     } finally {
       setLoading(false);
     }
@@ -224,11 +226,11 @@ export default function LoginScreen({ navigation }: Props) {
         style={styles.keyboardView}
       >
         <Surface style={[styles.surface, { backgroundColor: theme.colors.surface }]} elevation={4}>
-          <Text style={[styles.title, { color: theme.colors.primary }]}>Sport Buddy</Text>
-          <Text style={[styles.subtitle, { color: theme.colors.onSurfaceVariant }]}>Spor arkadaşını bul!</Text>
+          <Text style={[styles.title, { color: theme.colors.primary }]}>{t('common.appName')}</Text>
+          <Text style={[styles.subtitle, { color: theme.colors.onSurfaceVariant }]}>{t('auth.loginSubtitle')}</Text>
 
           <TextInput
-            label="E-posta"
+            label={t('auth.email')}
             value={email}
             onChangeText={setEmail}
             mode="outlined"
@@ -239,7 +241,7 @@ export default function LoginScreen({ navigation }: Props) {
           />
 
           <TextInput
-            label="Şifre"
+            label={t('auth.password')}
             value={password}
             onChangeText={setPassword}
             mode="outlined"
@@ -260,7 +262,7 @@ export default function LoginScreen({ navigation }: Props) {
               onPress={() => setRememberMe(!rememberMe)}
             />
             <Text style={[styles.rememberMeText, { color: theme.colors.onSurface }]} onPress={() => setRememberMe(!rememberMe)}>
-              Beni Hatırla
+              {t('auth.rememberMe')}
             </Text>
           </View>
 
@@ -272,12 +274,12 @@ export default function LoginScreen({ navigation }: Props) {
             style={styles.button}
             contentStyle={{ height: 48 }}
           >
-            Giriş Yap
+            {t('auth.login')}
           </Button>
 
           <View style={styles.dividerContainer}>
             <Divider style={styles.divider} />
-            <Text style={[styles.dividerText, { color: theme.colors.onSurfaceVariant }]}>veya</Text>
+            <Text style={[styles.dividerText, { color: theme.colors.onSurfaceVariant }]}>{t('auth.or')}</Text>
             <Divider style={styles.divider} />
           </View>
 
@@ -289,7 +291,7 @@ export default function LoginScreen({ navigation }: Props) {
             contentStyle={{ height: 48 }}
             icon="google"
           >
-            Google ile Giriş Yap
+            {t('auth.loginWithGoogle')}
           </Button>
 
           {appleAuthAvailable && Platform.OS === 'ios' && (
@@ -301,7 +303,7 @@ export default function LoginScreen({ navigation }: Props) {
               contentStyle={{ height: 48 }}
               icon="apple"
             >
-              Apple ile Giriş Yap
+              {t('auth.loginWithApple')}
             </Button>
           )}
 
@@ -310,7 +312,7 @@ export default function LoginScreen({ navigation }: Props) {
             onPress={() => navigation.navigate('Register')}
             style={styles.registerButton}
           >
-            Hesabın yok mu? Kayıt Ol
+            {t('auth.dontHaveAccount')} {t('auth.register')}
           </Button>
         </Surface>
       </KeyboardAvoidingView>

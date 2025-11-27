@@ -31,7 +31,8 @@
     "skip": "Skip",
     "seeAll": "See All",
     "more": "More",
-    "less": "Less"
+    "less": "Less",
+    "all": "All"
   },
 
   "auth": {
@@ -89,13 +90,18 @@
     "sortBy": "Sort By",
     "sortByDate": "By Date",
     "sortByDistance": "By Distance",
-    "sortByParticipants": "By Participants"
+    "sortByParticipants": "By Participants",
+    "noSessionsMatchingFilters": "No sessions matching your filters",
+    "tryDifferentFilters": "Try different filters to find more sessions",
+    "resetFilters": "Reset Filters",
+    "filterSettings": "Filter Settings"
   },
 
   "session": {
     "title": "Session",
     "detail": "Session Detail",
     "create": "Create Session",
+    "createNew": "Create New Session",
     "edit": "Edit Session",
     "delete": "Delete Session",
     "join": "Join",
@@ -107,6 +113,8 @@
     "sport": "Sport",
     "selectSport": "Select Sport",
     "location": "Location",
+    "noLocationSelected": "No location selected",
+    "details": "Details",
     "date": "Date",
     "time": "Time",
     "maxParticipants": "Max Participants",
@@ -237,11 +245,22 @@
     "newAchievement": "New Achievement!",
     "points": "Points",
     "totalPoints": "Total Points",
+    "level": "Level",
+    "pointsToNextLevel": "{{points}} points to next level",
+    "statistics": "Achievement Statistics",
+    "earned": "Earned",
+    "remaining": "Remaining",
+    "completion": "Completion",
     "categories": {
       "participation": "Participation",
       "social": "Social",
       "creation": "Organization",
       "special": "Special"
+    },
+    "category": {
+      "sessions": "Sessions",
+      "ratings": "Ratings",
+      "activity": "Activity"
     }
   },
 
@@ -279,7 +298,9 @@
     "offline": "Offline",
     "typing": "typing...",
     "seen": "Seen",
-    "delivered": "Delivered"
+    "delivered": "Delivered",
+    "uploadError": "An error occurred while uploading the photo",
+    "uploadingImage": "Uploading photo..."
   },
 
   "notifications": {
@@ -391,7 +412,8 @@
     "termsOfService": "Terms of Service",
     "privacyPolicy": "Privacy Policy",
     "deleteAccount": "Delete Account",
-    "deleteAccountConfirm": "Are you sure you want to delete your account? This action cannot be undone."
+    "deleteAccountConfirm": "Are you sure you want to delete your account? This action cannot be undone.",
+    "openSettings": "Open Settings"
   },
 
   "language": {
@@ -413,6 +435,9 @@
     "myLocation": "My Location",
     "enableLocation": "Enable Location",
     "locationPermissionDenied": "Location permission denied",
+    "locationPermissionRequired": "Location Permission Required",
+    "locationPermissionMessage": "Allow location access to see nearby events. You can enable it in Settings.",
+    "locationError": "Could not get location. Please make sure location services are enabled.",
     "distance": "Distance",
     "km": "km",
     "m": "m"
@@ -436,6 +461,40 @@
     "noFavorites": "No favorites yet",
     "addedToFavorites": "Added to favorites",
     "removedFromFavorites": "Removed from favorites"
+  },
+
+  "filters": {
+    "advancedFilters": "Advanced Filters",
+    "distance": "Distance (km)",
+    "maxDistanceFromLocation": "Maximum distance from your location",
+    "distanceLimit": "Distance Limit",
+    "enableLocationForDistance": "Allow location access to use distance filter",
+    "dateRange": "Date Range",
+    "noStartDate": "No start date",
+    "noEndDate": "No end date",
+    "onlyAvailableSessions": "Only Available Sessions",
+    "hideFullSessions": "Hide sessions with full participant quota",
+    "reset": "Reset"
+  },
+
+  "myEvents": {
+    "title": "My Sessions",
+    "upcoming": "Upcoming",
+    "past": "Past",
+    "created": "Created",
+    "joined": "Joined",
+    "noUpcomingEvents": "No upcoming events",
+    "noPastEvents": "No past events"
+  },
+
+  "report": {
+    "title": "Report User",
+    "reportUser": "Report User",
+    "reason": "Reason",
+    "description": "Description",
+    "submit": "Submit Report",
+    "success": "Report submitted successfully",
+    "error": "Failed to submit report"
   },
 
   "errors": {

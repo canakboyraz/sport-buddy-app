@@ -10,8 +10,10 @@ import { useAuth } from '../../hooks/useAuth';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { useFocusEffect } from '@react-navigation/native';
 import { getSkillLevelLabel } from '../../utils/skillLevelUtils';
+import { useTranslation } from 'react-i18next';
 
 export default function MyEventsScreen({ navigation }: any) {
+  const { t } = useTranslation();
   const { user } = useAuth();
   const theme = useTheme();
   const [sessions, setSessions] = useState<SportSession[]>([]);
@@ -136,25 +138,25 @@ export default function MyEventsScreen({ navigation }: any) {
             {isCreator && (
               <View style={styles.statusBadge}>
                 <MaterialCommunityIcons name="crown" size={10} color="white" />
-                <Text style={styles.badgeText}>Oluşturduğum</Text>
+                <Text style={styles.badgeText}>{t('myEvents.created')}</Text>
               </View>
             )}
             {!isCreator && (
               <View style={[styles.statusBadge, { backgroundColor: 'rgba(255, 255, 255, 0.2)' }]}>
                 <MaterialCommunityIcons name="account-check" size={10} color="white" />
-                <Text style={styles.badgeText}>Katıldığım</Text>
+                <Text style={styles.badgeText}>{t('myEvents.joined')}</Text>
               </View>
             )}
             {isFull && !isPast && (
               <View style={[styles.statusBadge, { backgroundColor: '#F44336' }]}>
                 <MaterialCommunityIcons name="close-circle" size={10} color="white" />
-                <Text style={styles.badgeText}>Dolu</Text>
+                <Text style={styles.badgeText}>{t('session.full')}</Text>
               </View>
             )}
             {isPast && (
               <View style={[styles.statusBadge, { backgroundColor: 'rgba(255, 255, 255, 0.15)' }]}>
                 <MaterialCommunityIcons name="clock-outline" size={10} color="white" />
-                <Text style={styles.badgeText}>Geçmiş</Text>
+                <Text style={styles.badgeText}>{t('myEvents.past')}</Text>
               </View>
             )}
           </View>
@@ -201,8 +203,8 @@ export default function MyEventsScreen({ navigation }: any) {
           value={filter}
           onValueChange={(value) => setFilter(value as 'upcoming' | 'past')}
           buttons={[
-            { value: 'upcoming', label: 'Yaklaşan' },
-            { value: 'past', label: 'Geçmiş' },
+            { value: 'upcoming', label: t('myEvents.upcoming') },
+            { value: 'past', label: t('myEvents.past') },
           ]}
         />
       </View>
@@ -218,7 +220,7 @@ export default function MyEventsScreen({ navigation }: any) {
         ListEmptyComponent={
           <View style={styles.emptyContainer}>
             <Text style={[styles.emptyText, { color: theme.colors.onSurfaceVariant }]}>
-              {filter === 'upcoming' ? 'Yaklaşan etkinlik yok' : 'Geçmiş etkinlik yok'}
+              {filter === 'upcoming' ? t('myEvents.noUpcomingEvents') : t('myEvents.noPastEvents')}
             </Text>
           </View>
         }

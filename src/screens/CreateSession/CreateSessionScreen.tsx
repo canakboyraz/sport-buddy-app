@@ -18,6 +18,7 @@ import {
   validateLocation,
   validateCoordinates
 } from '../../utils/validation';
+import { useTranslation } from 'react-i18next';
 
 // Spor türlerine göre simge eşleştirme
 const getSportIcon = (sportName: string): string => {
@@ -86,6 +87,7 @@ const getSportIcon = (sportName: string): string => {
 
 export default function CreateSessionScreen({ navigation }: any) {
   const { user } = useAuth();
+  const { t } = useTranslation();
   const theme = useTheme();
   const [sports, setSports] = useState<Sport[]>([]);
   const [selectedSport, setSelectedSport] = useState<number | null>(null);
@@ -129,7 +131,7 @@ export default function CreateSessionScreen({ navigation }: any) {
         setSports(data);
       } else if (error) {
         console.error('Error loading sports:', error);
-        Alert.alert('Hata', 'Sporlar yüklenirken bir hata oluştu');
+        Alert.alert(t('common.error'), t('createSession.errors.loadSportsFailed'));
       }
     } catch (error) {
       console.error('Error in loadSports:', error);
@@ -139,7 +141,7 @@ export default function CreateSessionScreen({ navigation }: any) {
   const getCurrentLocation = async () => {
     const { status } = await Location.requestForegroundPermissionsAsync();
     if (status !== 'granted') {
-      Alert.alert('İzin Gerekli', 'Konum izni verilmedi');
+      Alert.alert(t('map.locationPermissionRequired'), t('map.locationPermissionDenied'));
       return;
     }
 
@@ -219,19 +221,19 @@ export default function CreateSessionScreen({ navigation }: any) {
   const handleCreate = async () => {
     // Validate required fields
     if (!selectedSport || !title || !location || !maxParticipants) {
-      Alert.alert('Hata', 'Lütfen zorunlu alanları doldurun');
+      Alert.alert(t('common.error'), t('createSession.errors.fillRequired'));
       return;
     }
 
     if (!user) {
-      Alert.alert('Hata', 'Kullanıcı bilgisi bulunamadı');
+      Alert.alert(t('common.error'), t('createSession.errors.userNotFound'));
       return;
     }
 
     // Validate title
     const titleValidation = validateSessionTitle(title);
     if (!titleValidation.isValid) {
-      Alert.alert('Hata', titleValidation.message);
+      Alert.alert(t('common.error'), titleValidation.message);
       return;
     }
 
@@ -239,7 +241,7 @@ export default function CreateSessionScreen({ navigation }: any) {
     if (description) {
       const descValidation = validateSessionDescription(description);
       if (!descValidation.isValid) {
-        Alert.alert('Hata', descValidation.message);
+        Alert.alert(t('common.error'), descValidation.message);
         return;
       }
     }
@@ -247,7 +249,7 @@ export default function CreateSessionScreen({ navigation }: any) {
     // Validate location
     const locationValidation = validateLocation(location);
     if (!locationValidation.isValid) {
-      Alert.alert('Hata', locationValidation.message);
+      Alert.alert(t('common.error'), locationValidation.message);
       return;
     }
 
@@ -255,7 +257,7 @@ export default function CreateSessionScreen({ navigation }: any) {
     if (latitude !== null && longitude !== null) {
       const coordValidation = validateCoordinates(latitude, longitude);
       if (!coordValidation.isValid) {
-        Alert.alert('Hata', coordValidation.message);
+        Alert.alert(t('common.error'), coordValidation.message);
         return;
       }
     }
@@ -264,13 +266,13 @@ export default function CreateSessionScreen({ navigation }: any) {
     const maxParticipantsNum = parseInt(maxParticipants);
     const participantsValidation = validateMaxParticipants(maxParticipantsNum);
     if (!participantsValidation.isValid) {
-      Alert.alert('Hata', participantsValidation.message);
+      Alert.alert(t('common.error'), participantsValidation.message);
       return;
     }
 
     // Validate session date is in the future
     if (sessionDate <= new Date()) {
-      Alert.alert('Hata', 'Etkinlik tarihi gelecekte olmalıdır');
+      Alert.alert(t('common.error'), t('createSession.errors.dateMustBeFuture'));
       return;
     }
 
@@ -305,7 +307,7 @@ export default function CreateSessionScreen({ navigation }: any) {
 
         if (recurringError) {
           console.error('Error creating recurring session:', recurringError);
-          Alert.alert('Hata', recurringError.message);
+          Alert.alert(t('common.error'), recurringError.message);
           setLoading(false);
           return;
         }
@@ -323,15 +325,15 @@ export default function CreateSessionScreen({ navigation }: any) {
 
         if (generateError) {
           console.error('Error generating sessions:', generateError);
-          Alert.alert('Uyarı', 'Tekrarlayan seans şablonu oluşturuldu ancak otomatik seanslar oluşturulamadı.');
+          Alert.alert(t('createSession.warning'), t('createSession.recurringCreatedButGenerateFailed'));
         } else {
           const sessionCount = generatedSessions?.length || 0;
           Alert.alert(
-            'Başarılı',
-            `Tekrarlayan seans oluşturuldu! ${sessionCount} adet seans otomatik olarak oluşturuldu.`,
+            t('common.success'),
+            t('createSession.recurringCreatedSuccess', { count: sessionCount }),
             [
               {
-                text: 'Tamam',
+                text: t('common.ok'),
                 onPress: resetForm,
               },
             ]
@@ -358,11 +360,11 @@ export default function CreateSessionScreen({ navigation }: any) {
 
         if (error) {
           console.error('Error creating session:', error);
-          Alert.alert('Hata', error.message);
+          Alert.alert(t('common.error'), error.message);
         } else {
-          Alert.alert('Başarılı', 'Seans oluşturuldu!', [
+          Alert.alert(t('common.success'), t('session.createSuccess'), [
             {
-              text: 'Tamam',
+              text: t('common.ok'),
               onPress: resetForm,
             },
           ]);
@@ -371,7 +373,7 @@ export default function CreateSessionScreen({ navigation }: any) {
     } catch (error) {
       console.error('Error in handleCreate:', error);
       setLoading(false);
-      Alert.alert('Hata', 'Seans oluşturulurken bir hata oluştu');
+      Alert.alert(t('common.error'), t('createSession.errors.createFailed'));
     }
   };
 
@@ -397,7 +399,7 @@ export default function CreateSessionScreen({ navigation }: any) {
     <ScrollView style={[styles.container, { backgroundColor: theme.colors.background }]}>
       <View style={styles.form}>
         <TextInput
-          label="Spor Türü *"
+          label={t('createSession.sportType') + ' *'}
           value={sports.find(s => s.id === selectedSport)?.name || ''}
           mode="outlined"
           style={[styles.input, { backgroundColor: theme.colors.surface }]}
@@ -413,7 +415,7 @@ export default function CreateSessionScreen({ navigation }: any) {
             onDismiss={() => setSportMenuVisible(false)}
             style={[styles.sportDialog, { backgroundColor: theme.colors.surface }]}
           >
-            <Dialog.Title style={{ color: theme.colors.onSurface }}>Spor Türü Seçin</Dialog.Title>
+            <Dialog.Title style={{ color: theme.colors.onSurface }}>{t('createSession.selectSport')}</Dialog.Title>
             <Dialog.ScrollArea style={styles.dialogScrollArea}>
               <ScrollView>
                 {sports.map((sport) => (
@@ -432,13 +434,13 @@ export default function CreateSessionScreen({ navigation }: any) {
               </ScrollView>
             </Dialog.ScrollArea>
             <Dialog.Actions>
-              <Button onPress={() => setSportMenuVisible(false)}>İptal</Button>
+              <Button onPress={() => setSportMenuVisible(false)}>{t('common.cancel')}</Button>
             </Dialog.Actions>
           </Dialog>
         </Portal>
 
         <TextInput
-          label="Başlık *"
+          label={t('createSession.title') + ' *'}
           value={title}
           onChangeText={setTitle}
           mode="outlined"
@@ -446,7 +448,7 @@ export default function CreateSessionScreen({ navigation }: any) {
         />
 
         <TextInput
-          label="Açıklama"
+          label={t('createSession.description')}
           value={description}
           onChangeText={setDescription}
           mode="outlined"
@@ -456,7 +458,7 @@ export default function CreateSessionScreen({ navigation }: any) {
         />
 
         <TextInput
-          label="Konum *"
+          label={t('createSession.location') + ' *'}
           value={location}
           onChangeText={setLocation}
           mode="outlined"
@@ -475,7 +477,7 @@ export default function CreateSessionScreen({ navigation }: any) {
           style={styles.mapButton}
           icon="map-marker"
         >
-          Haritadan Konum Seç
+          {t('createSession.selectFromMap')}
         </Button>
 
         <MapPicker
@@ -512,7 +514,7 @@ export default function CreateSessionScreen({ navigation }: any) {
         )}
 
         <TextInput
-          label="Maksimum Katılımcı *"
+          label={t('createSession.maxParticipants') + ' *'}
           value={maxParticipants}
           onChangeText={setMaxParticipants}
           mode="outlined"
@@ -521,12 +523,12 @@ export default function CreateSessionScreen({ navigation }: any) {
         />
 
         <TextInput
-          label="Seviye"
+          label={t('createSession.skillLevel')}
           value={
-            skillLevel === 'any' ? 'Herkes' :
-            skillLevel === 'beginner' ? 'Başlangıç' :
-            skillLevel === 'intermediate' ? 'Orta' :
-            'İleri'
+            skillLevel === 'any' ? t('skillLevel.any') :
+            skillLevel === 'beginner' ? t('skillLevel.beginner') :
+            skillLevel === 'intermediate' ? t('skillLevel.intermediate') :
+            t('skillLevel.advanced')
           }
           mode="outlined"
           style={[styles.input, { backgroundColor: theme.colors.surface }]}
@@ -542,13 +544,13 @@ export default function CreateSessionScreen({ navigation }: any) {
             onDismiss={() => setSkillMenuVisible(false)}
             style={[styles.sportDialog, { backgroundColor: theme.colors.surface }]}
           >
-            <Dialog.Title style={{ color: theme.colors.onSurface }}>Seviye Seçin</Dialog.Title>
+            <Dialog.Title style={{ color: theme.colors.onSurface }}>{t('createSession.selectSkillLevel')}</Dialog.Title>
             <Dialog.Content>
               {[
-                { value: 'any', label: 'Herkes' },
-                { value: 'beginner', label: 'Başlangıç' },
-                { value: 'intermediate', label: 'Orta' },
-                { value: 'advanced', label: 'İleri' }
+                { value: 'any', label: t('skillLevel.any') },
+                { value: 'beginner', label: t('skillLevel.beginner') },
+                { value: 'intermediate', label: t('skillLevel.intermediate') },
+                { value: 'advanced', label: t('skillLevel.advanced') }
               ].map((skill) => (
                 <List.Item
                   key={skill.value}
@@ -564,7 +566,7 @@ export default function CreateSessionScreen({ navigation }: any) {
               ))}
             </Dialog.Content>
             <Dialog.Actions>
-              <Button onPress={() => setSkillMenuVisible(false)}>İptal</Button>
+              <Button onPress={() => setSkillMenuVisible(false)}>{t('common.cancel')}</Button>
             </Dialog.Actions>
           </Dialog>
         </Portal>
@@ -572,7 +574,7 @@ export default function CreateSessionScreen({ navigation }: any) {
         {/* Recurring Session Options */}
         <View style={styles.recurringContainer}>
           <View style={styles.recurringHeader}>
-            <Text style={[styles.recurringLabel, { color: theme.colors.onSurface }]}>Tekrarlayan Etkinlik</Text>
+            <Text style={[styles.recurringLabel, { color: theme.colors.onSurface }]}>{t('createSession.recurringSession')}</Text>
             <Switch value={isRecurring} onValueChange={setIsRecurring} />
           </View>
         </View>
@@ -580,12 +582,12 @@ export default function CreateSessionScreen({ navigation }: any) {
         {isRecurring && (
           <View style={[styles.recurringOptions, { backgroundColor: theme.colors.surfaceVariant }]}>
             <TextInput
-              label="Tekrarlama Sıklığı"
+              label={t('createSession.recurrenceFrequency')}
               value={
-                recurrenceType === 'daily' ? 'Her Gün' :
-                recurrenceType === 'weekly' ? 'Her Hafta' :
-                recurrenceType === 'biweekly' ? 'İki Haftada Bir' :
-                'Her Ay'
+                recurrenceType === 'daily' ? t('createSession.frequency.daily') :
+                recurrenceType === 'weekly' ? t('createSession.frequency.weekly') :
+                recurrenceType === 'biweekly' ? t('createSession.frequency.biweekly') :
+                t('createSession.frequency.monthly')
               }
               mode="outlined"
               style={[styles.input, { backgroundColor: theme.colors.surface }]}
@@ -601,13 +603,13 @@ export default function CreateSessionScreen({ navigation }: any) {
                 onDismiss={() => setRecurrenceMenuVisible(false)}
                 style={[styles.sportDialog, { backgroundColor: theme.colors.surface }]}
               >
-                <Dialog.Title style={{ color: theme.colors.onSurface }}>Tekrarlama Sıklığı</Dialog.Title>
+                <Dialog.Title style={{ color: theme.colors.onSurface }}>{t('createSession.recurrenceFrequency')}</Dialog.Title>
                 <Dialog.Content>
                   {[
-                    { value: 'daily', label: 'Her Gün' },
-                    { value: 'weekly', label: 'Her Hafta' },
-                    { value: 'biweekly', label: 'İki Haftada Bir' },
-                    { value: 'monthly', label: 'Her Ay' }
+                    { value: 'daily', label: t('createSession.frequency.daily') },
+                    { value: 'weekly', label: t('createSession.frequency.weekly') },
+                    { value: 'biweekly', label: t('createSession.frequency.biweekly') },
+                    { value: 'monthly', label: t('createSession.frequency.monthly') }
                   ].map((rec) => (
                     <List.Item
                       key={rec.value}
@@ -623,16 +625,24 @@ export default function CreateSessionScreen({ navigation }: any) {
                   ))}
                 </Dialog.Content>
                 <Dialog.Actions>
-                  <Button onPress={() => setRecurrenceMenuVisible(false)}>İptal</Button>
+                  <Button onPress={() => setRecurrenceMenuVisible(false)}>{t('common.cancel')}</Button>
                 </Dialog.Actions>
               </Dialog>
             </Portal>
 
             {(recurrenceType === 'weekly' || recurrenceType === 'biweekly') && (
               <View style={styles.dayChipsContainer}>
-                <Text style={[styles.dayChipsLabel, { color: theme.colors.onSurfaceVariant }]}>Gün Seçin:</Text>
+                <Text style={[styles.dayChipsLabel, { color: theme.colors.onSurfaceVariant }]}>{t('createSession.selectDay')}</Text>
                 <View style={styles.dayChips}>
-                  {['Pazar', 'Pazartesi', 'Salı', 'Çarşamba', 'Perşembe', 'Cuma', 'Cumartesi'].map((day, index) => (
+                  {[
+                    t('createSession.days.sunday'),
+                    t('createSession.days.monday'),
+                    t('createSession.days.tuesday'),
+                    t('createSession.days.wednesday'),
+                    t('createSession.days.thursday'),
+                    t('createSession.days.friday'),
+                    t('createSession.days.saturday')
+                  ].map((day, index) => (
                     <Chip
                       key={index}
                       selected={recurrenceDay === index}
@@ -648,7 +658,7 @@ export default function CreateSessionScreen({ navigation }: any) {
 
             {recurrenceType === 'monthly' && (
               <TextInput
-                label="Ayın Hangi Günü (1-31)"
+                label={t('createSession.dayOfMonth')}
                 value={recurrenceDay.toString()}
                 onChangeText={(text) => {
                   const day = parseInt(text);
@@ -668,11 +678,11 @@ export default function CreateSessionScreen({ navigation }: any) {
               style={styles.input}
               icon="calendar-end"
             >
-              {endDate ? `Bitiş: ${format(endDate, 'dd MMM yyyy', { locale: tr })}` : 'Bitiş Tarihi (İsteğe Bağlı)'}
+              {endDate ? t('createSession.endDate') + ': ' + format(endDate, 'dd MMM yyyy', { locale: tr }) : t('createSession.endDateOptional')}
             </Button>
 
             <Text style={[styles.recurringInfo, { color: theme.colors.onSurfaceVariant }]}>
-              💡 Tekrarlayan etkinlik aktif olduğu sürece önümüzdeki 30 gün için otomatik seanslar oluşturulur.
+              {t('createSession.recurringInfo')}
             </Text>
           </View>
         )}
@@ -684,7 +694,7 @@ export default function CreateSessionScreen({ navigation }: any) {
           disabled={loading}
           style={styles.button}
         >
-          {isRecurring ? 'Tekrarlayan Seans Oluştur' : 'Seans Oluştur'}
+          {isRecurring ? t('createSession.createRecurring') : t('session.create')}
         </Button>
       </View>
 

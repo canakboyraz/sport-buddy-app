@@ -31,7 +31,8 @@
     "skip": "Geç",
     "seeAll": "Tümünü Gör",
     "more": "Daha Fazla",
-    "less": "Daha Az"
+    "less": "Daha Az",
+    "all": "Tümü"
   },
 
   "auth": {
@@ -89,13 +90,18 @@
     "sortBy": "Sıralama",
     "sortByDate": "Tarihe Göre",
     "sortByDistance": "Uzaklığa Göre",
-    "sortByParticipants": "Katılımcı Sayısına Göre"
+    "sortByParticipants": "Katılımcı Sayısına Göre",
+    "noSessionsMatchingFilters": "Filtrelerinize uygun seans bulunamadı",
+    "tryDifferentFilters": "Farklı filtreler deneyerek daha fazla seans bulabilirsiniz",
+    "resetFilters": "Filtreleri Sıfırla",
+    "filterSettings": "Filtre Ayarları"
   },
 
   "session": {
     "title": "Seans",
     "detail": "Seans Detayı",
     "create": "Seans Oluştur",
+    "createNew": "Yeni Seans Ekle",
     "edit": "Seansı Düzenle",
     "delete": "Seansı Sil",
     "join": "Katıl",
@@ -107,6 +113,8 @@
     "sport": "Spor",
     "selectSport": "Spor Seç",
     "location": "Konum",
+    "noLocationSelected": "Konum seçilmedi",
+    "details": "Detaylar",
     "date": "Tarih",
     "time": "Saat",
     "maxParticipants": "Maksimum Katılımcı",
@@ -237,11 +245,22 @@
     "newAchievement": "Yeni Başarı!",
     "points": "Puan",
     "totalPoints": "Toplam Puan",
+    "level": "Seviye",
+    "pointsToNextLevel": "Bir sonraki seviyeye {{points}} puan kaldı",
+    "statistics": "Başarı İstatistikleri",
+    "earned": "Kazanılan",
+    "remaining": "Kalan",
+    "completion": "Tamamlanma",
     "categories": {
       "participation": "Katılım",
       "social": "Sosyal",
       "creation": "Organizasyon",
       "special": "Özel"
+    },
+    "category": {
+      "sessions": "Seanslar",
+      "ratings": "Değerlendirmeler",
+      "activity": "Aktivite"
     }
   },
 
@@ -279,7 +298,9 @@
     "offline": "Çevrimdışı",
     "typing": "yazıyor...",
     "seen": "Görüldü",
-    "delivered": "İletildi"
+    "delivered": "İletildi",
+    "uploadError": "Fotoğraf yüklenirken bir hata oluştu",
+    "uploadingImage": "Fotoğraf yükleniyor..."
   },
 
   "notifications": {
@@ -391,7 +412,8 @@
     "termsOfService": "Kullanım Şartları",
     "privacyPolicy": "Gizlilik Politikası",
     "deleteAccount": "Hesabı Sil",
-    "deleteAccountConfirm": "Hesabınızı silmek istediğinizden emin misiniz? Bu işlem geri alınamaz."
+    "deleteAccountConfirm": "Hesabınızı silmek istediğinizden emin misiniz? Bu işlem geri alınamaz.",
+    "openSettings": "Ayarları Aç"
   },
 
   "language": {
@@ -413,6 +435,9 @@
     "myLocation": "Konumum",
     "enableLocation": "Konum İzni",
     "locationPermissionDenied": "Konum izni verilmedi",
+    "locationPermissionRequired": "Konum İzni Gerekli",
+    "locationPermissionMessage": "Yakınınızdaki etkinlikleri görmek için konum erişimine izin verin. Ayarlar'dan izni etkinleştirebilirsiniz.",
+    "locationError": "Konum bilgisi alınamadı. Lütfen konum servislerinizin açık olduğundan emin olun.",
     "distance": "Uzaklık",
     "km": "km",
     "m": "m"
@@ -436,6 +461,40 @@
     "noFavorites": "Henüz favori eklemediniz",
     "addedToFavorites": "Favorilere eklendi",
     "removedFromFavorites": "Favorilerden çıkarıldı"
+  },
+
+  "filters": {
+    "advancedFilters": "Gelişmiş Filtreler",
+    "distance": "Mesafe (km)",
+    "maxDistanceFromLocation": "Konumunuza olan maksimum mesafe",
+    "distanceLimit": "Mesafe Sınırı",
+    "enableLocationForDistance": "Mesafe filtresini kullanmak için konum erişimine izin verin",
+    "dateRange": "Tarih Aralığı",
+    "noStartDate": "Başlangıç yok",
+    "noEndDate": "Bitiş yok",
+    "onlyAvailableSessions": "Sadece Boş Etkinlikler",
+    "hideFullSessions": "Katılımcı kotası dolu olan etkinlikleri gizle",
+    "reset": "Sıfırla"
+  },
+
+  "myEvents": {
+    "title": "Seanslarım",
+    "upcoming": "Yaklaşan",
+    "past": "Geçmiş",
+    "created": "Oluşturduğum",
+    "joined": "Katıldığım",
+    "noUpcomingEvents": "Yaklaşan etkinlik yok",
+    "noPastEvents": "Geçmiş etkinlik yok"
+  },
+
+  "report": {
+    "title": "Kullanıcıyı Şikayet Et",
+    "reportUser": "Kullanıcıyı Şikayet Et",
+    "reason": "Sebep",
+    "description": "Açıklama",
+    "submit": "Şikayeti Gönder",
+    "success": "Şikayet başarıyla gönderildi",
+    "error": "Şikayet gönderilemedi"
   },
 
   "errors": {

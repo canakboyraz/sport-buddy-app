@@ -4,10 +4,11 @@ import { Card, Text, Chip, Avatar, Button, useTheme, ProgressBar } from 'react-n
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { SportSession } from '../types';
 import { format } from 'date-fns';
-import { tr } from 'date-fns/locale';
 import { Circle, Svg } from 'react-native-svg';
 import { LinearGradient } from 'expo-linear-gradient';
 import { getSkillLevelLabel } from '../utils/skillLevelUtils';
+import { useTranslation } from 'react-i18next';
+import { getDateLocale } from '../utils/dateLocale';
 
 type Props = {
     item: SportSession;
@@ -19,6 +20,7 @@ type Props = {
 
 const SessionCard = ({ item, sportIcon, distance, onPress, onLocationPress }: Props) => {
     const theme = useTheme();
+    const { t } = useTranslation();
     const sessionDate = new Date(item.session_date);
     const participantsCount = item.participants?.filter(p => p.status === 'approved').length || 0;
     const isFull = participantsCount >= item.max_participants;
@@ -121,10 +123,10 @@ const SessionCard = ({ item, sportIcon, distance, onPress, onLocationPress }: Pr
                     <View style={[styles.infoBox, { backgroundColor: theme.colors.primaryContainer + '40' }]}>
                         <MaterialCommunityIcons name="calendar-clock" size={12} color={theme.colors.primary} />
                         <Text variant="bodySmall" style={[styles.infoBoxText, { color: theme.colors.onSurface }]}>
-                            {format(sessionDate, 'd MMM', { locale: tr })}
+                            {format(sessionDate, 'd MMM', { locale: getDateLocale() })}
                         </Text>
                         <Text variant="labelSmall" style={[styles.infoBoxSubtext, { color: theme.colors.onSurfaceVariant }]}>
-                            {format(sessionDate, 'HH:mm', { locale: tr })}
+                            {format(sessionDate, 'HH:mm', { locale: getDateLocale() })}
                         </Text>
                     </View>
 
@@ -135,7 +137,7 @@ const SessionCard = ({ item, sportIcon, distance, onPress, onLocationPress }: Pr
                             {participantsCount}/{item.max_participants}
                         </Text>
                         <Text variant="labelSmall" style={[styles.infoBoxSubtext, { color: theme.colors.onSurfaceVariant }]}>
-                            {isFull ? 'DOLU' : 'Kişi'}
+                            {isFull ? t('session.full').toUpperCase() : t('session.participants')}
                         </Text>
                     </View>
                 </View>
@@ -151,7 +153,7 @@ const SessionCard = ({ item, sportIcon, distance, onPress, onLocationPress }: Pr
                         style={[styles.locationText, { color: theme.colors.onSurface }]}
                         numberOfLines={1}
                     >
-                        {item.location || 'Konum seçilmedi'}
+                        {item.location || t('session.noLocationSelected')}
                     </Text>
                     <MaterialCommunityIcons name="chevron-right" size={12} color={theme.colors.onSurfaceVariant} />
                 </TouchableOpacity>
@@ -166,7 +168,7 @@ const SessionCard = ({ item, sportIcon, distance, onPress, onLocationPress }: Pr
                     labelStyle={styles.detailsButtonLabel}
                     icon="information-outline"
                 >
-                    Detaylar
+                    {t('session.details')}
                 </Button>
                 <Button
                     mode="contained"
@@ -176,7 +178,7 @@ const SessionCard = ({ item, sportIcon, distance, onPress, onLocationPress }: Pr
                     labelStyle={styles.joinButtonLabel}
                     icon={isFull ? 'close-circle' : 'account-plus'}
                 >
-                    {isFull ? 'Dolu' : 'Katıl'}
+                    {isFull ? t('session.full') : t('session.join')}
                 </Button>
             </Card.Actions>
         </Card>

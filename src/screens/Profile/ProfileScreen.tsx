@@ -11,10 +11,12 @@ import { pickImageFromGallery, takePhotoWithCamera, uploadProfilePhoto } from '.
 import { useNavigation } from '@react-navigation/native';
 import { StackNavigationProp } from '@react-navigation/stack';
 import { RootStackParamList } from '../../navigation/AppNavigator';
+import { useTranslation } from 'react-i18next';
 
 type ProfileScreenNavigationProp = StackNavigationProp<RootStackParamList>;
 
 export default function ProfileScreen() {
+  const { t } = useTranslation();
   const navigation = useNavigation<ProfileScreenNavigationProp>();
   const { user } = useAuth();
   const { isDarkMode, toggleTheme } = useTheme();
@@ -78,7 +80,7 @@ export default function ProfileScreen() {
     if (Platform.OS === 'ios') {
       ActionSheetIOS.showActionSheetWithOptions(
         {
-          options: ['İptal', 'Fotoğraf Çek', 'Galeriden Seç'],
+          options: [t('common.cancel'), t('profile.takePhoto'), t('profile.selectFromGallery')],
           cancelButtonIndex: 0,
         },
         (buttonIndex) => {
@@ -103,10 +105,10 @@ export default function ProfileScreen() {
       setUploadingPhoto(false);
 
       if (url) {
-        Alert.alert('Başarılı', 'Profil fotoğrafı güncellendi');
+        Alert.alert(t('common.success'), t('profile.photoUpdateSuccess'));
         loadProfile();
       } else {
-        Alert.alert('Hata', 'Fotoğraf yüklenirken bir hata oluştu');
+        Alert.alert(t('common.error'), t('profile.photoUploadError'));
       }
     }
   };
@@ -120,19 +122,19 @@ export default function ProfileScreen() {
       setUploadingPhoto(false);
 
       if (url) {
-        Alert.alert('Başarılı', 'Profil fotoğrafı güncellendi');
+        Alert.alert(t('common.success'), t('profile.photoUpdateSuccess'));
         loadProfile();
       } else {
-        Alert.alert('Hata', 'Fotoğraf yüklenirken bir hata oluştu');
+        Alert.alert(t('common.error'), t('profile.photoUploadError'));
       }
     }
   };
 
   const handleLogout = async () => {
-    Alert.alert('Çıkış', 'Çıkmak istediğinizden emin misiniz?', [
-      { text: 'İptal', style: 'cancel' },
+    Alert.alert(t('auth.logout'), t('profile.logoutConfirm'), [
+      { text: t('common.cancel'), style: 'cancel' },
       {
-        text: 'Çıkış',
+        text: t('auth.logout'),
         style: 'destructive',
         onPress: async () => {
           await supabase.auth.signOut();
@@ -152,7 +154,7 @@ export default function ProfileScreen() {
   if (!profile) {
     return (
       <View style={[styles.loadingContainer, { backgroundColor: theme.colors.background }]}>
-        <Text style={{ color: theme.colors.onBackground }}>Profil bulunamadı</Text>
+        <Text style={{ color: theme.colors.onBackground }}>{t('profile.profileNotFound')}</Text>
       </View>
     );
   }
@@ -215,20 +217,20 @@ export default function ProfileScreen() {
         <Card.Content style={styles.cardContent}>
           {profile.bio && (
             <>
-              <Text style={[styles.bioLabel, { color: theme.colors.onSurface }]}>Hakkında</Text>
+              <Text style={[styles.bioLabel, { color: theme.colors.onSurface }]}>{t('profile.bio')}</Text>
               <Text style={[styles.bio, { color: theme.colors.onSurfaceVariant }]}>{profile.bio}</Text>
               <Divider style={styles.divider} />
             </>
           )}
 
-          {/* Hızlı Erişim Butonları */}
+          {/* Quick Actions */}
           <View style={styles.quickActions}>
             <TouchableOpacity
               style={[styles.quickActionButton, { backgroundColor: theme.colors.primaryContainer }]}
               onPress={() => navigation.navigate('EditProfile')}
             >
               <MaterialCommunityIcons name="pencil" size={24} color={theme.colors.primary} />
-              <Text style={[styles.quickActionText, { color: theme.colors.onSurface }]}>Düzenle</Text>
+              <Text style={[styles.quickActionText, { color: theme.colors.onSurface }]}>{t('common.edit')}</Text>
             </TouchableOpacity>
 
             <TouchableOpacity
@@ -236,7 +238,7 @@ export default function ProfileScreen() {
               onPress={() => navigation.navigate('CreateSession')}
             >
               <MaterialCommunityIcons name="plus-circle" size={24} color={theme.colors.secondary} />
-              <Text style={[styles.quickActionText, { color: theme.colors.onSurface }]}>Yeni Seans</Text>
+              <Text style={[styles.quickActionText, { color: theme.colors.onSurface }]}>{t('profile.newSession')}</Text>
             </TouchableOpacity>
 
             <TouchableOpacity
@@ -244,18 +246,18 @@ export default function ProfileScreen() {
               onPress={() => navigation.navigate('Favorites')}
             >
               <MaterialCommunityIcons name="heart" size={24} color={theme.colors.tertiary} />
-              <Text style={[styles.quickActionText, { color: theme.colors.onSurface }]}>Favoriler</Text>
+              <Text style={[styles.quickActionText, { color: theme.colors.onSurface }]}>{t('navigation.favorites')}</Text>
             </TouchableOpacity>
           </View>
         </Card.Content>
       </Card>
 
-      {/* İstatistikler & Başarılar */}
+      {/* Statistics & Achievements */}
       <Surface style={[styles.menuCard, { backgroundColor: theme.colors.surface }]} elevation={1}>
-        <Text style={[styles.menuTitle, { color: theme.colors.onSurface }]}>İstatistikler & Başarılar</Text>
+        <Text style={[styles.menuTitle, { color: theme.colors.onSurface }]}>{t('profile.statsAndAchievements')}</Text>
         <List.Item
-          title="İstatistiklerim"
-          description="Aktivite geçmişini gör"
+          title={t('profile.myStats')}
+          description={t('profile.viewActivityHistory')}
           left={props => <List.Icon {...props} icon="chart-box" color={theme.colors.primary} />}
           right={props => <List.Icon {...props} icon="chevron-right" />}
           onPress={() => navigation.navigate('ProfileStats')}
@@ -263,8 +265,8 @@ export default function ProfileScreen() {
         />
         <Divider />
         <List.Item
-          title="Başarılarım"
-          description="Kazandığın rozetleri keşfet"
+          title={t('profile.myAchievements')}
+          description={t('profile.discoverBadges')}
           left={props => <List.Icon {...props} icon="trophy" color="#FFD700" />}
           right={props => <List.Icon {...props} icon="chevron-right" />}
           onPress={() => navigation.navigate('Achievements')}
@@ -272,12 +274,12 @@ export default function ProfileScreen() {
         />
       </Surface>
 
-      {/* Sosyal */}
+      {/* Social */}
       <Surface style={[styles.menuCard, { backgroundColor: theme.colors.surface }]} elevation={1}>
-        <Text style={[styles.menuTitle, { color: theme.colors.onSurface }]}>Sosyal</Text>
+        <Text style={[styles.menuTitle, { color: theme.colors.onSurface }]}>{t('profile.social')}</Text>
         <List.Item
-          title="Arkadaşlarım"
-          description="Arkadaş listeni yönet"
+          title={t('friends.myFriends')}
+          description={t('profile.manageFriendsList')}
           left={props => <List.Icon {...props} icon="account-multiple" color={theme.colors.primary} />}
           right={props => <List.Icon {...props} icon="chevron-right" />}
           onPress={() => navigation.navigate('Friends')}
@@ -285,8 +287,8 @@ export default function ProfileScreen() {
         />
         <Divider />
         <List.Item
-          title="Engellenenler"
-          description="Engellenen kullanıcılar"
+          title={t('profile.blockedUsers')}
+          description={t('profile.blockedUsersDesc')}
           left={props => <List.Icon {...props} icon="account-off" color="#F44336" />}
           right={props => <List.Icon {...props} icon="chevron-right" />}
           onPress={() => navigation.navigate('BlockedUsers')}
@@ -294,20 +296,20 @@ export default function ProfileScreen() {
         />
       </Surface>
 
-      {/* Ayarlar */}
+      {/* Settings */}
       <Surface style={[styles.menuCard, { backgroundColor: theme.colors.surface }]} elevation={1}>
-        <Text style={[styles.menuTitle, { color: theme.colors.onSurface }]}>Ayarlar</Text>
+        <Text style={[styles.menuTitle, { color: theme.colors.onSurface }]}>{t('navigation.settings')}</Text>
         <List.Item
-          title="Koyu Tema"
-          description={isDarkMode ? "Açık" : "Kapalı"}
+          title={t('settings.darkMode')}
+          description={isDarkMode ? t('profile.themeOn') : t('profile.themeOff')}
           left={props => <List.Icon {...props} icon={isDarkMode ? "weather-night" : "weather-sunny"} color={theme.colors.primary} />}
           right={() => <Switch value={isDarkMode} onValueChange={toggleTheme} />}
           style={styles.menuItem}
         />
         <Divider />
         <List.Item
-          title="Genel Ayarlar"
-          description="Uygulama tercihlerini düzenle"
+          title={t('profile.generalSettings')}
+          description={t('profile.editAppPreferences')}
           left={props => <List.Icon {...props} icon="cog" color={theme.colors.primary} />}
           right={props => <List.Icon {...props} icon="chevron-right" />}
           onPress={() => navigation.navigate('Settings')}
@@ -315,11 +317,11 @@ export default function ProfileScreen() {
         />
       </Surface>
 
-      {/* Değerlendirmeler */}
+      {/* Ratings */}
       {ratings.length > 0 && (
         <Card style={styles.card}>
           <Card.Content>
-            <Text style={[styles.sectionTitle, { color: theme.colors.onSurface }]}>Değerlendirmeler</Text>
+            <Text style={[styles.sectionTitle, { color: theme.colors.onSurface }]}>{t('rating.ratingsAndReviews')}</Text>
             {ratings.map((rating) => (
               <Card key={rating.id} style={styles.ratingCard} mode="outlined">
                 <Card.Content>
@@ -330,7 +332,7 @@ export default function ProfileScreen() {
                         label={rating.rater?.full_name?.charAt(0) || 'U'}
                       />
                       <Text style={[styles.raterName, { color: theme.colors.onSurface }]}>
-                        {rating.rater?.full_name || 'Anonim'}
+                        {rating.rater?.full_name || t('profile.anonymous')}
                       </Text>
                     </View>
                     <View style={styles.starsRow}>
@@ -363,7 +365,7 @@ export default function ProfileScreen() {
         style={styles.logoutButton}
         buttonColor="#d32f2f"
       >
-        Çıkış Yap
+        {t('auth.logout')}
       </Button>
 
       {/* Android Photo Menu */}
@@ -373,8 +375,8 @@ export default function ProfileScreen() {
           onDismiss={() => setPhotoMenuVisible(false)}
           anchor={<View />}
         >
-          <Menu.Item onPress={takePhoto} title="Fotoğraf Çek" leadingIcon="camera" />
-          <Menu.Item onPress={pickPhoto} title="Galeriden Seç" leadingIcon="image" />
+          <Menu.Item onPress={takePhoto} title={t('profile.takePhoto')} leadingIcon="camera" />
+          <Menu.Item onPress={pickPhoto} title={t('profile.selectFromGallery')} leadingIcon="image" />
         </Menu>
       )}
     </ScrollView>

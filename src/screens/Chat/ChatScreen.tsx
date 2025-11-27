@@ -4,13 +4,14 @@ import { TextInput, Button, Text, Avatar, IconButton, ActivityIndicator, useThem
 import { supabase } from '../../services/supabase';
 import { Message } from '../../types';
 import { format } from 'date-fns';
-import { tr } from 'date-fns/locale';
 import { StackNavigationProp } from '@react-navigation/stack';
+import { getDateLocale } from '../../utils/dateLocale';
 import { RouteProp } from '@react-navigation/native';
 import { RootStackParamList } from '../../navigation/AppNavigator';
 import { useAuth } from '../../hooks/useAuth';
 import { pickImageFromGallery, takePhotoWithCamera } from '../../services/imageService';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
+import { useTranslation } from 'react-i18next';
 
 type ChatScreenNavigationProp = StackNavigationProp<RootStackParamList, 'Chat'>;
 type ChatScreenRouteProp = RouteProp<RootStackParamList, 'Chat'>;
@@ -23,6 +24,7 @@ type Props = {
 export default function ChatScreen({ navigation, route }: Props) {
   const { sessionId } = route.params;
   const { user } = useAuth();
+  const { t } = useTranslation();
   const theme = useTheme();
   const [messages, setMessages] = useState<Message[]>([]);
   const [newMessage, setNewMessage] = useState('');
@@ -136,7 +138,7 @@ export default function ChatScreen({ navigation, route }: Props) {
             styles.messageTime,
             { color: isOwnMessage ? 'rgba(255, 255, 255, 0.8)' : theme.colors.onSurfaceVariant }
           ]}>
-            {format(new Date(item.created_at), 'HH:mm', { locale: tr })}
+            {format(new Date(item.created_at), 'HH:mm', { locale: getDateLocale() })}
           </Text>
         </View>
       </View>
@@ -168,7 +170,7 @@ export default function ChatScreen({ navigation, route }: Props) {
         <TextInput
           value={newMessage}
           onChangeText={setNewMessage}
-          placeholder="Mesaj yaz..."
+          placeholder={t('chat.typeMessage')}
           mode="outlined"
           style={styles.input}
           multiline
@@ -181,7 +183,7 @@ export default function ChatScreen({ navigation, route }: Props) {
           disabled={sending || !newMessage.trim()}
           style={styles.sendButton}
         >
-          Gönder
+          {t('common.send')}
         </Button>
       </View>
     </KeyboardAvoidingView>
