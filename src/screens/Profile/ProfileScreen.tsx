@@ -21,8 +21,6 @@ export default function ProfileScreen() {
   const { user } = useAuth();
   const { isDarkMode, toggleTheme } = useTheme();
   const theme = usePaperTheme();
-
-  console.log('[ProfileScreen] t("common.edit"):', t('common.edit'));
   const [profile, setProfile] = useState<Profile | null>(null);
   const [ratings, setRatings] = useState<Rating[]>([]);
   const [averageRating, setAverageRating] = useState(0);
@@ -232,7 +230,7 @@ export default function ProfileScreen() {
           <View style={[styles.quickActionIcon, { backgroundColor: theme.colors.primary + '20' }]}>
             <MaterialCommunityIcons name="pencil" size={26} color={theme.colors.primary} />
           </View>
-          <Text style={[styles.quickActionText, { color: theme.colors.onSurface }]}>{t('common.edit')}</Text>
+          <Text style={[styles.quickActionText, { color: theme.colors.onPrimaryContainer }]}>{t('common.edit')}</Text>
         </TouchableOpacity>
 
         <TouchableOpacity
@@ -242,7 +240,7 @@ export default function ProfileScreen() {
           <View style={[styles.quickActionIcon, { backgroundColor: theme.colors.tertiary + '20' }]}>
             <MaterialCommunityIcons name="heart" size={26} color={theme.colors.tertiary} />
           </View>
-          <Text style={[styles.quickActionText, { color: theme.colors.onSurface }]}>{t('navigation.favorites')}</Text>
+          <Text style={[styles.quickActionText, { color: theme.colors.onTertiaryContainer }]}>{t('navigation.favorites')}</Text>
         </TouchableOpacity>
 
         <TouchableOpacity
@@ -252,7 +250,7 @@ export default function ProfileScreen() {
           <View style={[styles.quickActionIcon, { backgroundColor: theme.colors.secondary + '20' }]}>
             <MaterialCommunityIcons name="chart-line" size={26} color={theme.colors.secondary} />
           </View>
-          <Text style={[styles.quickActionText, { color: theme.colors.onSurface }]}>{t('profile.myStats')}</Text>
+          <Text style={[styles.quickActionText, { color: theme.colors.onSecondaryContainer }]}>{t('profile.myStats')}</Text>
         </TouchableOpacity>
       </View>
 
