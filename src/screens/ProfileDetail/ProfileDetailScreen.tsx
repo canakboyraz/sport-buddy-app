@@ -5,7 +5,7 @@ import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 import { supabase } from '../../services/supabase';
 import { format } from 'date-fns';
-import { tr } from 'date-fns/locale';
+import { getDateLocale } from '../../utils/dateLocale';
 
 const { width } = Dimensions.get('window');
 
@@ -250,7 +250,7 @@ export default function ProfileDetailScreen({ route, navigation }: any) {
 
         {/* Member Since */}
         <Text style={styles.memberSince}>
-          Üyelik: {format(new Date(profile.created_at), 'MMM yyyy', { locale: tr })}
+          Üyelik: {format(new Date(profile.created_at), 'MMM yyyy', { locale: getDateLocale() })}
         </Text>
 
         {/* Friend Request Button */}
@@ -377,7 +377,7 @@ export default function ProfileDetailScreen({ route, navigation }: any) {
                         {rating.rater.full_name || rating.rater.email}
                       </Text>
                       <Text style={styles.ratingDate}>
-                        {format(new Date(rating.created_at), 'dd MMM yyyy', { locale: tr })}
+                        {format(new Date(rating.created_at), 'dd MMM yyyy', { locale: getDateLocale() })}
                       </Text>
                     </View>
                   </View>

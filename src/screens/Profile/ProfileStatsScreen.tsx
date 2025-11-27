@@ -5,7 +5,7 @@ import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { supabase } from '../../services/supabase';
 import { useAuth } from '../../hooks/useAuth';
 import { format } from 'date-fns';
-import { tr } from 'date-fns/locale';
+import { getDateLocale } from '../../utils/dateLocale';
 
 interface UserStats {
   totalSessionsCreated: number;
@@ -228,7 +228,7 @@ export default function ProfileStatsScreen() {
           <StatItem
             icon="calendar-account"
             label="Üyelik Tarihi"
-            value={format(new Date(stats.memberSince), 'dd MMMM yyyy', { locale: tr })}
+            value={format(new Date(stats.memberSince), 'dd MMMM yyyy', { locale: getDateLocale() })}
             color="#607D8B"
           />
         </Card.Content>

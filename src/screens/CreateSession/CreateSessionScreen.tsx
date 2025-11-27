@@ -10,7 +10,6 @@ import MapPicker from '../../components/MapPicker';
 import WeatherCard from '../../components/WeatherCard';
 import { useAuth } from '../../hooks/useAuth';
 import { format } from 'date-fns';
-import { tr } from 'date-fns/locale';
 import {
   validateSessionTitle,
   validateSessionDescription,
@@ -19,6 +18,7 @@ import {
   validateCoordinates
 } from '../../utils/validation';
 import { useTranslation } from 'react-i18next';
+import { getDateLocale } from '../../utils/dateLocale';
 
 // Spor türlerine göre simge eşleştirme
 const getSportIcon = (sportName: string): string => {
@@ -500,7 +500,7 @@ export default function CreateSessionScreen({ navigation }: any) {
           style={styles.input}
           icon="calendar"
         >
-          {format(sessionDate, 'dd MMM yyyy, HH:mm', { locale: tr })}
+          {format(sessionDate, 'dd MMM yyyy, HH:mm', { locale: getDateLocale() })}
         </Button>
 
         {/* Weather Forecast */}
@@ -678,7 +678,7 @@ export default function CreateSessionScreen({ navigation }: any) {
               style={styles.input}
               icon="calendar-end"
             >
-              {endDate ? t('createSession.endDate') + ': ' + format(endDate, 'dd MMM yyyy', { locale: tr }) : t('createSession.endDateOptional')}
+              {endDate ? t('createSession.endDate') + ': ' + format(endDate, 'dd MMM yyyy', { locale: getDateLocale() }) : t('createSession.endDateOptional')}
             </Button>
 
             <Text style={[styles.recurringInfo, { color: theme.colors.onSurfaceVariant }]}>

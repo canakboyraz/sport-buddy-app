@@ -5,8 +5,8 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { supabase } from '../../services/supabase';
 import { SportSession } from '../../types';
 import { format } from 'date-fns';
-import { tr } from 'date-fns/locale';
 import { useAuth } from '../../hooks/useAuth';
+import { getDateLocale } from '../../utils/dateLocale';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { useFocusEffect } from '@react-navigation/native';
 import { getSkillLevelLabel } from '../../utils/skillLevelUtils';
@@ -173,7 +173,7 @@ export default function MyEventsScreen({ navigation }: any) {
           <View style={styles.infoRow}>
             <MaterialCommunityIcons name="calendar-clock" size={16} color={theme.colors.primary} />
             <Text style={[styles.infoText, { color: theme.colors.onSurface }]}>
-              {format(new Date(item.session_date), 'dd MMM yyyy, HH:mm', { locale: tr })}
+              {format(new Date(item.session_date), 'dd MMM yyyy, HH:mm', { locale: getDateLocale() })}
             </Text>
           </View>
 

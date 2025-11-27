@@ -5,7 +5,7 @@ import { ActivityIndicator, FAB, Portal, Modal, Card, Text, Button, Chip } from 
 import { supabase } from '../../services/supabase';
 import { SportSession } from '../../types';
 import { format } from 'date-fns';
-import { tr } from 'date-fns/locale';
+import { getDateLocale } from '../../utils/dateLocale';
 import * as Location from 'expo-location';
 import { StackNavigationProp } from '@react-navigation/stack';
 import { RootStackParamList } from '../../navigation/AppNavigator';
@@ -207,7 +207,7 @@ export default function MapViewScreen({ navigation }: Props) {
                 <View style={styles.infoRow}>
                   <MaterialCommunityIcons name="calendar" size={18} color="#6200ee" />
                   <Text style={styles.infoText}>
-                    {format(new Date(selectedSession.session_date), 'dd MMM yyyy, HH:mm', { locale: tr })}
+                    {format(new Date(selectedSession.session_date), 'dd MMM yyyy, HH:mm', { locale: getDateLocale() })}
                   </Text>
                 </View>
 

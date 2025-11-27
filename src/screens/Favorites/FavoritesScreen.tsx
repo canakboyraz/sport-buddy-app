@@ -5,7 +5,7 @@ import { getUserFavorites, getUserSavedSessions } from '../../services/favorites
 import { useAuth } from '../../hooks/useAuth';
 import { SportSession } from '../../types';
 import { format } from 'date-fns';
-import { tr } from 'date-fns/locale';
+import { getDateLocale } from '../../utils/dateLocale';
 import { StackNavigationProp } from '@react-navigation/stack';
 import { RootStackParamList } from '../../navigation/AppNavigator';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
@@ -111,7 +111,7 @@ export default function FavoritesScreen({ navigation }: Props) {
           <View style={styles.infoRow}>
             <MaterialCommunityIcons name="calendar" size={18} color="#6200ee" />
             <Text style={styles.date}>
-              {format(new Date(session.session_date), 'dd MMM yyyy, HH:mm', { locale: tr })}
+              {format(new Date(session.session_date), 'dd MMM yyyy, HH:mm', { locale: getDateLocale() })}
             </Text>
           </View>
 
@@ -142,7 +142,7 @@ export default function FavoritesScreen({ navigation }: Props) {
             <MaterialCommunityIcons name="clock-outline" size={14} color="#999" />
             <Text style={styles.dateAdded}>
               {activeTab === 'favorites' ? 'Favorilere eklendi: ' : 'Kaydedildi: '}
-              {format(new Date(item.created_at), 'dd MMM yyyy', { locale: tr })}
+              {format(new Date(item.created_at), 'dd MMM yyyy', { locale: getDateLocale() })}
             </Text>
           </View>
         </Card.Content>

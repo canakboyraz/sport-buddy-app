@@ -5,7 +5,7 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { supabase } from '../../services/supabase';
 import { SportSession, SessionParticipant } from '../../types';
 import { format } from 'date-fns';
-import { tr } from 'date-fns/locale';
+import { getDateLocale } from '../../utils/dateLocale';
 import { StackNavigationProp } from '@react-navigation/stack';
 import { RouteProp } from '@react-navigation/native';
 import { RootStackParamList } from '../../navigation/AppNavigator';
@@ -398,10 +398,10 @@ export default function SessionDetailScreen({ navigation, route }: Props) {
               <MaterialCommunityIcons name="calendar-clock" size={18} color={theme.colors.primary} />
               <Text style={[styles.infoBoxLabel, { color: theme.colors.onSurfaceVariant }]}>Tarih & Saat</Text>
               <Text style={[styles.infoBoxValue, { color: theme.colors.onSurface }]}>
-                {format(new Date(session.session_date), 'd MMM yyyy', { locale: tr })}
+                {format(new Date(session.session_date), 'd MMM yyyy', { locale: getDateLocale() })}
               </Text>
               <Text style={[styles.infoBoxSubvalue, { color: theme.colors.onSurfaceVariant }]}>
-                {format(new Date(session.session_date), 'HH:mm', { locale: tr })}
+                {format(new Date(session.session_date), 'HH:mm', { locale: getDateLocale() })}
               </Text>
             </View>
 
