@@ -1,5 +1,4 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
-import { useTranslation } from 'react-i18next';
 import i18n from 'i18next';
 import { initReactI18next } from 'react-i18next';
 import * as Localization from 'expo-localization';
@@ -84,15 +83,19 @@ type LanguageContextType = {
 const LanguageContext = createContext<LanguageContextType | undefined>(undefined);
 
 export const LanguageProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  // i18n is already initialized at module level, just use it
-  const { t, i18n: i18nInstance } = useTranslation();
   const [currentLanguage, setCurrentLanguage] = useState<LanguageCode>(i18n.language as LanguageCode || defaultLanguage);
   const [isChangingLanguage, setIsChangingLanguage] = useState(false);
+  const [, forceUpdate] = useState({});
+
+  // Use i18n.t directly instead of useTranslation hook
+  const t = (key: string, options?: any): string => {
+    return i18n.t(key, options);
+  };
 
   console.log('[LanguageProvider RENDER] currentLanguage:', currentLanguage);
   console.log('[LanguageProvider RENDER] i18n.language:', i18n.language);
-  console.log('[LanguageProvider RENDER] t("auth.login") =', t('auth.login'));
-  console.log('[LanguageProvider RENDER] i18n.t("auth.login") =', i18n.t('auth.login'));
+  console.log('[LanguageProvider RENDER] Direct i18n.t("auth.login") =', i18n.t('auth.login'));
+  console.log('[LanguageProvider RENDER] Direct i18n.t("auth.email") =', i18n.t('auth.email'));
 
   useEffect(() => {
     // Load saved language preference
@@ -100,20 +103,23 @@ export const LanguageProvider: React.FC<{ children: React.ReactNode }> = ({ chil
       if (savedLanguage && savedLanguage !== currentLanguage) {
         i18n.changeLanguage(savedLanguage);
         setCurrentLanguage(savedLanguage as LanguageCode);
+        forceUpdate({});
       }
     });
 
     // Listen to language changes
     const handleLanguageChange = (lng: string) => {
+      console.log('[LanguageProvider] Language changed to:', lng);
       setCurrentLanguage(lng as LanguageCode);
+      forceUpdate({});
     };
 
-    i18nInstance.on('languageChanged', handleLanguageChange);
+    i18n.on('languageChanged', handleLanguageChange);
 
     return () => {
-      i18nInstance.off('languageChanged', handleLanguageChange);
+      i18n.off('languageChanged', handleLanguageChange);
     };
-  }, [i18nInstance]);
+  }, []);
 
   const changeLanguage = async (languageCode: LanguageCode): Promise<boolean> => {
     setIsChangingLanguage(true);
