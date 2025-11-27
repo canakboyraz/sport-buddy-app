@@ -32,7 +32,8 @@
     "seeAll": "See All",
     "more": "More",
     "less": "Less",
-    "all": "All"
+    "all": "All",
+    "unknown": "Unknown"
   },
 
   "auth": {
@@ -548,7 +549,12 @@
     "removeFromFavorites": "Remove from Favorites",
     "noFavorites": "No favorites yet",
     "addedToFavorites": "Added to favorites",
-    "removedFromFavorites": "Removed from favorites"
+    "removedFromFavorites": "Removed from favorites",
+    "saved": "Saved",
+    "noSaved": "No saved sessions yet",
+    "noFavoritesDesc": "You can add sessions you like to favorites",
+    "noSavedDesc": "You can save sessions you're interested in",
+    "note": "Note"
   },
 
   "filters": {

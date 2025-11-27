@@ -32,7 +32,8 @@
     "seeAll": "Tümünü Gör",
     "more": "Daha Fazla",
     "less": "Daha Az",
-    "all": "Tümü"
+    "all": "Tümü",
+    "unknown": "Bilinmeyen"
   },
 
   "auth": {
@@ -548,7 +549,12 @@
     "removeFromFavorites": "Favorilerden Çıkar",
     "noFavorites": "Henüz favori eklemediniz",
     "addedToFavorites": "Favorilere eklendi",
-    "removedFromFavorites": "Favorilerden çıkarıldı"
+    "removedFromFavorites": "Favorilerden çıkarıldı",
+    "saved": "Kayıtlı",
+    "noSaved": "Henüz kayıtlı seans yok",
+    "noFavoritesDesc": "Beğendiğiniz seansları favorilere ekleyebilirsiniz",
+    "noSavedDesc": "İlgilendiğiniz seansları kayıt edebilirsiniz",
+    "note": "Not"
   },
 
   "filters": {

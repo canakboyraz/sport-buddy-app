@@ -1,11 +1,14 @@
 import React, { useEffect, useState } from 'react';
 import { View, ScrollView, StyleSheet } from 'react-native';
-import { Card, Text, ActivityIndicator, Divider } from 'react-native-paper';
+import { Card, Text, ActivityIndicator, Divider, Surface, useTheme as usePaperTheme } from 'react-native-paper';
+import { LinearGradient } from 'expo-linear-gradient';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { supabase } from '../../services/supabase';
 import { useAuth } from '../../hooks/useAuth';
 import { format } from 'date-fns';
 import { getDateLocale } from '../../utils/dateLocale';
+import { useLanguage } from '../../contexts/LanguageContext';
+import { useTheme } from '../../contexts/ThemeContext';
 
 interface UserStats {
   totalSessionsCreated: number;
@@ -21,6 +24,9 @@ interface UserStats {
 
 export default function ProfileStatsScreen() {
   const { user } = useAuth();
+  const { t } = useLanguage();
+  const { isDarkMode } = useTheme();
+  const theme = usePaperTheme();
   const [loading, setLoading] = useState(true);
   const [stats, setStats] = useState<UserStats | null>(null);
 
@@ -36,20 +42,17 @@ export default function ProfileStatsScreen() {
     setLoading(true);
 
     try {
-      // Get total sessions created
       const { count: sessionsCreated } = await supabase
         .from('sport_sessions')
         .select('*', { count: 'exact', head: true })
         .eq('creator_id', user.id);
 
-      // Get total sessions joined
       const { count: sessionsJoined } = await supabase
         .from('session_participants')
         .select('*', { count: 'exact', head: true })
         .eq('user_id', user.id)
         .eq('status', 'approved');
 
-      // Get ratings data
       const { data: ratingsData } = await supabase
         .from('ratings')
         .select('rating')
@@ -60,14 +63,12 @@ export default function ProfileStatsScreen() {
         ? ratingsData!.reduce((sum, r) => sum + r.rating, 0) / totalRatings
         : 0;
 
-      // Get profile data
       const { data: profileData } = await supabase
         .from('profiles')
         .select('created_at, favorite_sports')
         .eq('id', user.id)
         .single();
 
-      // Get upcoming sessions
       const now = new Date().toISOString();
       const { count: upcoming } = await supabase
         .from('sport_sessions')
@@ -75,20 +76,17 @@ export default function ProfileStatsScreen() {
         .eq('creator_id', user.id)
         .gte('session_date', now);
 
-      // Get completed sessions (past sessions)
       const { count: completed } = await supabase
         .from('sport_sessions')
         .select('*', { count: 'exact', head: true })
         .eq('creator_id', user.id)
         .lt('session_date', now);
 
-      // Get chat messages count
       const { count: chatMessages } = await supabase
         .from('chat_messages')
         .select('*', { count: 'exact', head: true })
         .eq('user_id', user.id);
 
-      // Parse favorite sport
       const favSports = profileData?.favorite_sports || '';
       const favSport = favSports.split(',')[0]?.trim() || null;
 
@@ -110,163 +108,145 @@ export default function ProfileStatsScreen() {
     setLoading(false);
   };
 
+  const StatItem = ({ icon, label, value, color }: {
+    icon: string;
+    label: string;
+    value: string | number;
+    color: string;
+  }) => (
+    <View style={styles.statItem}>
+      <View style={[styles.iconContainer, { backgroundColor: color + '20' }]}>
+        <MaterialCommunityIcons name={icon as any} size={28} color={color} />
+      </View>
+      <View style={styles.statContent}>
+        <Text style={[styles.statValue, { color: theme.colors.onSurface }]}>{value}</Text>
+        <Text style={[styles.statLabel, { color: theme.colors.onSurfaceVariant }]}>{label}</Text>
+      </View>
+    </View>
+  );
+
   if (loading) {
     return (
-      <View style={styles.loadingContainer}>
-        <ActivityIndicator size="large" />
+      <View style={[styles.loadingContainer, { backgroundColor: theme.colors.background }]}>
+        <ActivityIndicator size="large" color={theme.colors.primary} />
       </View>
     );
   }
 
   if (!stats) {
     return (
-      <View style={styles.loadingContainer}>
-        <Text>İstatistikler yüklenemedi</Text>
+      <View style={[styles.loadingContainer, { backgroundColor: theme.colors.background }]}>
+        <Text style={{ color: theme.colors.onBackground }}>{t('stats.loadError')}</Text>
       </View>
     );
   }
 
-  const StatItem = ({ icon, label, value, color = '#6200ee' }: {
-    icon: string;
-    label: string;
-    value: string | number;
-    color?: string;
-  }) => (
-    <View style={styles.statItem}>
-      <MaterialCommunityIcons name={icon as any} size={32} color={color} />
-      <View style={styles.statContent}>
-        <Text style={styles.statValue}>{value}</Text>
-        <Text style={styles.statLabel}>{label}</Text>
-      </View>
-    </View>
-  );
-
   return (
-    <ScrollView style={styles.container}>
-      <Card style={styles.card}>
-        <Card.Content>
-          <Text style={styles.sectionTitle}>Genel İstatistikler</Text>
+    <LinearGradient
+      colors={
+        isDarkMode
+          ? [theme.colors.background, theme.colors.background]
+          : [theme.colors.primaryContainer + '20', theme.colors.background]
+      }
+      style={styles.container}
+    >
+      <ScrollView contentContainerStyle={styles.scrollContent}>
+        {/* General Stats */}
+        <Surface style={[styles.card, { backgroundColor: theme.colors.surface }]} elevation={2}>
+          <View style={styles.cardHeader}>
+            <MaterialCommunityIcons name="chart-box" size={24} color={theme.colors.primary} />
+            <Text style={[styles.sectionTitle, { color: theme.colors.onSurface }]}>
+              {t('stats.general')}
+            </Text>
+          </View>
 
-          <StatItem
-            icon="calendar-plus"
-            label="Oluşturulan Seanslar"
-            value={stats.totalSessionsCreated}
-            color="#4CAF50"
-          />
+          <StatItem icon="calendar-plus" label={t('stats.sessionsCreated')} value={stats.totalSessionsCreated} color="#4CAF50" />
           <Divider style={styles.divider} />
-
-          <StatItem
-            icon="account-group"
-            label="Katılınan Seanslar"
-            value={stats.totalSessionsJoined}
-            color="#2196F3"
-          />
+          <StatItem icon="account-group" label={t('stats.sessionsJoined')} value={stats.totalSessionsJoined} color="#2196F3" />
           <Divider style={styles.divider} />
-
-          <StatItem
-            icon="calendar-clock"
-            label="Yaklaşan Seanslar"
-            value={stats.upcomingSessions}
-            color="#FF9800"
-          />
+          <StatItem icon="calendar-clock" label={t('stats.upcomingSessions')} value={stats.upcomingSessions} color="#FF9800" />
           <Divider style={styles.divider} />
+          <StatItem icon="calendar-check" label={t('stats.completedSessions')} value={stats.completedSessions} color="#9C27B0" />
+        </Surface>
 
-          <StatItem
-            icon="calendar-check"
-            label="Tamamlanan Seanslar"
-            value={stats.completedSessions}
-            color="#9C27B0"
-          />
-        </Card.Content>
-      </Card>
+        {/* Ratings */}
+        <Surface style={[styles.card, { backgroundColor: theme.colors.surface }]} elevation={2}>
+          <View style={styles.cardHeader}>
+            <MaterialCommunityIcons name="star-box" size={24} color={theme.colors.primary} />
+            <Text style={[styles.sectionTitle, { color: theme.colors.onSurface }]}>
+              {t('stats.ratings')}
+            </Text>
+          </View>
 
-      <Card style={styles.card}>
-        <Card.Content>
-          <Text style={styles.sectionTitle}>Değerlendirmeler</Text>
-
-          <StatItem
-            icon="star"
-            label="Ortalama Puan"
-            value={stats.averageRating > 0 ? stats.averageRating.toFixed(1) : '-'}
-            color="#FFD700"
-          />
+          <StatItem icon="star" label={t('stats.averageRating')} value={stats.averageRating > 0 ? stats.averageRating.toFixed(1) : '-'} color="#FFD700" />
           <Divider style={styles.divider} />
+          <StatItem icon="star-box-multiple" label={t('stats.totalRatings')} value={stats.totalRatingsReceived} color="#FFC107" />
+        </Surface>
 
-          <StatItem
-            icon="star-box-multiple"
-            label="Toplam Değerlendirme"
-            value={stats.totalRatingsReceived}
-            color="#FFC107"
-          />
-        </Card.Content>
-      </Card>
+        {/* Activity */}
+        <Surface style={[styles.card, { backgroundColor: theme.colors.surface }]} elevation={2}>
+          <View style={styles.cardHeader}>
+            <MaterialCommunityIcons name="lightning-bolt" size={24} color={theme.colors.primary} />
+            <Text style={[styles.sectionTitle, { color: theme.colors.onSurface }]}>
+              {t('stats.activity')}
+            </Text>
+          </View>
 
-      <Card style={styles.card}>
-        <Card.Content>
-          <Text style={styles.sectionTitle}>Aktivite</Text>
-
-          <StatItem
-            icon="message-text"
-            label="Gönderilen Mesajlar"
-            value={stats.totalChatMessages}
-            color="#00BCD4"
-          />
-          <Divider style={styles.divider} />
-
+          <StatItem icon="message-text" label={t('stats.messagesSent')} value={stats.totalChatMessages} color="#00BCD4" />
           {stats.favoriteSport && (
             <>
-              <StatItem
-                icon="trophy"
-                label="Favori Spor"
-                value={stats.favoriteSport}
-                color="#E91E63"
-              />
               <Divider style={styles.divider} />
+              <StatItem icon="trophy" label={t('stats.favoriteSport')} value={stats.favoriteSport} color="#E91E63" />
             </>
           )}
+          <Divider style={styles.divider} />
+          <StatItem icon="calendar-account" label={t('stats.memberSince')} value={format(new Date(stats.memberSince), 'dd MMM yyyy', { locale: getDateLocale() })} color="#607D8B" />
+        </Surface>
 
-          <StatItem
-            icon="calendar-account"
-            label="Üyelik Tarihi"
-            value={format(new Date(stats.memberSince), 'dd MMMM yyyy', { locale: getDateLocale() })}
-            color="#607D8B"
-          />
-        </Card.Content>
-      </Card>
-
-      <Card style={styles.card}>
-        <Card.Content>
-          <Text style={styles.sectionTitle}>Toplam Aktivite</Text>
+        {/* Summary */}
+        <Surface style={[styles.summaryCard, { backgroundColor: theme.colors.surfaceVariant }]} elevation={1}>
+          <Text style={[styles.summaryTitle, { color: theme.colors.onSurface }]}>{t('stats.summary')}</Text>
           <View style={styles.summaryContainer}>
             <View style={styles.summaryItem}>
-              <Text style={styles.summaryNumber}>
+              <Text style={[styles.summaryNumber, { color: theme.colors.primary }]}>
                 {stats.totalSessionsCreated + stats.totalSessionsJoined}
               </Text>
-              <Text style={styles.summaryLabel}>Toplam Seans</Text>
+              <Text style={[styles.summaryLabel, { color: theme.colors.onSurfaceVariant }]}>
+                {t('stats.totalSessions')}
+              </Text>
             </View>
+            <View style={styles.summaryDivider} />
             <View style={styles.summaryItem}>
-              <Text style={styles.summaryNumber}>
+              <Text style={[styles.summaryNumber, { color: theme.colors.secondary }]}>
                 {stats.totalChatMessages}
               </Text>
-              <Text style={styles.summaryLabel}>Mesaj</Text>
+              <Text style={[styles.summaryLabel, { color: theme.colors.onSurfaceVariant }]}>
+                {t('stats.messages')}
+              </Text>
             </View>
+            <View style={styles.summaryDivider} />
             <View style={styles.summaryItem}>
-              <Text style={styles.summaryNumber}>
+              <Text style={[styles.summaryNumber, { color: theme.colors.tertiary }]}>
                 {stats.totalRatingsReceived}
               </Text>
-              <Text style={styles.summaryLabel}>Değerlendirme</Text>
+              <Text style={[styles.summaryLabel, { color: theme.colors.onSurfaceVariant }]}>
+                {t('stats.ratingsCount')}
+              </Text>
             </View>
           </View>
-        </Card.Content>
-      </Card>
-    </ScrollView>
+        </Surface>
+      </ScrollView>
+    </LinearGradient>
   );
 }
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#f5f5f5',
+  },
+  scrollContent: {
+    padding: 16,
+    paddingBottom: 32,
   },
   loadingContainer: {
     flex: 1,
@@ -274,53 +254,80 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   card: {
-    margin: 15,
-    marginBottom: 10,
+    marginBottom: 16,
+    borderRadius: 20,
+    padding: 20,
+  },
+  cardHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 20,
+    gap: 12,
   },
   sectionTitle: {
-    fontSize: 18,
-    fontWeight: 'bold',
-    marginBottom: 15,
-    color: '#333',
+    fontSize: 20,
+    fontWeight: '700',
   },
   statItem: {
     flexDirection: 'row',
     alignItems: 'center',
-    paddingVertical: 10,
+    paddingVertical: 12,
+  },
+  iconContainer: {
+    width: 56,
+    height: 56,
+    borderRadius: 28,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginRight: 16,
   },
   statContent: {
-    marginLeft: 15,
     flex: 1,
   },
   statValue: {
-    fontSize: 24,
-    fontWeight: 'bold',
-    color: '#333',
+    fontSize: 26,
+    fontWeight: '700',
+    marginBottom: 2,
   },
   statLabel: {
     fontSize: 14,
-    color: '#666',
-    marginTop: 2,
   },
   divider: {
-    marginVertical: 8,
+    marginVertical: 4,
+  },
+  summaryCard: {
+    borderRadius: 20,
+    padding: 24,
+    marginTop: 8,
+  },
+  summaryTitle: {
+    fontSize: 18,
+    fontWeight: '700',
+    marginBottom: 20,
+    textAlign: 'center',
   },
   summaryContainer: {
     flexDirection: 'row',
     justifyContent: 'space-around',
-    paddingVertical: 10,
+    alignItems: 'center',
   },
   summaryItem: {
     alignItems: 'center',
+    flex: 1,
+  },
+  summaryDivider: {
+    width: 1,
+    height: 60,
+    backgroundColor: 'rgba(0,0,0,0.1)',
   },
   summaryNumber: {
-    fontSize: 28,
-    fontWeight: 'bold',
-    color: '#6200ee',
+    fontSize: 32,
+    fontWeight: '700',
+    marginBottom: 8,
   },
   summaryLabel: {
-    fontSize: 12,
-    color: '#666',
-    marginTop: 5,
+    fontSize: 13,
+    textAlign: 'center',
+    fontWeight: '500',
   },
 });

@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
-import { View, FlatList, StyleSheet, RefreshControl, TouchableOpacity } from 'react-native';
-import { Card, Text, Chip, ActivityIndicator, SegmentedButtons } from 'react-native-paper';
+import { View, FlatList, StyleSheet, RefreshControl } from 'react-native';
+import { Card, Text, Chip, ActivityIndicator, SegmentedButtons, Surface, useTheme as usePaperTheme } from 'react-native-paper';
+import { LinearGradient } from 'expo-linear-gradient';
 import { getUserFavorites, getUserSavedSessions } from '../../services/favoritesService';
 import { useAuth } from '../../hooks/useAuth';
 import { SportSession } from '../../types';
@@ -9,6 +10,8 @@ import { getDateLocale } from '../../utils/dateLocale';
 import { StackNavigationProp } from '@react-navigation/stack';
 import { RootStackParamList } from '../../navigation/AppNavigator';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
+import { useLanguage } from '../../contexts/LanguageContext';
+import { useTheme } from '../../contexts/ThemeContext';
 
 type FavoritesScreenNavigationProp = StackNavigationProp<RootStackParamList>;
 
@@ -25,12 +28,17 @@ const getSportIcon = (sportName: string): string => {
     'Yüzme': 'swim',
     'Koşu': 'run',
     'Bisiklet': 'bike',
+    'Gym': 'weight-lifter',
+    'Yoga': 'yoga',
   };
   return iconMap[sportName] || 'trophy';
 };
 
 export default function FavoritesScreen({ navigation }: Props) {
   const { user } = useAuth();
+  const { t } = useLanguage();
+  const { isDarkMode } = useTheme();
+  const theme = usePaperTheme();
   const [activeTab, setActiveTab] = useState('favorites');
   const [favorites, setFavorites] = useState<any[]>([]);
   const [savedSessions, setSavedSessions] = useState<any[]>([]);
@@ -78,82 +86,139 @@ export default function FavoritesScreen({ navigation }: Props) {
     const sportIcon = getSportIcon(session.sport?.name || '');
 
     return (
-      <Card
-        style={styles.card}
-        mode="elevated"
-        onPress={() => navigation.navigate('SessionDetail', { sessionId: session.id })}
+      <Surface
+        style={[styles.card, { backgroundColor: theme.colors.surface }]}
+        elevation={2}
       >
-        <Card.Content>
-          <View style={styles.cardHeader}>
-            <Text style={styles.title} numberOfLines={1}>{session.title}</Text>
-            <Chip icon="account-multiple" style={styles.chip} compact>
-              {participantCount}/{session.max_participants}
-            </Chip>
-          </View>
+        <Card
+          style={{ backgroundColor: 'transparent' }}
+          onPress={() => navigation.navigate('SessionDetail', { sessionId: session.id })}
+        >
+          <Card.Content>
+            {/* Header with Title and Participants */}
+            <View style={styles.cardHeader}>
+              <Text
+                style={[styles.title, { color: theme.colors.onSurface }]}
+                numberOfLines={1}
+              >
+                {session.title}
+              </Text>
+              <Chip
+                icon="account-multiple"
+                style={[styles.participantChip, { backgroundColor: theme.colors.primaryContainer }]}
+                textStyle={{ color: theme.colors.onPrimaryContainer, fontWeight: '600' }}
+                compact
+              >
+                {participantCount}/{session.max_participants}
+              </Chip>
+            </View>
 
-          <View style={styles.infoRow}>
-            <MaterialCommunityIcons name={sportIcon as any} size={18} color="#6200ee" />
-            <Text style={styles.sport}>{session.sport?.name}</Text>
-          </View>
+            {/* Sport Badge */}
+            <View style={styles.sportBadge}>
+              <View style={[styles.sportIconContainer, { backgroundColor: theme.colors.primary + '20' }]}>
+                <MaterialCommunityIcons name={sportIcon as any} size={20} color={theme.colors.primary} />
+              </View>
+              <Text style={[styles.sportText, { color: theme.colors.onSurface }]}>
+                {session.sport?.name}
+              </Text>
+              {session.skill_level && (
+                <Chip
+                  icon="star"
+                  style={[styles.skillChip, { backgroundColor: theme.colors.tertiaryContainer }]}
+                  textStyle={{ color: theme.colors.onTertiaryContainer, fontSize: 11 }}
+                  compact
+                >
+                  {t(`skillLevel.${session.skill_level}`)}
+                </Chip>
+              )}
+            </View>
 
-          <View style={styles.infoRow}>
-            <MaterialCommunityIcons name="map-marker" size={18} color="#6200ee" />
-            <Text style={styles.location} numberOfLines={1}>{session.location}</Text>
-          </View>
-
-          {session.city && (
+            {/* Location */}
             <View style={styles.infoRow}>
-              <MaterialCommunityIcons name="city" size={18} color="#6200ee" />
-              <Text style={styles.city}>{session.city}</Text>
+              <MaterialCommunityIcons name="map-marker" size={18} color={theme.colors.secondary} />
+              <Text style={[styles.infoText, { color: theme.colors.onSurfaceVariant }]} numberOfLines={1}>
+                {session.location}
+              </Text>
             </View>
-          )}
 
-          <View style={styles.infoRow}>
-            <MaterialCommunityIcons name="calendar" size={18} color="#6200ee" />
-            <Text style={styles.date}>
-              {format(new Date(session.session_date), 'dd MMM yyyy, HH:mm', { locale: getDateLocale() })}
-            </Text>
-          </View>
+            {/* City */}
+            {session.city && (
+              <View style={styles.infoRow}>
+                <MaterialCommunityIcons name="city" size={18} color={theme.colors.secondary} />
+                <Text style={[styles.infoText, { color: theme.colors.onSurfaceVariant }]}>
+                  {session.city}
+                </Text>
+              </View>
+            )}
 
-          <View style={styles.infoRow}>
-            <MaterialCommunityIcons name="star" size={18} color="#6200ee" />
-            <Text style={styles.skillLevel}>{session.skill_level}</Text>
-          </View>
-
-          <View style={styles.infoRow}>
-            <MaterialCommunityIcons name="account" size={18} color="#6200ee" />
-            <Text style={styles.creator}>{session.creator?.full_name}</Text>
-          </View>
-
-          {activeTab === 'saved' && item.notes && (
-            <View style={styles.notesContainer}>
-              <Text style={styles.notesLabel}>Not:</Text>
-              <Text style={styles.notesText} numberOfLines={2}>{item.notes}</Text>
+            {/* Date & Time */}
+            <View style={styles.infoRow}>
+              <MaterialCommunityIcons name="calendar-clock" size={18} color={theme.colors.secondary} />
+              <Text style={[styles.infoText, { color: theme.colors.onSurfaceVariant }]}>
+                {format(new Date(session.session_date), 'dd MMM yyyy, HH:mm', { locale: getDateLocale() })}
+              </Text>
             </View>
-          )}
 
-          {isFull && (
-            <Chip icon="close-circle" style={styles.fullChip} textStyle={styles.fullChipText} compact>
-              Dolu
-            </Chip>
-          )}
+            {/* Creator */}
+            <View style={styles.infoRow}>
+              <MaterialCommunityIcons name="account-circle" size={18} color={theme.colors.secondary} />
+              <Text style={[styles.infoText, { color: theme.colors.onSurfaceVariant }]}>
+                {session.creator?.full_name || t('common.unknown')}
+              </Text>
+            </View>
 
-          <View style={styles.dateAddedContainer}>
-            <MaterialCommunityIcons name="clock-outline" size={14} color="#999" />
-            <Text style={styles.dateAdded}>
-              {activeTab === 'favorites' ? 'Favorilere eklendi: ' : 'Kaydedildi: '}
-              {format(new Date(item.created_at), 'dd MMM yyyy', { locale: getDateLocale() })}
-            </Text>
-          </View>
-        </Card.Content>
-      </Card>
+            {/* Notes (for saved sessions) */}
+            {activeTab === 'saved' && item.notes && (
+              <Surface
+                style={[styles.notesContainer, { backgroundColor: theme.colors.surfaceVariant }]}
+                elevation={0}
+              >
+                <View style={styles.notesHeader}>
+                  <MaterialCommunityIcons name="note-text" size={16} color={theme.colors.primary} />
+                  <Text style={[styles.notesLabel, { color: theme.colors.primary }]}>
+                    {t('favorites.note')}
+                  </Text>
+                </View>
+                <Text style={[styles.notesText, { color: theme.colors.onSurfaceVariant }]} numberOfLines={2}>
+                  {item.notes}
+                </Text>
+              </Surface>
+            )}
+
+            {/* Status Badges */}
+            <View style={styles.badgesRow}>
+              {isFull && (
+                <Chip
+                  icon="close-circle"
+                  style={[styles.statusChip, { backgroundColor: theme.colors.errorContainer }]}
+                  textStyle={{ color: theme.colors.onErrorContainer, fontSize: 11 }}
+                  compact
+                >
+                  {t('session.full')}
+                </Chip>
+              )}
+              <View style={{ flex: 1 }} />
+              <View style={styles.dateAddedContainer}>
+                <MaterialCommunityIcons
+                  name={activeTab === 'favorites' ? 'heart' : 'bookmark'}
+                  size={14}
+                  color={theme.colors.onSurfaceVariant}
+                />
+                <Text style={[styles.dateAdded, { color: theme.colors.onSurfaceVariant }]}>
+                  {format(new Date(item.created_at), 'dd MMM', { locale: getDateLocale() })}
+                </Text>
+              </View>
+            </View>
+          </Card.Content>
+        </Card>
+      </Surface>
     );
   };
 
   if (loading && !refreshing) {
     return (
-      <View style={styles.loadingContainer}>
-        <ActivityIndicator size="large" />
+      <View style={[styles.loadingContainer, { backgroundColor: theme.colors.background }]}>
+        <ActivityIndicator size="large" color={theme.colors.primary} />
       </View>
     );
   }
@@ -161,62 +226,80 @@ export default function FavoritesScreen({ navigation }: Props) {
   const data = activeTab === 'favorites' ? favorites : savedSessions;
 
   return (
-    <View style={styles.container}>
-      <View style={styles.tabContainer}>
+    <LinearGradient
+      colors={
+        isDarkMode
+          ? [theme.colors.background, theme.colors.background]
+          : [theme.colors.primaryContainer + '20', theme.colors.background]
+      }
+      style={styles.container}
+    >
+      {/* Tab Switcher */}
+      <Surface style={[styles.tabContainer, { backgroundColor: theme.colors.surface }]} elevation={1}>
         <SegmentedButtons
           value={activeTab}
           onValueChange={setActiveTab}
           buttons={[
             {
               value: 'favorites',
-              label: 'Favoriler',
+              label: t('favorites.title'),
               icon: 'heart',
+              style: activeTab === 'favorites' ? { backgroundColor: theme.colors.secondaryContainer } : {},
             },
             {
               value: 'saved',
-              label: 'Kayıtlı',
+              label: t('favorites.saved'),
               icon: 'bookmark',
+              style: activeTab === 'saved' ? { backgroundColor: theme.colors.secondaryContainer } : {},
             },
           ]}
+          style={{ backgroundColor: 'transparent' }}
         />
-      </View>
+      </Surface>
 
+      {/* Sessions List */}
       <FlatList
         data={data}
         renderItem={renderSessionCard}
         keyExtractor={(item) => String(item.id)}
         contentContainerStyle={styles.list}
         refreshControl={
-          <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
+          <RefreshControl
+            refreshing={refreshing}
+            onRefresh={onRefresh}
+            tintColor={theme.colors.primary}
+            colors={[theme.colors.primary]}
+          />
         }
         ListEmptyComponent={
           <View style={styles.emptyContainer}>
-            <MaterialCommunityIcons
-              name={activeTab === 'favorites' ? 'heart-outline' : 'bookmark-outline'}
-              size={64}
-              color="#ccc"
-            />
-            <Text style={styles.emptyText}>
+            <View style={[styles.emptyIconContainer, { backgroundColor: theme.colors.surfaceVariant }]}>
+              <MaterialCommunityIcons
+                name={activeTab === 'favorites' ? 'heart-outline' : 'bookmark-outline'}
+                size={64}
+                color={theme.colors.onSurfaceVariant}
+              />
+            </View>
+            <Text style={[styles.emptyText, { color: theme.colors.onSurface }]}>
               {activeTab === 'favorites'
-                ? 'Henüz favori eklemediniz'
-                : 'Henüz kayıtlı seans yok'}
+                ? t('favorites.noFavorites')
+                : t('favorites.noSaved')}
             </Text>
-            <Text style={styles.emptySubtext}>
+            <Text style={[styles.emptySubtext, { color: theme.colors.onSurfaceVariant }]}>
               {activeTab === 'favorites'
-                ? 'Beğendiğiniz seansları favorilere ekleyebilirsiniz'
-                : 'İlgilendiğiniz seansları kayıt edebilirsiniz'}
+                ? t('favorites.noFavoritesDesc')
+                : t('favorites.noSavedDesc')}
             </Text>
           </View>
         }
       />
-    </View>
+    </LinearGradient>
   );
 }
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#f5f5f5',
   },
   loadingContainer: {
     flex: 1,
@@ -224,126 +307,129 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   tabContainer: {
-    backgroundColor: '#fff',
-    padding: 10,
-    borderBottomWidth: 1,
-    borderBottomColor: '#e0e0e0',
+    padding: 16,
+    borderBottomLeftRadius: 20,
+    borderBottomRightRadius: 20,
   },
   list: {
-    padding: 10,
+    padding: 16,
+    paddingBottom: 32,
   },
   card: {
-    marginBottom: 15,
+    marginBottom: 16,
+    borderRadius: 16,
+    overflow: 'hidden',
   },
   cardHeader: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    marginBottom: 10,
+    marginBottom: 12,
   },
   title: {
     fontSize: 18,
-    fontWeight: 'bold',
+    fontWeight: '700',
     flex: 1,
     marginRight: 8,
   },
-  chip: {
-    marginLeft: 10,
+  participantChip: {
+    marginLeft: 8,
+  },
+  sportBadge: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 12,
+    gap: 8,
+  },
+  sportIconContainer: {
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  sportText: {
+    fontSize: 15,
+    fontWeight: '600',
+    flex: 1,
+  },
+  skillChip: {
+    height: 24,
   },
   infoRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    marginBottom: 6,
+    marginBottom: 8,
+    gap: 8,
   },
-  sport: {
+  infoText: {
     fontSize: 14,
-    marginLeft: 8,
-    color: '#333',
-    flex: 1,
-  },
-  location: {
-    fontSize: 14,
-    marginLeft: 8,
-    color: '#333',
-    flex: 1,
-  },
-  city: {
-    fontSize: 14,
-    marginLeft: 8,
-    color: '#333',
-    flex: 1,
-  },
-  date: {
-    fontSize: 14,
-    marginLeft: 8,
-    color: '#333',
-    flex: 1,
-  },
-  skillLevel: {
-    fontSize: 14,
-    marginLeft: 8,
-    color: '#333',
-    flex: 1,
-  },
-  creator: {
-    fontSize: 14,
-    marginLeft: 8,
-    color: '#333',
     flex: 1,
   },
   notesContainer: {
-    marginTop: 8,
-    padding: 8,
-    backgroundColor: '#fff9e6',
-    borderRadius: 4,
+    marginTop: 12,
+    padding: 12,
+    borderRadius: 12,
+  },
+  notesHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 6,
+    gap: 6,
   },
   notesLabel: {
     fontSize: 12,
-    fontWeight: 'bold',
-    color: '#666',
-    marginBottom: 4,
+    fontWeight: '700',
+    textTransform: 'uppercase',
+    letterSpacing: 0.5,
   },
   notesText: {
     fontSize: 13,
-    color: '#333',
+    lineHeight: 18,
   },
-  fullChip: {
-    backgroundColor: '#F44336',
-    marginTop: 8,
-    alignSelf: 'flex-start',
+  badgesRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginTop: 12,
+    paddingTop: 12,
+    borderTopWidth: 1,
+    borderTopColor: 'rgba(0,0,0,0.08)',
   },
-  fullChipText: {
-    color: '#FFF',
-    fontSize: 12,
+  statusChip: {
+    height: 24,
   },
   dateAddedContainer: {
     flexDirection: 'row',
     alignItems: 'center',
-    marginTop: 8,
-    paddingTop: 8,
-    borderTopWidth: 1,
-    borderTopColor: '#e0e0e0',
+    gap: 4,
   },
   dateAdded: {
     fontSize: 12,
-    color: '#999',
-    marginLeft: 4,
+    fontWeight: '500',
   },
   emptyContainer: {
     padding: 40,
     alignItems: 'center',
     justifyContent: 'center',
+    marginTop: 60,
+  },
+  emptyIconContainer: {
+    width: 120,
+    height: 120,
+    borderRadius: 60,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginBottom: 24,
   },
   emptyText: {
-    fontSize: 16,
-    color: '#999',
-    marginTop: 16,
-    fontWeight: 'bold',
+    fontSize: 18,
+    fontWeight: '700',
+    marginBottom: 8,
   },
   emptySubtext: {
     fontSize: 14,
-    color: '#bbb',
-    marginTop: 8,
     textAlign: 'center',
+    paddingHorizontal: 32,
+    lineHeight: 20,
   },
 });
