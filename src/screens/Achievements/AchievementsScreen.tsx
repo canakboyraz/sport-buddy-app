@@ -213,31 +213,39 @@ export default function AchievementsScreen() {
     return (
       <Card
         key={achievement.id}
-        style={[styles.achievementCard, earned && styles.earnedCard]}
+        style={[
+          styles.achievementCard,
+          { backgroundColor: theme.colors.surface },
+          earned && { backgroundColor: theme.colors.primaryContainer + '30' }
+        ]}
         mode="elevated"
       >
         <Card.Content style={styles.achievementContent}>
-          <View style={styles.achievementIcon}>
+          <View style={[styles.achievementIcon, { backgroundColor: earned ? achievement.color + '20' : theme.colors.surfaceVariant }]}>
             <MaterialCommunityIcons
               name={achievement.icon as any}
               size={48}
-              color={earned ? achievement.color : '#ccc'}
+              color={earned ? achievement.color : theme.colors.onSurfaceVariant}
             />
           </View>
           <View style={styles.achievementInfo}>
-            <Text style={[styles.achievementName, earned && styles.earnedText]}>
+            <Text style={[
+              styles.achievementName,
+              { color: theme.colors.onSurface },
+              earned && { color: theme.colors.primary }
+            ]}>
               {achievement.name}
             </Text>
-            <Text style={styles.achievementDescription}>{achievement.description}</Text>
+            <Text style={[styles.achievementDescription, { color: theme.colors.onSurfaceVariant }]}>{achievement.description}</Text>
 
             {!earned && (
               <View style={styles.progressContainer}>
                 <ProgressBar
                   progress={progress}
                   color={achievement.color}
-                  style={styles.progressBar}
+                  style={[styles.progressBar, { backgroundColor: theme.colors.surfaceVariant }]}
                 />
-                <Text style={styles.progressText}>
+                <Text style={[styles.progressText, { color: theme.colors.onSurfaceVariant }]}>
                   {current}/{required}
                 </Text>
               </View>
@@ -246,16 +254,16 @@ export default function AchievementsScreen() {
             <View style={styles.achievementFooter}>
               <Chip
                 icon={getCategoryIcon(achievement.category)}
-                style={styles.categoryChip}
-                textStyle={styles.chipText}
+                style={[styles.categoryChip, { backgroundColor: theme.colors.secondaryContainer }]}
+                textStyle={[styles.chipText, { color: theme.colors.onSecondaryContainer }]}
                 compact
               >
                 {getCategoryName(achievement.category)}
               </Chip>
               <Chip
                 icon="star"
-                style={styles.pointsChip}
-                textStyle={styles.chipText}
+                style={[styles.pointsChip, { backgroundColor: theme.colors.tertiaryContainer }]}
+                textStyle={[styles.chipText, { color: theme.colors.onTertiaryContainer }]}
                 compact
               >
                 {achievement.points} {t('achievement.points')}
@@ -274,8 +282,8 @@ export default function AchievementsScreen() {
 
   if (loading) {
     return (
-      <View style={styles.loadingContainer}>
-        <ActivityIndicator size="large" />
+      <View style={[styles.loadingContainer, { backgroundColor: theme.colors.background }]}>
+        <ActivityIndicator size="large" color={theme.colors.primary} />
       </View>
     );
   }
@@ -294,11 +302,15 @@ export default function AchievementsScreen() {
   }, {} as Record<string, AchievementProgress[]>);
 
   return (
-    <ScrollView style={styles.container}>
+    <ScrollView style={[styles.container, { backgroundColor: theme.colors.background }]}>
       {/* Level Card */}
       <Card style={styles.levelCard} mode="elevated">
         <LinearGradient
-          colors={['#6200ee', '#9C27B0']}
+          colors={
+            isDarkMode
+              ? [theme.colors.primary, theme.colors.secondary]
+              : [theme.colors.primary, '#9C27B0']
+          }
           start={{ x: 0, y: 0 }}
           end={{ x: 1, y: 1 }}
           style={styles.gradient}
@@ -326,21 +338,21 @@ export default function AchievementsScreen() {
       </Card>
 
       {/* Stats Card */}
-      <Card style={styles.statsCard} mode="elevated">
+      <Card style={[styles.statsCard, { backgroundColor: theme.colors.surface }]} mode="elevated">
         <Card.Content>
-          <Text style={styles.sectionTitle}>{t('achievement.statistics')}</Text>
+          <Text style={[styles.sectionTitle, { color: theme.colors.onSurface }]}>{t('achievement.statistics')}</Text>
           <View style={styles.statsRow}>
             <View style={styles.statItem}>
-              <Text style={styles.statValue}>{earnedCount}</Text>
-              <Text style={styles.statLabel}>{t('achievement.earned')}</Text>
+              <Text style={[styles.statValue, { color: theme.colors.primary }]}>{earnedCount}</Text>
+              <Text style={[styles.statLabel, { color: theme.colors.onSurfaceVariant }]}>{t('achievement.earned')}</Text>
             </View>
             <View style={styles.statItem}>
-              <Text style={styles.statValue}>{totalAchievements - earnedCount}</Text>
-              <Text style={styles.statLabel}>{t('achievement.remaining')}</Text>
+              <Text style={[styles.statValue, { color: theme.colors.primary }]}>{totalAchievements - earnedCount}</Text>
+              <Text style={[styles.statLabel, { color: theme.colors.onSurfaceVariant }]}>{t('achievement.remaining')}</Text>
             </View>
             <View style={styles.statItem}>
-              <Text style={styles.statValue}>{completionPercentage.toFixed(0)}%</Text>
-              <Text style={styles.statLabel}>{t('achievement.completion')}</Text>
+              <Text style={[styles.statValue, { color: theme.colors.primary }]}>{completionPercentage.toFixed(0)}%</Text>
+              <Text style={[styles.statLabel, { color: theme.colors.onSurfaceVariant }]}>{t('achievement.completion')}</Text>
             </View>
           </View>
         </Card.Content>
@@ -349,13 +361,13 @@ export default function AchievementsScreen() {
       {/* Achievements by Category */}
       {Object.entries(groupedAchievements).map(([category, items]) => (
         <View key={category} style={styles.categorySection}>
-          <View style={styles.categoryHeader}>
+          <View style={[styles.categoryHeader, { backgroundColor: theme.colors.surface, borderBottomColor: theme.colors.outlineVariant }]}>
             <MaterialCommunityIcons
               name={getCategoryIcon(category) as any}
               size={24}
-              color="#6200ee"
+              color={theme.colors.primary}
             />
-            <Text style={styles.categoryTitle}>{getCategoryName(category)}</Text>
+            <Text style={[styles.categoryTitle, { color: theme.colors.onSurface }]}>{getCategoryName(category)}</Text>
           </View>
           {items.map(renderAchievement)}
         </View>
@@ -367,7 +379,6 @@ export default function AchievementsScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#f5f5f5',
   },
   loadingContainer: {
     flex: 1,
@@ -378,9 +389,10 @@ const styles = StyleSheet.create({
     margin: 15,
     marginBottom: 10,
     overflow: 'hidden',
+    borderRadius: 20,
   },
   gradient: {
-    borderRadius: 12,
+    borderRadius: 20,
   },
   levelHeader: {
     flexDirection: 'row',
@@ -390,7 +402,7 @@ const styles = StyleSheet.create({
   },
   levelText: {
     fontSize: 28,
-    fontWeight: 'bold',
+    fontWeight: '700',
     color: '#fff',
   },
   pointsText: {
@@ -411,17 +423,19 @@ const styles = StyleSheet.create({
     fontSize: 12,
     marginTop: 8,
     textAlign: 'center',
+    fontWeight: '500',
   },
   statsCard: {
     margin: 15,
     marginTop: 0,
     marginBottom: 10,
+    borderRadius: 20,
+    padding: 4,
   },
   sectionTitle: {
     fontSize: 18,
-    fontWeight: 'bold',
+    fontWeight: '700',
     marginBottom: 15,
-    color: '#333',
   },
   statsRow: {
     flexDirection: 'row',
@@ -432,13 +446,12 @@ const styles = StyleSheet.create({
   },
   statValue: {
     fontSize: 32,
-    fontWeight: 'bold',
-    color: '#6200ee',
+    fontWeight: '700',
   },
   statLabel: {
     fontSize: 14,
-    color: '#666',
     marginTop: 4,
+    fontWeight: '500',
   },
   categorySection: {
     marginBottom: 15,
@@ -447,23 +460,18 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     paddingHorizontal: 15,
-    paddingVertical: 10,
-    backgroundColor: '#fff',
+    paddingVertical: 12,
     borderBottomWidth: 1,
-    borderBottomColor: '#e0e0e0',
   },
   categoryTitle: {
     fontSize: 16,
-    fontWeight: 'bold',
-    color: '#333',
+    fontWeight: '700',
     marginLeft: 8,
   },
   achievementCard: {
     marginHorizontal: 15,
     marginVertical: 5,
-  },
-  earnedCard: {
-    backgroundColor: '#f0f7ff',
+    borderRadius: 16,
   },
   achievementContent: {
     flexDirection: 'row',
@@ -471,22 +479,22 @@ const styles = StyleSheet.create({
   },
   achievementIcon: {
     marginRight: 15,
+    width: 64,
+    height: 64,
+    borderRadius: 32,
+    alignItems: 'center',
+    justifyContent: 'center',
   },
   achievementInfo: {
     flex: 1,
   },
   achievementName: {
     fontSize: 16,
-    fontWeight: 'bold',
-    color: '#333',
+    fontWeight: '700',
     marginBottom: 4,
-  },
-  earnedText: {
-    color: '#6200ee',
   },
   achievementDescription: {
     fontSize: 14,
-    color: '#666',
     marginBottom: 8,
   },
   progressContainer: {
@@ -498,22 +506,19 @@ const styles = StyleSheet.create({
   },
   progressText: {
     fontSize: 12,
-    color: '#999',
     marginTop: 4,
+    fontWeight: '500',
   },
   achievementFooter: {
     flexDirection: 'row',
     marginTop: 8,
     gap: 8,
   },
-  categoryChip: {
-    backgroundColor: '#e3f2fd',
-  },
-  pointsChip: {
-    backgroundColor: '#fff3e0',
-  },
+  categoryChip: {},
+  pointsChip: {},
   chipText: {
     fontSize: 11,
+    fontWeight: '600',
   },
   checkmark: {
     position: 'absolute',

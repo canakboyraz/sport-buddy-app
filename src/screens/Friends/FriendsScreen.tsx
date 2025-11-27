@@ -1,6 +1,6 @@
 import React, { useEffect, useState, useCallback } from 'react';
 import { View, FlatList, StyleSheet, RefreshControl, Alert, TouchableOpacity } from 'react-native';
-import { Card, Text, Button, Avatar, ActivityIndicator, Searchbar, Chip, Divider, IconButton } from 'react-native-paper';
+import { Card, Text, Button, Avatar, ActivityIndicator, Searchbar, Chip, Divider, IconButton, Surface, useTheme as usePaperTheme } from 'react-native-paper';
 import { supabase } from '../../services/supabase';
 import { useAuth } from '../../hooks/useAuth';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
@@ -8,6 +8,8 @@ import { friendService, FriendshipStatus } from '../../services/friendService';
 import { StackNavigationProp } from '@react-navigation/stack';
 import { RootStackParamList } from '../../navigation/AppNavigator';
 import { useLanguage } from '../../contexts/LanguageContext';
+import { useTheme } from '../../contexts/ThemeContext';
+import { LinearGradient } from 'expo-linear-gradient';
 
 interface Friend {
   id: string;
@@ -38,6 +40,8 @@ interface Props {
 export default function FriendsScreen({ navigation }: Props) {
   const { user } = useAuth();
   const { t } = useLanguage();
+  const { isDarkMode } = useTheme();
+  const theme = usePaperTheme();
   const [activeTab, setActiveTab] = useState<TabType>('friends');
   const [friends, setFriends] = useState<Friend[]>([]);
   const [friendRequests, setFriendRequests] = useState<FriendRequest[]>([]);
@@ -241,44 +245,45 @@ export default function FriendsScreen({ navigation }: Props) {
   };
 
   const renderFriend = ({ item }: { item: Friend }) => (
-    <Card style={styles.card} mode="elevated">
+    <Surface style={[styles.card, { backgroundColor: theme.colors.surface }]} elevation={2}>
       <TouchableOpacity onPress={() => navigation.navigate('ProfileDetail', { userId: item.id })}>
-        <Card.Content style={styles.cardContent}>
+        <View style={styles.cardContent}>
           {item.avatar_url ? (
-            <Avatar.Image size={50} source={{ uri: item.avatar_url }} />
+            <Avatar.Image size={56} source={{ uri: item.avatar_url }} />
           ) : (
-            <Avatar.Text size={50} label={item.full_name?.charAt(0) || 'U'} />
+            <Avatar.Text size={56} label={item.full_name?.charAt(0) || 'U'} style={{ backgroundColor: theme.colors.primaryContainer }} />
           )}
           <View style={styles.friendInfo}>
-            <Text style={styles.friendName}>{item.full_name}</Text>
-            {item.bio && <Text style={styles.friendBio} numberOfLines={1}>{item.bio}</Text>}
+            <Text style={[styles.friendName, { color: theme.colors.onSurface }]}>{item.full_name}</Text>
+            {item.bio && <Text style={[styles.friendBio, { color: theme.colors.onSurfaceVariant }]} numberOfLines={1}>{item.bio}</Text>}
           </View>
           <IconButton
             icon="account-remove"
             size={24}
+            iconColor={theme.colors.error}
             onPress={(e) => {
               e?.stopPropagation();
               removeFriend(item.id);
             }}
             disabled={processingIds.has(item.id)}
           />
-        </Card.Content>
+        </View>
       </TouchableOpacity>
-    </Card>
+    </Surface>
   );
 
   const renderFriendRequest = ({ item }: { item: FriendRequest }) => (
-    <Card style={styles.card} mode="elevated">
+    <Surface style={[styles.card, { backgroundColor: theme.colors.surface }]} elevation={2}>
       <TouchableOpacity onPress={() => navigation.navigate('ProfileDetail', { userId: item.requester.id })}>
-        <Card.Content style={styles.cardContent}>
+        <View style={styles.cardContent}>
           {item.requester.avatar_url ? (
-            <Avatar.Image size={50} source={{ uri: item.requester.avatar_url }} />
+            <Avatar.Image size={56} source={{ uri: item.requester.avatar_url }} />
           ) : (
-            <Avatar.Text size={50} label={item.requester.full_name?.charAt(0) || 'U'} />
+            <Avatar.Text size={56} label={item.requester.full_name?.charAt(0) || 'U'} style={{ backgroundColor: theme.colors.primaryContainer }} />
           )}
           <View style={styles.friendInfo}>
-            <Text style={styles.friendName}>{item.requester.full_name}</Text>
-            {item.requester.bio && <Text style={styles.friendBio} numberOfLines={1}>{item.requester.bio}</Text>}
+            <Text style={[styles.friendName, { color: theme.colors.onSurface }]}>{item.requester.full_name}</Text>
+            {item.requester.bio && <Text style={[styles.friendBio, { color: theme.colors.onSurfaceVariant }]} numberOfLines={1}>{item.requester.bio}</Text>}
           </View>
           <View style={styles.requestActions}>
             <IconButton
@@ -302,36 +307,44 @@ export default function FriendsScreen({ navigation }: Props) {
               disabled={processingIds.has(item.id)}
             />
           </View>
-        </Card.Content>
+        </View>
       </TouchableOpacity>
-    </Card>
+    </Surface>
   );
 
   const renderSentRequest = ({ item }: { item: FriendRequest }) => (
-    <Card style={styles.card} mode="elevated">
+    <Surface style={[styles.card, { backgroundColor: theme.colors.surface }]} elevation={2}>
       <TouchableOpacity onPress={() => navigation.navigate('ProfileDetail', { userId: item.target.id })}>
-        <Card.Content style={styles.cardContent}>
+        <View style={styles.cardContent}>
           {item.target.avatar_url ? (
-            <Avatar.Image size={50} source={{ uri: item.target.avatar_url }} />
+            <Avatar.Image size={56} source={{ uri: item.target.avatar_url }} />
           ) : (
-            <Avatar.Text size={50} label={item.target.full_name?.charAt(0) || 'U'} />
+            <Avatar.Text size={56} label={item.target.full_name?.charAt(0) || 'U'} style={{ backgroundColor: theme.colors.primaryContainer }} />
           )}
           <View style={styles.friendInfo}>
-            <Text style={styles.friendName}>{item.target.full_name}</Text>
-            <Chip icon="clock" compact style={styles.pendingChip}>{t('friends.pending')}</Chip>
+            <Text style={[styles.friendName, { color: theme.colors.onSurface }]}>{item.target.full_name}</Text>
+            <Chip
+              icon="clock"
+              compact
+              style={[styles.pendingChip, { backgroundColor: theme.colors.secondaryContainer }]}
+              textStyle={{ color: theme.colors.onSecondaryContainer }}
+            >
+              {t('friends.pending')}
+            </Chip>
           </View>
           <IconButton
             icon="close"
             size={24}
+            iconColor={theme.colors.error}
             onPress={(e) => {
               e?.stopPropagation();
               cancelFriendRequest(item.id);
             }}
             disabled={processingIds.has(item.id)}
           />
-        </Card.Content>
+        </View>
       </TouchableOpacity>
-    </Card>
+    </Surface>
   );
 
   const renderSearchResult = ({ item }: { item: Friend }) => {
@@ -388,24 +401,24 @@ export default function FriendsScreen({ navigation }: Props) {
     };
 
     return (
-      <Card style={styles.card} mode="elevated">
+      <Surface style={[styles.card, { backgroundColor: theme.colors.surface }]} elevation={2}>
         <TouchableOpacity onPress={() => navigation.navigate('ProfileDetail', { userId: item.id })}>
-          <Card.Content style={styles.cardContent}>
+          <View style={styles.cardContent}>
             {item.avatar_url ? (
-              <Avatar.Image size={50} source={{ uri: item.avatar_url }} />
+              <Avatar.Image size={56} source={{ uri: item.avatar_url }} />
             ) : (
-              <Avatar.Text size={50} label={item.full_name?.charAt(0) || 'U'} />
+              <Avatar.Text size={56} label={item.full_name?.charAt(0) || 'U'} style={{ backgroundColor: theme.colors.primaryContainer }} />
             )}
             <View style={styles.friendInfo}>
-              <Text style={styles.friendName}>{item.full_name}</Text>
-              {item.bio && <Text style={styles.friendBio} numberOfLines={1}>{item.bio}</Text>}
+              <Text style={[styles.friendName, { color: theme.colors.onSurface }]}>{item.full_name}</Text>
+              {item.bio && <Text style={[styles.friendBio, { color: theme.colors.onSurfaceVariant }]} numberOfLines={1}>{item.bio}</Text>}
             </View>
             <View onStartShouldSetResponder={() => true}>
               {renderActionButton()}
             </View>
-          </Card.Content>
+          </View>
         </TouchableOpacity>
-      </Card>
+      </Surface>
     );
   };
 
@@ -434,8 +447,10 @@ export default function FriendsScreen({ navigation }: Props) {
 
     return (
       <View style={styles.emptyContainer}>
-        <MaterialCommunityIcons name={icon as any} size={64} color="#ccc" />
-        <Text style={styles.emptyText}>{message}</Text>
+        <View style={[styles.emptyIconContainer, { backgroundColor: theme.colors.surfaceVariant }]}>
+          <MaterialCommunityIcons name={icon as any} size={64} color={theme.colors.onSurfaceVariant} />
+        </View>
+        <Text style={[styles.emptyText, { color: theme.colors.onSurface }]}>{message}</Text>
       </View>
     );
   };
@@ -471,13 +486,20 @@ export default function FriendsScreen({ navigation }: Props) {
   };
 
   return (
-    <View style={styles.container}>
+    <LinearGradient
+      colors={
+        isDarkMode
+          ? [theme.colors.background, theme.colors.background]
+          : [theme.colors.primaryContainer + '20', theme.colors.background]
+      }
+      style={styles.container}
+    >
       {/* Tabs */}
-      <View style={styles.tabs}>
+      <Surface style={[styles.tabs, { backgroundColor: theme.colors.surface }]} elevation={1}>
         <Chip
           selected={activeTab === 'friends'}
           onPress={() => setActiveTab('friends')}
-          style={styles.tab}
+          style={[styles.tab, activeTab === 'friends' && { backgroundColor: theme.colors.secondaryContainer }]}
           icon="account-multiple"
         >
           {t('friends.tabs.friends')}
@@ -485,7 +507,7 @@ export default function FriendsScreen({ navigation }: Props) {
         <Chip
           selected={activeTab === 'requests'}
           onPress={() => setActiveTab('requests')}
-          style={styles.tab}
+          style={[styles.tab, activeTab === 'requests' && { backgroundColor: theme.colors.secondaryContainer }]}
           icon="account-clock"
         >
           {t('friends.tabs.requests')} {friendRequests.length > 0 && `(${friendRequests.length})`}
@@ -493,7 +515,7 @@ export default function FriendsScreen({ navigation }: Props) {
         <Chip
           selected={activeTab === 'sent'}
           onPress={() => setActiveTab('sent')}
-          style={styles.tab}
+          style={[styles.tab, activeTab === 'sent' && { backgroundColor: theme.colors.secondaryContainer }]}
           icon="send-clock"
         >
           {t('friends.tabs.sent')}
@@ -501,14 +523,12 @@ export default function FriendsScreen({ navigation }: Props) {
         <Chip
           selected={activeTab === 'search'}
           onPress={() => setActiveTab('search')}
-          style={styles.tab}
+          style={[styles.tab, activeTab === 'search' && { backgroundColor: theme.colors.secondaryContainer }]}
           icon="magnify"
         >
           {t('common.search')}
         </Chip>
-      </View>
-
-      <Divider />
+      </Surface>
 
       {/* Search bar for search tab */}
       {activeTab === 'search' && (
@@ -517,14 +537,14 @@ export default function FriendsScreen({ navigation }: Props) {
           onChangeText={setSearchQuery}
           value={searchQuery}
           onSubmitEditing={searchUsers}
-          style={styles.searchBar}
+          style={[styles.searchBar, { backgroundColor: theme.colors.surface }]}
         />
       )}
 
       {/* List */}
       {loading ? (
-        <View style={styles.loadingContainer}>
-          <ActivityIndicator size="large" />
+        <View style={[styles.loadingContainer, { backgroundColor: theme.colors.background }]}>
+          <ActivityIndicator size="large" color={theme.colors.primary} />
         </View>
       ) : (
         <FlatList
@@ -534,30 +554,36 @@ export default function FriendsScreen({ navigation }: Props) {
           contentContainerStyle={styles.list}
           ListEmptyComponent={renderEmptyState}
           refreshControl={
-            <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
+            <RefreshControl
+              refreshing={refreshing}
+              onRefresh={onRefresh}
+              tintColor={theme.colors.primary}
+              colors={[theme.colors.primary]}
+            />
           }
         />
       )}
-    </View>
+    </LinearGradient>
   );
 }
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#f5f5f5',
   },
   tabs: {
     flexDirection: 'row',
-    padding: 10,
-    backgroundColor: '#fff',
+    padding: 12,
     gap: 8,
+    borderBottomLeftRadius: 20,
+    borderBottomRightRadius: 20,
   },
   tab: {
     flex: 1,
   },
   searchBar: {
-    margin: 10,
+    margin: 12,
+    borderRadius: 12,
   },
   loadingContainer: {
     flex: 1,
@@ -565,14 +591,17 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   list: {
-    padding: 10,
+    padding: 12,
   },
   card: {
-    marginBottom: 10,
+    marginBottom: 12,
+    borderRadius: 16,
+    overflow: 'hidden',
   },
   cardContent: {
     flexDirection: 'row',
     alignItems: 'center',
+    padding: 16,
   },
   friendInfo: {
     flex: 1,
@@ -580,13 +609,11 @@ const styles = StyleSheet.create({
   },
   friendName: {
     fontSize: 16,
-    fontWeight: 'bold',
-    color: '#333',
+    fontWeight: '700',
   },
   friendBio: {
     fontSize: 14,
-    color: '#666',
-    marginTop: 2,
+    marginTop: 4,
   },
   requestActions: {
     flexDirection: 'row',
@@ -598,10 +625,19 @@ const styles = StyleSheet.create({
   emptyContainer: {
     padding: 40,
     alignItems: 'center',
+    marginTop: 40,
+  },
+  emptyIconContainer: {
+    width: 120,
+    height: 120,
+    borderRadius: 60,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginBottom: 24,
   },
   emptyText: {
     fontSize: 16,
-    color: '#999',
+    fontWeight: '600',
     marginTop: 16,
     textAlign: 'center',
   },
