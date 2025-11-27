@@ -22,18 +22,33 @@ const resources = {
   en: { translation: en },
 };
 
-// Get device language
+// Get device language based on locale and region
 const getDeviceLanguage = (): LanguageCode => {
   const deviceLocale = Localization.getLocales()[0];
   const languageCode = deviceLocale?.languageCode || 'en';
+  const regionCode = deviceLocale?.regionCode || '';
 
-  // Check if device language is supported
+  console.log('[i18n] Device locale detected:', {
+    language: languageCode,
+    region: regionCode,
+    fullLocale: `${languageCode}-${regionCode}`
+  });
+
+  // Priority 1: Check if device language is directly supported (tr, en)
   if (languageCode in LANGUAGES) {
+    console.log(`[i18n] Using device language: ${languageCode}`);
     return languageCode as LanguageCode;
   }
 
-  // Default to Turkish for Turkey region, English otherwise
-  return deviceLocale?.regionCode === 'TR' ? 'tr' : 'en';
+  // Priority 2: Check if region is Turkey, use Turkish
+  if (regionCode === 'TR') {
+    console.log('[i18n] Region is Turkey, using Turkish');
+    return 'tr';
+  }
+
+  // Priority 3: Default to English for all other countries
+  console.log('[i18n] Using default language: English');
+  return 'en';
 };
 
 // Initialize i18next
@@ -43,17 +58,24 @@ const initI18n = async () => {
   try {
     savedLanguage = await AsyncStorage.getItem(LANGUAGE_STORAGE_KEY);
   } catch (error) {
-    console.error('Error loading saved language:', error);
+    console.error('[i18n] Error loading saved language:', error);
   }
 
+  // Determine which language to use
   const language = savedLanguage || getDeviceLanguage();
+
+  if (savedLanguage) {
+    console.log(`[i18n] Using saved user preference: ${savedLanguage}`);
+  } else {
+    console.log(`[i18n] No saved preference, auto-detected: ${language}`);
+  }
 
   i18n
     .use(initReactI18next)
     .init({
       resources,
       lng: language,
-      fallbackLng: 'en',
+      fallbackLng: 'en', // Always fall back to English if translation missing
       interpolation: {
         escapeValue: false, // React already handles XSS
       },
@@ -62,6 +84,8 @@ const initI18n = async () => {
         useSuspense: false,
       },
     });
+
+  console.log(`[i18n] Initialized with language: ${language}`);
 };
 
 initI18n();
