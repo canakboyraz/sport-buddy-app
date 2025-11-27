@@ -53,9 +53,8 @@ if (i18n.isInitialized) {
 // Use initReactI18next plugin
 i18n.use(initReactI18next);
 
-// Initialize with resources - this is synchronous
+// Initialize without resources first
 i18n.init({
-  resources,
   lng: defaultLanguage,
   fallbackLng: 'en',
   interpolation: {
@@ -73,6 +72,12 @@ i18n.init({
     return key;
   },
 });
+
+// Add resources manually after initialization
+console.log('[LanguageContext MODULE] Adding resources manually...');
+i18n.addResourceBundle('tr', 'translation', tr, true, true);
+i18n.addResourceBundle('en', 'translation', en, true, true);
+console.log('[LanguageContext MODULE] Resources added manually');
 
 console.log('[LanguageContext MODULE] After init():');
 console.log('[LanguageContext MODULE] - isInitialized:', i18n.isInitialized);
