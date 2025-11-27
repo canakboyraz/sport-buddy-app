@@ -1,5 +1,6 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
+import i18n from '../i18n';
 import { changeLanguage as changeI18nLanguage, getCurrentLanguage, LanguageCode, LANGUAGES } from '../i18n';
 
 type LanguageContextType = {
@@ -12,8 +13,14 @@ type LanguageContextType = {
 
 const LanguageContext = createContext<LanguageContextType | undefined>(undefined);
 
+// FORCE i18n initialization by importing and using it
+console.log('[LanguageContext] Forcing i18n initialization');
+console.log('[LanguageContext] i18n.isInitialized:', i18n.isInitialized);
+console.log('[LanguageContext] i18n.language:', i18n.language);
+console.log('[LanguageContext] Test translation auth.login:', i18n.t('auth.login'));
+
 export const LanguageProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const { t, i18n } = useTranslation();
+  const { t, i18n: i18nInstance } = useTranslation();
   const [currentLanguage, setCurrentLanguage] = useState<LanguageCode>(getCurrentLanguage());
   const [isChangingLanguage, setIsChangingLanguage] = useState(false);
 
@@ -23,12 +30,12 @@ export const LanguageProvider: React.FC<{ children: React.ReactNode }> = ({ chil
       setCurrentLanguage(lng as LanguageCode);
     };
 
-    i18n.on('languageChanged', handleLanguageChange);
+    i18nInstance.on('languageChanged', handleLanguageChange);
 
     return () => {
-      i18n.off('languageChanged', handleLanguageChange);
+      i18nInstance.off('languageChanged', handleLanguageChange);
     };
-  }, [i18n]);
+  }, [i18nInstance]);
 
   const changeLanguage = async (languageCode: LanguageCode): Promise<boolean> => {
     setIsChangingLanguage(true);
