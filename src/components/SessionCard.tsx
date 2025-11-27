@@ -100,7 +100,7 @@ const SessionCard = ({ item, sportIcon, distance, onPress, onLocationPress }: Pr
                             <View style={styles.skillBadge}>
                                 <MaterialCommunityIcons name="medal" size={8} color="white" />
                                 <Text variant="labelSmall" style={styles.skillBadgeText}>
-                                    {getSkillLevelLabel(item.skill_level)}
+                                    {getSkillLevelLabel(item.skill_level, t)}
                                 </Text>
                             </View>
                         </View>

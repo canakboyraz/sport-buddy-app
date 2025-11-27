@@ -1,9 +1,8 @@
-import i18n from '../i18n';
-
 /**
  * Skill level değerlerini çeviren yardımcı fonksiyon
+ * NOT: Bu fonksiyon t fonksiyonunu parametre olarak alır
  */
-export const getSkillLevelLabel = (skillLevel: string): string => {
+export const getSkillLevelLabel = (skillLevel: string, t: (key: string) => string): string => {
   // Map skill level values to i18n keys
   const keyMap: { [key: string]: string } = {
     'any': 'skillLevel.any',
@@ -15,7 +14,7 @@ export const getSkillLevelLabel = (skillLevel: string): string => {
 
   const translationKey = keyMap[skillLevel];
   if (translationKey) {
-    return i18n.t(translationKey);
+    return t(translationKey);
   }
 
   return skillLevel;
@@ -23,13 +22,12 @@ export const getSkillLevelLabel = (skillLevel: string): string => {
 
 /**
  * Skill level seçenekleri listesi
+ * NOT: Bu fonksiyon t fonksiyonunu parametre olarak alır
  */
-export const getSkillLevelOptions = () => [
-  { value: 'any', label: i18n.t('skillLevel.any') },
-  { value: 'beginner', label: i18n.t('skillLevel.beginner') },
-  { value: 'intermediate', label: i18n.t('skillLevel.intermediate') },
-  { value: 'advanced', label: i18n.t('skillLevel.advanced') },
+export const getSkillLevelOptions = (t: (key: string) => string) => [
+  { value: 'any', label: t('skillLevel.any') },
+  { value: 'beginner', label: t('skillLevel.beginner') },
+  { value: 'intermediate', label: t('skillLevel.intermediate') },
+  { value: 'advanced', label: t('skillLevel.advanced') },
+  { value: 'professional', label: t('skillLevel.professional') },
 ];
-
-// For backwards compatibility
-export const skillLevelOptions = getSkillLevelOptions();

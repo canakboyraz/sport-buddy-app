@@ -167,7 +167,7 @@ export default function MyEventsScreen({ navigation }: any) {
           <View style={styles.infoRow}>
             <MaterialCommunityIcons name="soccer" size={16} color={theme.colors.primary} />
             <Text style={[styles.infoText, { color: theme.colors.onSurface }]}>{item.sport?.name}</Text>
-            <Text style={[styles.skillLevel, { color: theme.colors.onSurfaceVariant }]}>• {getSkillLevelLabel(item.skill_level)}</Text>
+            <Text style={[styles.skillLevel, { color: theme.colors.onSurfaceVariant }]}>• {getSkillLevelLabel(item.skill_level, t)}</Text>
           </View>
 
           <View style={styles.infoRow}>

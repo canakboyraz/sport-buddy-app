@@ -15,6 +15,7 @@ import WeatherCard from '../../components/WeatherCard';
 import { scheduleSessionReminders, cancelSessionReminders, sendParticipantJoinedNotification, scheduleLocalNotification } from '../../services/notificationService';
 import { getBadgeLevel } from '../../services/ratingService';
 import { useTheme } from '../../contexts/ThemeContext';
+import { useLanguage } from '../../contexts/LanguageContext';
 import { getSkillLevelLabel } from '../../utils/skillLevelUtils';
 
 let MapView: any = null;
@@ -38,6 +39,7 @@ export default function SessionDetailScreen({ navigation, route }: Props) {
   const { sessionId } = route.params;
   const { user } = useAuth();
   const { theme } = useTheme();
+  const { t } = useLanguage();
   const [session, setSession] = useState<SportSession | null>(null);
   const [loading, setLoading] = useState(true);
   const [actionLoading, setActionLoading] = useState(false);
@@ -386,7 +388,7 @@ export default function SessionDetailScreen({ navigation, route }: Props) {
               {session.sport?.name}
             </Chip>
             <Chip icon="star" textStyle={styles.headerChipText} style={styles.headerChip}>
-              {getSkillLevelLabel(session.skill_level)}
+              {getSkillLevelLabel(session.skill_level, t)}
             </Chip>
           </View>
         </LinearGradient>

@@ -665,5 +665,25 @@
     "skating": "Paten",
     "skiing": "Kayak",
     "other": "Diğer"
+  },
+
+  "stats": {
+    "general": "Genel İstatistikler",
+    "sessionsCreated": "Oluşturulan Seanslar",
+    "sessionsJoined": "Katılınan Seanslar",
+    "upcomingSessions": "Yaklaşan Seanslar",
+    "completedSessions": "Tamamlanan Seanslar",
+    "ratings": "Değerlendirmeler",
+    "averageRating": "Ortalama Puan",
+    "totalRatings": "Toplam Değerlendirme",
+    "activity": "Aktivite",
+    "messagesSent": "Gönderilen Mesajlar",
+    "favoriteSport": "Favori Spor",
+    "memberSince": "Üyelik Tarihi",
+    "summary": "Özet",
+    "totalSessions": "Toplam Seans",
+    "messages": "Mesajlar",
+    "ratingsCount": "Değerlendirme",
+    "loadError": "İstatistikler yüklenemedi"
   }
 }

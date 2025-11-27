@@ -665,5 +665,25 @@
     "skating": "Skating",
     "skiing": "Skiing",
     "other": "Other"
+  },
+
+  "stats": {
+    "general": "General Statistics",
+    "sessionsCreated": "Sessions Created",
+    "sessionsJoined": "Sessions Joined",
+    "upcomingSessions": "Upcoming Sessions",
+    "completedSessions": "Completed Sessions",
+    "ratings": "Ratings",
+    "averageRating": "Average Rating",
+    "totalRatings": "Total Ratings",
+    "activity": "Activity",
+    "messagesSent": "Messages Sent",
+    "favoriteSport": "Favorite Sport",
+    "memberSince": "Member Since",
+    "summary": "Summary",
+    "totalSessions": "Total Sessions",
+    "messages": "Messages",
+    "ratingsCount": "Ratings",
+    "loadError": "Could not load statistics"
   }
 }
