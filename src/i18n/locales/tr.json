@@ -398,6 +398,11 @@
     "permissionDenied": "Bildirim izni verilmedi!",
     "permissionRequired": "Bildirimler için izin gerekli",
     "enableInSettings": "Ayarlardan bildirim iznini etkinleştirin",
+    "all": "Tümü",
+    "unread": "Okunmamış",
+    "markAllRead": "Tümünü Okundu İşaretle",
+    "noNotifications": "Henüz bildirim yok",
+    "noUnreadNotifications": "Okunmamış bildirim yok",
     "types": {
       "all": "Tüm Bildirimler",
       "sessionReminder": "Seans Hatırlatıcıları",

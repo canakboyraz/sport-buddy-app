@@ -117,3 +117,27 @@ export interface UserAchievement {
   unlocked_at?: string;
   progress?: number;
 }
+
+export type NotificationType =
+  | 'friend_request'
+  | 'friend_accepted'
+  | 'session_join_request'
+  | 'session_join_approved'
+  | 'session_join_rejected'
+  | 'session_reminder'
+  | 'new_message'
+  | 'rating_received'
+  | 'achievement_unlocked';
+
+export interface Notification {
+  id: number;
+  user_id: string;
+  type: NotificationType;
+  title: string;
+  message: string;
+  data?: Record<string, any>;
+  is_read: boolean;
+  created_at: string;
+  sender?: Profile;
+  session?: SportSession;
+}

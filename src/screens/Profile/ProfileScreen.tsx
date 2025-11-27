@@ -172,6 +172,14 @@ export default function ProfileScreen() {
         end={{ x: 1, y: 1 }}
         style={styles.gradientHeader}
       >
+        {/* Notification Icon */}
+        <TouchableOpacity
+          style={styles.notificationButton}
+          onPress={() => navigation.navigate('Notifications')}
+        >
+          <MaterialCommunityIcons name="bell" size={24} color="#fff" />
+        </TouchableOpacity>
+
         <View style={styles.headerContent}>
           <View style={styles.avatarContainer}>
             <TouchableOpacity onPress={handlePhotoSelection} disabled={uploadingPhoto}>
@@ -484,6 +492,18 @@ const styles = StyleSheet.create({
     paddingTop: 40,
     paddingBottom: 30,
     paddingHorizontal: 20,
+  },
+  notificationButton: {
+    position: 'absolute',
+    top: 45,
+    right: 20,
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    backgroundColor: 'rgba(255, 255, 255, 0.2)',
+    alignItems: 'center',
+    justifyContent: 'center',
+    zIndex: 10,
   },
   headerContent: {
     alignItems: 'center',

@@ -398,6 +398,11 @@
     "permissionDenied": "Notification permission denied!",
     "permissionRequired": "Permission required for notifications",
     "enableInSettings": "Enable notification permission in settings",
+    "all": "All",
+    "unread": "Unread",
+    "markAllRead": "Mark All as Read",
+    "noNotifications": "No notifications yet",
+    "noUnreadNotifications": "No unread notifications",
     "types": {
       "all": "All Notifications",
       "sessionReminder": "Session Reminders",

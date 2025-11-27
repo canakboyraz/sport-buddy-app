@@ -25,6 +25,7 @@ import ProfileDetailScreen from '../screens/ProfileDetail/ProfileDetailScreen';
 import SettingsScreen from '../screens/Settings/SettingsScreen';
 import LanguageSelectionScreen from '../screens/Settings/LanguageSelectionScreen';
 import NotificationSettingsScreen from '../screens/Settings/NotificationSettingsScreen';
+import NotificationsScreen from '../screens/Notifications/NotificationsScreen';
 
 export type MainTabParamList = {
   Home: undefined;
@@ -51,6 +52,7 @@ export type RootStackParamList = {
   Settings: undefined;
   LanguageSelection: undefined;
   NotificationSettings: undefined;
+  Notifications: undefined;
 };
 
 const MainTab = createBottomTabNavigator<MainTabParamList>();
@@ -242,6 +244,11 @@ export default function AppNavigator() {
         name="NotificationSettings"
         component={NotificationSettingsScreen}
         options={{ title: t('notifications.settings') }}
+      />
+      <RootStack.Screen
+        name="Notifications"
+        component={NotificationsScreen}
+        options={{ title: t('navigation.notifications') }}
       />
     </RootStack.Navigator>
   );
