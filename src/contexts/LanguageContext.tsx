@@ -1,5 +1,5 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
-import i18n from 'i18next';
+import i18n, { createInstance } from 'i18next';
 import { initReactI18next } from 'react-i18next';
 import * as Localization from 'expo-localization';
 import AsyncStorage from '@react-native-async-storage/async-storage';
@@ -36,57 +36,49 @@ const getDeviceLanguage = (): LanguageCode => {
   return 'en';
 };
 
-// IMPORTANT: Initialize i18n synchronously RIGHT NOW, before anything else
+// Create a new i18n instance to avoid conflicts
+const i18nInstance = createInstance();
+
 const defaultLanguage = getDeviceLanguage();
 
 console.log('[LanguageContext MODULE] Starting i18n initialization...');
 console.log('[LanguageContext MODULE] defaultLanguage:', defaultLanguage);
-console.log('[LanguageContext MODULE] resources:', JSON.stringify(Object.keys(resources)));
-console.log('[LanguageContext MODULE] tr keys count:', Object.keys(tr).length);
-console.log('[LanguageContext MODULE] en keys count:', Object.keys(en).length);
+console.log('[LanguageContext MODULE] resources keys:', JSON.stringify(Object.keys(resources)));
+console.log('[LanguageContext MODULE] tr translation keys:', Object.keys(tr).length);
+console.log('[LanguageContext MODULE] en translation keys:', Object.keys(en).length);
 
-// Always reinitialize to ensure fresh state
-if (i18n.isInitialized) {
-  console.log('[LanguageContext MODULE] i18n already initialized, creating new instance');
-}
-
-// Use initReactI18next plugin
-i18n.use(initReactI18next);
-
-// Initialize without resources first
-i18n.init({
-  lng: defaultLanguage,
-  fallbackLng: 'en',
-  interpolation: {
-    escapeValue: false,
-  },
-  compatibilityJSON: 'v3',
-  react: {
-    useSuspense: false,
-  },
-  // Add these to ensure resources load properly
-  returnEmptyString: false,
-  returnNull: false,
-  parseMissingKeyHandler: (key) => {
-    console.warn('[i18n] Missing translation key:', key);
-    return key;
-  },
-});
-
-// Add resources manually after initialization
-console.log('[LanguageContext MODULE] Adding resources manually...');
-i18n.addResourceBundle('tr', 'translation', tr, true, true);
-i18n.addResourceBundle('en', 'translation', en, true, true);
-console.log('[LanguageContext MODULE] Resources added manually');
+// Initialize the instance synchronously with initImmediate: false
+i18nInstance
+  .use(initReactI18next)
+  .init({
+    resources,
+    lng: defaultLanguage,
+    fallbackLng: 'en',
+    interpolation: {
+      escapeValue: false,
+    },
+    compatibilityJSON: 'v3',
+    react: {
+      useSuspense: false,
+    },
+    returnEmptyString: false,
+    returnNull: false,
+    keySeparator: '.',
+    parseMissingKeyHandler: (key) => {
+      console.warn('[i18n] Missing translation key:', key);
+      return key;
+    },
+  });
 
 console.log('[LanguageContext MODULE] After init():');
-console.log('[LanguageContext MODULE] - isInitialized:', i18n.isInitialized);
-console.log('[LanguageContext MODULE] - language:', i18n.language);
-console.log('[LanguageContext MODULE] - hasResourceBundle tr:', i18n.hasResourceBundle('tr', 'translation'));
-console.log('[LanguageContext MODULE] - hasResourceBundle en:', i18n.hasResourceBundle('en', 'translation'));
-console.log('[LanguageContext MODULE] - t("auth.login"):', i18n.t('auth.login'));
-console.log('[LanguageContext MODULE] - t("auth.email"):', i18n.t('auth.email'));
-console.log('[LanguageContext MODULE] - t("common.appName"):', i18n.t('common.appName'));
+console.log('[LanguageContext MODULE] - isInitialized:', i18nInstance.isInitialized);
+console.log('[LanguageContext MODULE] - language:', i18nInstance.language);
+console.log('[LanguageContext MODULE] - hasResourceBundle tr:', i18nInstance.hasResourceBundle('tr', 'translation'));
+console.log('[LanguageContext MODULE] - hasResourceBundle en:', i18nInstance.hasResourceBundle('en', 'translation'));
+console.log('[LanguageContext MODULE] - Test translations:');
+console.log('[LanguageContext MODULE]   - t("auth.login"):', i18nInstance.t('auth.login'));
+console.log('[LanguageContext MODULE]   - t("auth.email"):', i18nInstance.t('auth.email'));
+console.log('[LanguageContext MODULE]   - t("common.appName"):', i18nInstance.t('common.appName'));
 
 type LanguageContextType = {
   currentLanguage: LanguageCode;
@@ -99,25 +91,25 @@ type LanguageContextType = {
 const LanguageContext = createContext<LanguageContextType | undefined>(undefined);
 
 export const LanguageProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const [currentLanguage, setCurrentLanguage] = useState<LanguageCode>(i18n.language as LanguageCode || defaultLanguage);
+  const [currentLanguage, setCurrentLanguage] = useState<LanguageCode>(i18nInstance.language as LanguageCode || defaultLanguage);
   const [isChangingLanguage, setIsChangingLanguage] = useState(false);
   const [, forceUpdate] = useState({});
 
-  // Use i18n.t directly instead of useTranslation hook
+  // Use i18nInstance.t directly instead of useTranslation hook
   const t = (key: string, options?: any): string => {
-    return i18n.t(key, options);
+    return i18nInstance.t(key, options);
   };
 
   console.log('[LanguageProvider RENDER] currentLanguage:', currentLanguage);
-  console.log('[LanguageProvider RENDER] i18n.language:', i18n.language);
-  console.log('[LanguageProvider RENDER] Direct i18n.t("auth.login") =', i18n.t('auth.login'));
-  console.log('[LanguageProvider RENDER] Direct i18n.t("auth.email") =', i18n.t('auth.email'));
+  console.log('[LanguageProvider RENDER] i18nInstance.language:', i18nInstance.language);
+  console.log('[LanguageProvider RENDER] Direct i18nInstance.t("auth.login") =', i18nInstance.t('auth.login'));
+  console.log('[LanguageProvider RENDER] Direct i18nInstance.t("auth.email") =', i18nInstance.t('auth.email'));
 
   useEffect(() => {
     // Load saved language preference
     AsyncStorage.getItem(LANGUAGE_STORAGE_KEY).then((savedLanguage) => {
       if (savedLanguage && savedLanguage !== currentLanguage) {
-        i18n.changeLanguage(savedLanguage);
+        i18nInstance.changeLanguage(savedLanguage);
         setCurrentLanguage(savedLanguage as LanguageCode);
         forceUpdate({});
       }
@@ -130,17 +122,17 @@ export const LanguageProvider: React.FC<{ children: React.ReactNode }> = ({ chil
       forceUpdate({});
     };
 
-    i18n.on('languageChanged', handleLanguageChange);
+    i18nInstance.on('languageChanged', handleLanguageChange);
 
     return () => {
-      i18n.off('languageChanged', handleLanguageChange);
+      i18nInstance.off('languageChanged', handleLanguageChange);
     };
   }, []);
 
   const changeLanguage = async (languageCode: LanguageCode): Promise<boolean> => {
     setIsChangingLanguage(true);
     try {
-      await i18n.changeLanguage(languageCode);
+      await i18nInstance.changeLanguage(languageCode);
       await AsyncStorage.setItem(LANGUAGE_STORAGE_KEY, languageCode);
       setCurrentLanguage(languageCode);
       return true;
