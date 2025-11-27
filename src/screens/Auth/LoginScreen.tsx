@@ -10,7 +10,7 @@ import { secureStore } from '../../services/secureStore';
 import * as AppleAuthentication from 'expo-apple-authentication';
 import * as WebBrowser from 'expo-web-browser';
 import * as Linking from 'expo-linking';
-import { useTranslation } from 'react-i18next';
+import { useLanguage } from '../../contexts/LanguageContext';
 
 WebBrowser.maybeCompleteAuthSession();
 
@@ -21,7 +21,7 @@ type Props = {
 };
 
 export default function LoginScreen({ navigation }: Props) {
-  const { t } = useTranslation();
+  const { t } = useLanguage();
   const theme = useTheme();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');

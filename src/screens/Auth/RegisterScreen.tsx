@@ -6,7 +6,7 @@ import { supabase } from '../../services/supabase';
 import { validateEmail, validatePassword, validateName } from '../../utils/validation';
 import { StackNavigationProp } from '@react-navigation/stack';
 import { AuthStackParamList } from '../../navigation/AuthNavigator';
-import { useTranslation } from 'react-i18next';
+import { useLanguage } from '../../contexts/LanguageContext';
 
 type RegisterScreenNavigationProp = StackNavigationProp<AuthStackParamList, 'Register'>;
 
@@ -15,6 +15,7 @@ type Props = {
 };
 
 export default function RegisterScreen({ navigation }: Props) {
+  const { t } = useLanguage();
   const theme = useTheme();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -24,23 +25,23 @@ export default function RegisterScreen({ navigation }: Props) {
 
   const handleRegister = async () => {
     if (!email || !password || !fullName) {
-      Alert.alert('Hata', 'Lütfen zorunlu alanları doldurun');
+      Alert.alert(t('common.error'), t('auth.fillAllFields'));
       return;
     }
 
     if (!validateName(fullName)) {
-      Alert.alert('Hata', 'Ad Soyad en az 2 karakter olmalıdır');
+      Alert.alert(t('common.error'), t('auth.nameMinLength'));
       return;
     }
 
     if (!validateEmail(email)) {
-      Alert.alert('Hata', 'Geçerli bir e-posta adresi giriniz');
+      Alert.alert(t('common.error'), t('auth.invalidEmail'));
       return;
     }
 
     const passwordValidation = validatePassword(password);
     if (!passwordValidation.isValid) {
-      Alert.alert('Hata', passwordValidation.message || 'Geçersiz şifre');
+      Alert.alert(t('common.error'), passwordValidation.message || t('auth.invalidPassword'));
       return;
     }
 
@@ -53,7 +54,7 @@ export default function RegisterScreen({ navigation }: Props) {
 
     if (authError) {
       setLoading(false);
-      Alert.alert('Kayıt Hatası', authError.message);
+      Alert.alert(t('auth.registerError'), authError.message);
       return;
     }
 
@@ -68,10 +69,10 @@ export default function RegisterScreen({ navigation }: Props) {
       setLoading(false);
 
       if (profileError) {
-        Alert.alert('Profil Hatası', profileError.message);
+        Alert.alert(t('auth.profileError'), profileError.message);
       } else {
-        Alert.alert('Başarılı', 'Hesabınız oluşturuldu!', [
-          { text: 'Tamam', onPress: () => navigation.navigate('Login') },
+        Alert.alert(t('common.success'), t('auth.accountCreated'), [
+          { text: t('common.ok'), onPress: () => navigation.navigate('Login') },
         ]);
       }
     }
@@ -91,11 +92,11 @@ export default function RegisterScreen({ navigation }: Props) {
       >
         <ScrollView contentContainerStyle={styles.scrollContainer}>
           <Surface style={[styles.surface, { backgroundColor: theme.colors.surface }]} elevation={4}>
-            <Text style={[styles.title, { color: theme.colors.primary }]}>Kayıt Ol</Text>
-            <Text style={[styles.subtitle, { color: theme.colors.onSurfaceVariant }]}>Sport Buddy'e katıl!</Text>
+            <Text style={[styles.title, { color: theme.colors.primary }]}>{t('auth.register')}</Text>
+            <Text style={[styles.subtitle, { color: theme.colors.onSurfaceVariant }]}>{t('auth.registerSubtitle')}</Text>
 
             <TextInput
-              label="Ad Soyad *"
+              label={t('auth.fullName') + ' *'}
               value={fullName}
               onChangeText={setFullName}
               mode="outlined"
@@ -104,7 +105,7 @@ export default function RegisterScreen({ navigation }: Props) {
             />
 
             <TextInput
-              label="E-posta *"
+              label={t('auth.email') + ' *'}
               value={email}
               onChangeText={setEmail}
               mode="outlined"
@@ -115,7 +116,7 @@ export default function RegisterScreen({ navigation }: Props) {
             />
 
             <TextInput
-              label="Telefon"
+              label={t('auth.phone')}
               value={phone}
               onChangeText={setPhone}
               mode="outlined"
@@ -125,7 +126,7 @@ export default function RegisterScreen({ navigation }: Props) {
             />
 
             <TextInput
-              label="Şifre *"
+              label={t('auth.password') + ' *'}
               value={password}
               onChangeText={setPassword}
               mode="outlined"
@@ -142,7 +143,7 @@ export default function RegisterScreen({ navigation }: Props) {
               style={styles.button}
               contentStyle={{ height: 48 }}
             >
-              Kayıt Ol
+              {t('auth.register')}
             </Button>
 
             <Button
@@ -150,7 +151,7 @@ export default function RegisterScreen({ navigation }: Props) {
               onPress={() => navigation.navigate('Login')}
               style={styles.loginButton}
             >
-              Zaten hesabın var mı? Giriş Yap
+              {t('auth.alreadyHaveAccount')} {t('auth.login')}
             </Button>
           </Surface>
         </ScrollView>
