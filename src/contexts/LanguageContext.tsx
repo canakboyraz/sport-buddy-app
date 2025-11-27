@@ -37,12 +37,14 @@ const getDeviceLanguage = (): LanguageCode => {
   return 'en';
 };
 
+// IMPORTANT: Initialize i18n synchronously RIGHT NOW, before anything else
 const defaultLanguage = getDeviceLanguage();
 
-console.log('[LanguageContext] INITIALIZING i18n with language:', defaultLanguage);
-
-// Initialize i18next synchronously BEFORE anything else
+// Force immediate i18n initialization
 if (!i18n.isInitialized) {
+  console.log('[LanguageContext MODULE] Initializing i18n RIGHT NOW with language:', defaultLanguage);
+  console.log('[LanguageContext MODULE] tr.auth:', tr.auth);
+
   i18n.use(initReactI18next).init({
     resources,
     lng: defaultLanguage,
@@ -56,7 +58,8 @@ if (!i18n.isInitialized) {
     },
     initImmediate: false,
   });
-  console.log('[LanguageContext] i18n initialized! Testing translation auth.login:', i18n.t('auth.login'));
+
+  console.log('[LanguageContext MODULE] i18n.t("auth.login") after init:', i18n.t('auth.login'));
 }
 
 type LanguageContextType = {
@@ -70,9 +73,37 @@ type LanguageContextType = {
 const LanguageContext = createContext<LanguageContextType | undefined>(undefined);
 
 export const LanguageProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+  // CRITICAL: Initialize i18n INSIDE the component if not already done
+  const [initialized, setInitialized] = useState(() => {
+    if (!i18n.isInitialized) {
+      console.log('[LanguageProvider CONSTRUCTOR] i18n NOT initialized, initializing now!');
+      i18n.use(initReactI18next).init({
+        resources,
+        lng: defaultLanguage,
+        fallbackLng: 'en',
+        interpolation: {
+          escapeValue: false,
+        },
+        compatibilityJSON: 'v3',
+        react: {
+          useSuspense: false,
+        },
+        initImmediate: false,
+      });
+      console.log('[LanguageProvider CONSTRUCTOR] i18n.t("auth.login"):', i18n.t('auth.login'));
+      return true;
+    }
+    console.log('[LanguageProvider CONSTRUCTOR] i18n already initialized');
+    return true;
+  });
+
   const { t, i18n: i18nInstance } = useTranslation();
   const [currentLanguage, setCurrentLanguage] = useState<LanguageCode>(i18n.language as LanguageCode || defaultLanguage);
   const [isChangingLanguage, setIsChangingLanguage] = useState(false);
+
+  console.log('[LanguageProvider RENDER] currentLanguage:', currentLanguage);
+  console.log('[LanguageProvider RENDER] t("auth.login") =', t('auth.login'));
+  console.log('[LanguageProvider RENDER] i18n.t("auth.login") =', i18n.t('auth.login'));
 
   useEffect(() => {
     // Load saved language preference

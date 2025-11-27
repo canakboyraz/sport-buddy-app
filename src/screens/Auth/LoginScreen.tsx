@@ -23,6 +23,11 @@ type Props = {
 export default function LoginScreen({ navigation }: Props) {
   const { t } = useLanguage();
   const theme = useTheme();
+
+  console.log('[LoginScreen] t function test: t("auth.login") =', t('auth.login'));
+  console.log('[LoginScreen] t function test: t("auth.email") =', t('auth.email'));
+  console.log('[LoginScreen] t function test: t("common.appName") =', t('common.appName'));
+
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);

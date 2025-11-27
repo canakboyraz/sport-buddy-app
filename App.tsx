@@ -16,7 +16,7 @@ import {
 import { ThemeProvider, useTheme } from './src/contexts/ThemeContext';
 import { LanguageProvider } from './src/contexts/LanguageContext';
 import ErrorBoundary from './src/components/ErrorBoundary';
-import './src/i18n'; // Initialize i18n
+// NOTE: i18n is now initialized in LanguageContext, not here
 import * as Sentry from '@sentry/react-native';
 import { ActivityIndicator, View } from 'react-native';
 
