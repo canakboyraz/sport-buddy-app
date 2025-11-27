@@ -10,10 +10,10 @@ import { getDateLocale } from '../../utils/dateLocale';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { useFocusEffect } from '@react-navigation/native';
 import { getSkillLevelLabel } from '../../utils/skillLevelUtils';
-import { useTranslation } from 'react-i18next';
+import { useLanguage } from '../../contexts/LanguageContext';
 
 export default function MyEventsScreen({ navigation }: any) {
-  const { t } = useTranslation();
+  const { t } = useLanguage();
   const { user } = useAuth();
   const theme = useTheme();
   const [sessions, setSessions] = useState<SportSession[]>([]);

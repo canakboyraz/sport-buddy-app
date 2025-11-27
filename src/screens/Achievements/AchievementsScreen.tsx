@@ -5,7 +5,7 @@ import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { supabase } from '../../services/supabase';
 import { useAuth } from '../../hooks/useAuth';
 import { LinearGradient } from 'expo-linear-gradient';
-import { useTranslation } from 'react-i18next';
+import { useLanguage } from '../../contexts/LanguageContext';
 
 interface Achievement {
   id: number;
@@ -42,7 +42,7 @@ interface AchievementProgress {
 const { width } = Dimensions.get('window');
 
 export default function AchievementsScreen() {
-  const { t } = useTranslation();
+  const { t } = useLanguage();
   const { user } = useAuth();
   const [loading, setLoading] = useState(true);
   const [userPoints, setUserPoints] = useState<UserPoints>({ total_points: 0, level: 1 });

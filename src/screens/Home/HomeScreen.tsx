@@ -18,7 +18,7 @@ import { OfflineIndicator } from '../../components/OfflineIndicator';
 import { errorLogger } from '../../services/errorLogger';
 import EmptyState from '../../components/EmptyState';
 import { getSportIcon } from '../../utils/sportIcons';
-import { useTranslation } from 'react-i18next';
+import { useLanguage } from '../../contexts/LanguageContext';
 
 type HomeScreenNavigationProp = StackNavigationProp<RootStackParamList>;
 
@@ -29,7 +29,7 @@ type Props = {
 const PAGE_SIZE = 20;
 
 export default function HomeScreen({ navigation }: Props) {
-  const { t } = useTranslation();
+  const { t } = useLanguage();
   const theme = useTheme();
   const [sessions, setSessions] = useState<SportSession[]>([]);
   const [sports, setSports] = useState<Sport[]>([]);

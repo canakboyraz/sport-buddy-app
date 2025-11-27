@@ -4,7 +4,7 @@ import { createStackNavigator } from '@react-navigation/stack';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { useTheme } from 'react-native-paper';
-import { useTranslation } from 'react-i18next';
+import { useLanguage } from '../contexts/LanguageContext';
 import HomeScreen from '../screens/Home/HomeScreen';
 import MapViewScreen from '../screens/Map/MapViewScreen';
 import FavoritesScreen from '../screens/Favorites/FavoritesScreen';
@@ -58,7 +58,7 @@ const RootStack = createStackNavigator<RootStackParamList>();
 
 function MainTabNavigator() {
   const theme = useTheme();
-  const { t } = useTranslation();
+  const { t } = useLanguage();
 
   return (
     <MainTab.Navigator
@@ -151,7 +151,7 @@ function MainTabNavigator() {
 }
 
 export default function AppNavigator() {
-  const { t } = useTranslation();
+  const { t } = useLanguage();
 
   return (
     <RootStack.Navigator>

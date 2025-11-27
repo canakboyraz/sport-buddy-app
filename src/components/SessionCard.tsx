@@ -7,7 +7,7 @@ import { format } from 'date-fns';
 import { Circle, Svg } from 'react-native-svg';
 import { LinearGradient } from 'expo-linear-gradient';
 import { getSkillLevelLabel } from '../utils/skillLevelUtils';
-import { useTranslation } from 'react-i18next';
+import { useLanguage } from '../contexts/LanguageContext';
 import { getDateLocale } from '../utils/dateLocale';
 
 type Props = {
@@ -20,7 +20,7 @@ type Props = {
 
 const SessionCard = ({ item, sportIcon, distance, onPress, onLocationPress }: Props) => {
     const theme = useTheme();
-    const { t } = useTranslation();
+    const { t } = useLanguage();
     const sessionDate = new Date(item.session_date);
     const participantsCount = item.participants?.filter(p => p.status === 'approved').length || 0;
     const isFull = participantsCount >= item.max_participants;

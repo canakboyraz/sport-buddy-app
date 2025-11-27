@@ -7,7 +7,7 @@ import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { friendService, FriendshipStatus } from '../../services/friendService';
 import { StackNavigationProp } from '@react-navigation/stack';
 import { RootStackParamList } from '../../navigation/AppNavigator';
-import { useTranslation } from 'react-i18next';
+import { useLanguage } from '../../contexts/LanguageContext';
 
 interface Friend {
   id: string;
@@ -37,7 +37,7 @@ interface Props {
 
 export default function FriendsScreen({ navigation }: Props) {
   const { user } = useAuth();
-  const { t } = useTranslation();
+  const { t } = useLanguage();
   const [activeTab, setActiveTab] = useState<TabType>('friends');
   const [friends, setFriends] = useState<Friend[]>([]);
   const [friendRequests, setFriendRequests] = useState<FriendRequest[]>([]);

@@ -4,7 +4,7 @@ import { Modal, Text, Button, Switch, Chip, useTheme, Card } from 'react-native-
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import Slider from '@react-native-community/slider';
 import { format } from 'date-fns';
-import { useTranslation } from 'react-i18next';
+import { useLanguage } from '../contexts/LanguageContext';
 import { getDateLocale } from '../utils/dateLocale';
 
 export interface AdvancedFilters {
@@ -34,7 +34,7 @@ export default function AdvancedFiltersModal({
   hasLocation,
 }: Props) {
   const theme = useTheme();
-  const { t } = useTranslation();
+  const { t } = useLanguage();
   const [localFilters, setLocalFilters] = useState<AdvancedFilters>(filters);
 
   const handleApply = () => {

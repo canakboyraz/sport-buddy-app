@@ -6,10 +6,10 @@ import { useAuth } from '../../hooks/useAuth';
 import { Profile } from '../../types';
 import { useNavigation } from '@react-navigation/native';
 import { validateBio, validateName } from '../../utils/validation';
-import { useTranslation } from 'react-i18next';
+import { useLanguage } from '../../contexts/LanguageContext';
 
 export default function EditProfileScreen() {
-  const { t } = useTranslation();
+  const { t } = useLanguage();
   const navigation = useNavigation();
   const { user } = useAuth();
   const [loading, setLoading] = useState(true);

@@ -17,7 +17,7 @@ import {
   validateLocation,
   validateCoordinates
 } from '../../utils/validation';
-import { useTranslation } from 'react-i18next';
+import { useLanguage } from '../../contexts/LanguageContext';
 import { getDateLocale } from '../../utils/dateLocale';
 
 // Spor türlerine göre simge eşleştirme
@@ -87,7 +87,7 @@ const getSportIcon = (sportName: string): string => {
 
 export default function CreateSessionScreen({ navigation }: any) {
   const { user } = useAuth();
-  const { t } = useTranslation();
+  const { t } = useLanguage();
   const theme = useTheme();
   const [sports, setSports] = useState<Sport[]>([]);
   const [selectedSport, setSelectedSport] = useState<number | null>(null);

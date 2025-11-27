@@ -11,7 +11,7 @@ import { RootStackParamList } from '../../navigation/AppNavigator';
 import { useAuth } from '../../hooks/useAuth';
 import { pickImageFromGallery, takePhotoWithCamera } from '../../services/imageService';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
-import { useTranslation } from 'react-i18next';
+import { useLanguage } from '../../contexts/LanguageContext';
 
 type ChatScreenNavigationProp = StackNavigationProp<RootStackParamList, 'Chat'>;
 type ChatScreenRouteProp = RouteProp<RootStackParamList, 'Chat'>;
@@ -24,7 +24,7 @@ type Props = {
 export default function ChatScreen({ navigation, route }: Props) {
   const { sessionId } = route.params;
   const { user } = useAuth();
-  const { t } = useTranslation();
+  const { t } = useLanguage();
   const theme = useTheme();
   const [messages, setMessages] = useState<Message[]>([]);
   const [newMessage, setNewMessage] = useState('');

@@ -4,7 +4,7 @@ import { Text } from 'react-native-paper';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { Achievement, UserAchievement } from '../types';
 import { getAchievementRarityColor } from '../services/achievementService';
-import { useTranslation } from 'react-i18next';
+import { useLanguage } from '../contexts/LanguageContext';
 
 interface AchievementBadgeProps {
   achievement: Achievement;
@@ -21,7 +21,7 @@ export default function AchievementBadge({
   onPress,
   showLocked = true,
 }: AchievementBadgeProps) {
-  const { t } = useTranslation();
+  const { t } = useLanguage();
   const isUnlocked = !!userAchievement;
 
   // Calculate rarity from points if not provided
