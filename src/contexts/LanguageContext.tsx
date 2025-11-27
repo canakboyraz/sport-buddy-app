@@ -40,12 +40,20 @@ const getDeviceLanguage = (): LanguageCode => {
 // IMPORTANT: Initialize i18n synchronously RIGHT NOW, before anything else
 const defaultLanguage = getDeviceLanguage();
 
-// Force immediate i18n initialization
-if (!i18n.isInitialized) {
-  console.log('[LanguageContext MODULE] Initializing i18n RIGHT NOW with language:', defaultLanguage);
-  console.log('[LanguageContext MODULE] tr.auth:', tr.auth);
+// Force immediate synchronous i18n initialization
+console.log('[LanguageContext MODULE] Starting i18n initialization...');
+console.log('[LanguageContext MODULE] defaultLanguage:', defaultLanguage);
+console.log('[LanguageContext MODULE] Available resources:', Object.keys(resources));
+console.log('[LanguageContext MODULE] tr translations sample:', {
+  login: tr.auth.login,
+  email: tr.auth.email,
+  appName: tr.common.appName
+});
 
-  i18n.use(initReactI18next).init({
+// Initialize i18n instance
+i18n
+  .use(initReactI18next)
+  .init({
     resources,
     lng: defaultLanguage,
     fallbackLng: 'en',
@@ -56,11 +64,16 @@ if (!i18n.isInitialized) {
     react: {
       useSuspense: false,
     },
-    initImmediate: false,
   });
 
-  console.log('[LanguageContext MODULE] i18n.t("auth.login") after init:', i18n.t('auth.login'));
-}
+console.log('[LanguageContext MODULE] After init():');
+console.log('[LanguageContext MODULE] - i18n.isInitialized:', i18n.isInitialized);
+console.log('[LanguageContext MODULE] - i18n.language:', i18n.language);
+console.log('[LanguageContext MODULE] - i18n.languages:', i18n.languages);
+console.log('[LanguageContext MODULE] - hasResourceBundle("tr", "translation"):', i18n.hasResourceBundle('tr', 'translation'));
+console.log('[LanguageContext MODULE] - hasResourceBundle("en", "translation"):', i18n.hasResourceBundle('en', 'translation'));
+console.log('[LanguageContext MODULE] - t("auth.login"):', i18n.t('auth.login'));
+console.log('[LanguageContext MODULE] - getResource("tr", "translation", "auth.login"):', i18n.getResource('tr', 'translation', 'auth.login'));
 
 type LanguageContextType = {
   currentLanguage: LanguageCode;
@@ -73,35 +86,13 @@ type LanguageContextType = {
 const LanguageContext = createContext<LanguageContextType | undefined>(undefined);
 
 export const LanguageProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  // CRITICAL: Initialize i18n INSIDE the component if not already done
-  const [initialized, setInitialized] = useState(() => {
-    if (!i18n.isInitialized) {
-      console.log('[LanguageProvider CONSTRUCTOR] i18n NOT initialized, initializing now!');
-      i18n.use(initReactI18next).init({
-        resources,
-        lng: defaultLanguage,
-        fallbackLng: 'en',
-        interpolation: {
-          escapeValue: false,
-        },
-        compatibilityJSON: 'v3',
-        react: {
-          useSuspense: false,
-        },
-        initImmediate: false,
-      });
-      console.log('[LanguageProvider CONSTRUCTOR] i18n.t("auth.login"):', i18n.t('auth.login'));
-      return true;
-    }
-    console.log('[LanguageProvider CONSTRUCTOR] i18n already initialized');
-    return true;
-  });
-
+  // i18n is already initialized at module level, just use it
   const { t, i18n: i18nInstance } = useTranslation();
   const [currentLanguage, setCurrentLanguage] = useState<LanguageCode>(i18n.language as LanguageCode || defaultLanguage);
   const [isChangingLanguage, setIsChangingLanguage] = useState(false);
 
   console.log('[LanguageProvider RENDER] currentLanguage:', currentLanguage);
+  console.log('[LanguageProvider RENDER] i18n.language:', i18n.language);
   console.log('[LanguageProvider RENDER] t("auth.login") =', t('auth.login'));
   console.log('[LanguageProvider RENDER] i18n.t("auth.login") =', i18n.t('auth.login'));
 
