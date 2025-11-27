@@ -51,7 +51,7 @@ const getDeviceLanguage = (): LanguageCode => {
   return 'en';
 };
 
-// Initialize i18next
+// Initialize i18next with promise
 const initI18n = async () => {
   let savedLanguage: string | null = null;
 
@@ -70,7 +70,7 @@ const initI18n = async () => {
     console.log(`[i18n] No saved preference, auto-detected: ${language}`);
   }
 
-  i18n
+  await i18n
     .use(initReactI18next)
     .init({
       resources,
@@ -88,7 +88,8 @@ const initI18n = async () => {
   console.log(`[i18n] Initialized with language: ${language}`);
 };
 
-initI18n();
+// Export initialization promise
+export const i18nInitPromise = initI18n();
 
 // Change language function
 export const changeLanguage = async (languageCode: LanguageCode) => {

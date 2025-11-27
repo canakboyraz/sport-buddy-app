@@ -16,7 +16,7 @@ import {
 import { ThemeProvider, useTheme } from './src/contexts/ThemeContext';
 import { LanguageProvider } from './src/contexts/LanguageContext';
 import ErrorBoundary from './src/components/ErrorBoundary';
-import i18n from './src/i18n'; // Initialize i18n
+import { i18nInitPromise } from './src/i18n'; // Initialize i18n
 import * as Sentry from '@sentry/react-native';
 import { ActivityIndicator, View } from 'react-native';
 
@@ -49,29 +49,14 @@ function AppContent() {
 
   // Wait for i18n to be initialized
   useEffect(() => {
-    // Check if i18n is already initialized
-    if (i18n.isInitialized) {
+    i18nInitPromise.then(() => {
+      console.log('[App] i18n initialization complete');
       setI18nReady(true);
-    } else {
-      // Wait for initialization
-      const checkI18n = setInterval(() => {
-        if (i18n.isInitialized) {
-          setI18nReady(true);
-          clearInterval(checkI18n);
-        }
-      }, 100);
-
-      // Timeout after 3 seconds
-      const timeout = setTimeout(() => {
-        setI18nReady(true);
-        clearInterval(checkI18n);
-      }, 3000);
-
-      return () => {
-        clearInterval(checkI18n);
-        clearTimeout(timeout);
-      };
-    }
+    }).catch((error) => {
+      console.error('[App] i18n initialization failed:', error);
+      // Still set ready to avoid blocking the app
+      setI18nReady(true);
+    });
   }, []);
 
   useEffect(() => {
