@@ -163,6 +163,51 @@
     "reportSession": "Report Session"
   },
 
+  "createSession": {
+    "sportType": "Sport Type",
+    "selectSport": "Select Sport",
+    "title": "Title",
+    "description": "Description",
+    "location": "Location",
+    "selectFromMap": "Select from Map",
+    "maxParticipants": "Max Participants",
+    "skillLevel": "Skill Level",
+    "selectSkillLevel": "Select Skill Level",
+    "recurringSession": "Recurring Session",
+    "recurrenceFrequency": "Recurrence Frequency",
+    "selectDay": "Select Day",
+    "dayOfMonth": "Day of Month",
+    "endDate": "End Date",
+    "endDateOptional": "End Date (Optional)",
+    "recurringInfo": "Recurring sessions will be automatically created at the specified frequency.",
+    "createRecurring": "Create Recurring Session",
+    "warning": "Warning",
+    "recurringCreatedButGenerateFailed": "Recurring session created but sessions generation failed",
+    "recurringCreatedSuccess": "{{count}} sessions created successfully",
+    "frequency": {
+      "daily": "Daily",
+      "weekly": "Weekly",
+      "biweekly": "Biweekly",
+      "monthly": "Monthly"
+    },
+    "days": {
+      "sunday": "Sunday",
+      "monday": "Monday",
+      "tuesday": "Tuesday",
+      "wednesday": "Wednesday",
+      "thursday": "Thursday",
+      "friday": "Friday",
+      "saturday": "Saturday"
+    },
+    "errors": {
+      "loadSportsFailed": "Failed to load sports",
+      "fillRequired": "Please fill all required fields",
+      "userNotFound": "User not found",
+      "dateMustBeFuture": "Session date must be in the future",
+      "createFailed": "Failed to create session"
+    }
+  },
+
   "skillLevel": {
     "any": "Any",
     "beginner": "Beginner",

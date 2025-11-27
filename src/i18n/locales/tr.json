@@ -163,6 +163,51 @@
     "reportSession": "Seansı Bildir"
   },
 
+  "createSession": {
+    "sportType": "Spor Türü",
+    "selectSport": "Spor Seç",
+    "title": "Başlık",
+    "description": "Açıklama",
+    "location": "Konum",
+    "selectFromMap": "Haritadan Seç",
+    "maxParticipants": "Maksimum Katılımcı",
+    "skillLevel": "Seviye",
+    "selectSkillLevel": "Seviye Seç",
+    "recurringSession": "Tekrarlanan Seans",
+    "recurrenceFrequency": "Tekrar Sıklığı",
+    "selectDay": "Gün Seç",
+    "dayOfMonth": "Ayın Günü",
+    "endDate": "Bitiş Tarihi",
+    "endDateOptional": "Bitiş Tarihi (Opsiyonel)",
+    "recurringInfo": "Tekrarlanan seanslar belirlediğiniz sıklıkta otomatik olarak oluşturulacaktır.",
+    "createRecurring": "Tekrarlanan Seans Oluştur",
+    "warning": "Uyarı",
+    "recurringCreatedButGenerateFailed": "Tekrarlanan seans oluşturuldu ancak seanslar oluşturulamadı",
+    "recurringCreatedSuccess": "{{count}} adet seans başarıyla oluşturuldu",
+    "frequency": {
+      "daily": "Günlük",
+      "weekly": "Haftalık",
+      "biweekly": "İki Haftada Bir",
+      "monthly": "Aylık"
+    },
+    "days": {
+      "sunday": "Pazar",
+      "monday": "Pazartesi",
+      "tuesday": "Salı",
+      "wednesday": "Çarşamba",
+      "thursday": "Perşembe",
+      "friday": "Cuma",
+      "saturday": "Cumartesi"
+    },
+    "errors": {
+      "loadSportsFailed": "Sporlar yüklenemedi",
+      "fillRequired": "Lütfen zorunlu alanları doldurun",
+      "userNotFound": "Kullanıcı bulunamadı",
+      "dateMustBeFuture": "Seans tarihi gelecekte olmalıdır",
+      "createFailed": "Seans oluşturulamadı"
+    }
+  },
+
   "skillLevel": {
     "any": "Herkes",
     "beginner": "Başlangıç",
