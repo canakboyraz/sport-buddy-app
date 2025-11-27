@@ -21,6 +21,8 @@ export default function ProfileScreen() {
   const { user } = useAuth();
   const { isDarkMode, toggleTheme } = useTheme();
   const theme = usePaperTheme();
+
+  console.log('[ProfileScreen] t("common.edit"):', t('common.edit'));
   const [profile, setProfile] = useState<Profile | null>(null);
   const [ratings, setRatings] = useState<Rating[]>([]);
   const [averageRating, setAverageRating] = useState(0);
