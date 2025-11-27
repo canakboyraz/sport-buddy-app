@@ -41,23 +41,10 @@ if (sentryDsn && !sentryDsn.includes('your-sentry-dsn')) {
 function AppContent() {
   const [session, setSession] = useState<Session | null>(null);
   const [loading, setLoading] = useState(true);
-  const [i18nReady, setI18nReady] = useState(false);
   const notificationListener = useRef<any>();
   const responseListener = useRef<any>();
   const navigationRef = useRef<NavigationContainerRef<any>>(null);
   const { theme } = useTheme();
-
-  // Wait for i18n to be initialized
-  useEffect(() => {
-    i18nInitPromise.then(() => {
-      console.log('[App] i18n initialization complete');
-      setI18nReady(true);
-    }).catch((error) => {
-      console.error('[App] i18n initialization failed:', error);
-      // Still set ready to avoid blocking the app
-      setI18nReady(true);
-    });
-  }, []);
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data: { session } }) => {
@@ -124,8 +111,8 @@ function AppContent() {
     }
   }, [session]);
 
-  // Show loading while i18n or auth is initializing
-  if (!i18nReady || loading) {
+  // Show loading while auth is initializing
+  if (loading) {
     return (
       <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: theme.colors.background }}>
         <ActivityIndicator size="large" color={theme.colors.primary} />

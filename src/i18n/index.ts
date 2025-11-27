@@ -51,45 +51,53 @@ const getDeviceLanguage = (): LanguageCode => {
   return 'en';
 };
 
-// Initialize i18next with promise
-const initI18n = async () => {
-  let savedLanguage: string | null = null;
+// Initialize i18n synchronously first with default language
+// Then load saved preference asynchronously
+let i18nInitialized = false;
 
-  try {
-    savedLanguage = await AsyncStorage.getItem(LANGUAGE_STORAGE_KEY);
-  } catch (error) {
-    console.error('[i18n] Error loading saved language:', error);
-  }
+const initI18nSync = () => {
+  const defaultLanguage = getDeviceLanguage();
 
-  // Determine which language to use
-  const language = savedLanguage || getDeviceLanguage();
-
-  if (savedLanguage) {
-    console.log(`[i18n] Using saved user preference: ${savedLanguage}`);
-  } else {
-    console.log(`[i18n] No saved preference, auto-detected: ${language}`);
-  }
-
-  await i18n
+  i18n
     .use(initReactI18next)
     .init({
       resources,
-      lng: language,
-      fallbackLng: 'en', // Always fall back to English if translation missing
+      lng: defaultLanguage,
+      fallbackLng: 'en',
       interpolation: {
-        escapeValue: false, // React already handles XSS
+        escapeValue: false,
       },
-      compatibilityJSON: 'v3', // Use v3 format for pluralization
+      compatibilityJSON: 'v3',
       react: {
         useSuspense: false,
       },
     });
 
-  console.log(`[i18n] Initialized with language: ${language}`);
+  console.log(`[i18n] Initialized synchronously with language: ${defaultLanguage}`);
+  i18nInitialized = true;
 };
 
-// Export initialization promise
-export const i18nInitPromise = initI18n();
+// Load saved language preference and update if different
+const loadSavedLanguage = async () => {
+  try {
+    const savedLanguage = await AsyncStorage.getItem(LANGUAGE_STORAGE_KEY);
+    if (savedLanguage && savedLanguage !== i18n.language) {
+      await i18n.changeLanguage(savedLanguage);
+      console.log(`[i18n] Updated to saved language preference: ${savedLanguage}`);
+    }
+  } catch (error) {
+    console.error('[i18n] Error loading saved language:', error);
+  }
+};
+
+// Initialize synchronously first
+initI18nSync();
+
+// Then load saved preference in background
+loadSavedLanguage();
+
+// Export a resolved promise since init is synchronous
+export const i18nInitPromise = Promise.resolve();
 
 // Change language function
 export const changeLanguage = async (languageCode: LanguageCode) => {
