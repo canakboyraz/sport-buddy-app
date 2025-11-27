@@ -54,6 +54,9 @@ const getDeviceLanguage = (): LanguageCode => {
 // Initialize i18n - must be done synchronously before any component renders
 const defaultLanguage = getDeviceLanguage();
 
+console.log('[i18n] BEFORE init - defaultLanguage:', defaultLanguage);
+console.log('[i18n] BEFORE init - resources loaded:', Object.keys(resources));
+
 // Initialize i18next synchronously with initImmediate
 i18n.use(initReactI18next).init(
   {
@@ -75,6 +78,8 @@ i18n.use(initReactI18next).init(
       console.error('[i18n] Initialization error:', err);
     } else {
       console.log(`[i18n] Initialized with language: ${defaultLanguage}`);
+      console.log('[i18n] Test translation auth.login:', i18n.t('auth.login'));
+      console.log('[i18n] i18n.language:', i18n.language);
     }
   }
 );
