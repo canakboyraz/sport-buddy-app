@@ -215,7 +215,17 @@
     "photoUpdateSuccess": "Profil fotoğrafı güncellendi",
     "photoUploadError": "Fotoğraf yüklenemedi",
     "logoutConfirm": "Çıkış yapmak istediğinizden emin misiniz?",
-    "profileNotFound": "Profil bulunamadı"
+    "profileNotFound": "Profil bulunamadı",
+    "editProfileSubtitle": "Profil bilgilerinizi güncelleyin",
+    "fullNameRequired": "Ad Soyad zorunludur",
+    "fullNameMinLength": "Ad Soyad en az 2 karakter olmalıdır",
+    "phonePlaceholder": "Örn: 0555 555 5555",
+    "city": "Şehir",
+    "cityPlaceholder": "Örn: İstanbul",
+    "favoriteSports": "Favori Sporlar",
+    "favoriteSportsPlaceholder": "Örn: Futbol, Basketbol, Tenis",
+    "bioPlaceholder": "Kendiniz hakkında kısa bir bilgi yazın...",
+    "bioHelper": "Maksimum 500 karakter"
   },
 
   "rating": {

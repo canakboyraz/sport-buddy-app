@@ -215,7 +215,17 @@
     "photoUpdateSuccess": "Profile photo updated",
     "photoUploadError": "Failed to upload photo",
     "logoutConfirm": "Are you sure you want to logout?",
-    "profileNotFound": "Profile not found"
+    "profileNotFound": "Profile not found",
+    "editProfileSubtitle": "Update your profile information",
+    "fullNameRequired": "Full name is required",
+    "fullNameMinLength": "Full name must be at least 2 characters",
+    "phonePlaceholder": "e.g. 0555 555 5555",
+    "city": "City",
+    "cityPlaceholder": "e.g. Istanbul",
+    "favoriteSports": "Favorite Sports",
+    "favoriteSportsPlaceholder": "e.g. Football, Basketball, Tennis",
+    "bioPlaceholder": "Write a short bio about yourself...",
+    "bioHelper": "Maximum 500 characters"
   },
 
   "rating": {
