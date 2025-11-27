@@ -1,11 +1,12 @@
 import React, { useEffect, useState } from 'react';
 import { View, ScrollView, StyleSheet, Dimensions } from 'react-native';
-import { Card, Text, ActivityIndicator, ProgressBar, Chip, Divider } from 'react-native-paper';
+import { Card, Text, ActivityIndicator, ProgressBar, Chip, Divider, useTheme as usePaperTheme } from 'react-native-paper';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { supabase } from '../../services/supabase';
 import { useAuth } from '../../hooks/useAuth';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useLanguage } from '../../contexts/LanguageContext';
+import { useTheme } from '../../contexts/ThemeContext';
 
 interface Achievement {
   id: number;
@@ -44,6 +45,8 @@ const { width } = Dimensions.get('window');
 export default function AchievementsScreen() {
   const { t } = useLanguage();
   const { user } = useAuth();
+  const { isDarkMode } = useTheme();
+  const theme = usePaperTheme();
   const [loading, setLoading] = useState(true);
   const [userPoints, setUserPoints] = useState<UserPoints>({ total_points: 0, level: 1 });
   const [achievements, setAchievements] = useState<AchievementProgress[]>([]);
