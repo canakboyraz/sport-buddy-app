@@ -11,12 +11,12 @@ import { pickImageFromGallery, takePhotoWithCamera, uploadProfilePhoto } from '.
 import { useNavigation } from '@react-navigation/native';
 import { StackNavigationProp } from '@react-navigation/stack';
 import { RootStackParamList } from '../../navigation/AppNavigator';
-import { useTranslation } from 'react-i18next';
+import { useLanguage } from '../../contexts/LanguageContext';
 
 type ProfileScreenNavigationProp = StackNavigationProp<RootStackParamList>;
 
 export default function ProfileScreen() {
-  const { t } = useTranslation();
+  const { t } = useLanguage();
   const navigation = useNavigation<ProfileScreenNavigationProp>();
   const { user } = useAuth();
   const { isDarkMode, toggleTheme } = useTheme();

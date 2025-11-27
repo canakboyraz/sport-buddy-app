@@ -197,7 +197,25 @@
     "updateError": "Profil güncellenemedi",
     "selectFromGallery": "Galeriden Seç",
     "takePhoto": "Fotoğraf Çek",
-    "removePhoto": "Fotoğrafı Kaldır"
+    "removePhoto": "Fotoğrafı Kaldır",
+    "myStats": "İstatistiklerim",
+    "myAchievements": "Başarılarım",
+    "statsAndAchievements": "İstatistikler ve Başarılar",
+    "viewActivityHistory": "Aktivite geçmişini görüntüle",
+    "discoverBadges": "Rozetleri ve başarıları keşfet",
+    "social": "Sosyal",
+    "manageFriendsList": "Arkadaş listesini yönet",
+    "blockedUsers": "Engellenen Kullanıcılar",
+    "blockedUsersDesc": "Engellediğin kullanıcıları görüntüle",
+    "themeOn": "Açık",
+    "themeOff": "Kapalı",
+    "generalSettings": "Genel Ayarlar",
+    "editAppPreferences": "Uygulama tercihlerini düzenle",
+    "anonymous": "Anonim",
+    "photoUpdateSuccess": "Profil fotoğrafı güncellendi",
+    "photoUploadError": "Fotoğraf yüklenemedi",
+    "logoutConfirm": "Çıkış yapmak istediğinizden emin misiniz?",
+    "profileNotFound": "Profil bulunamadı"
   },
 
   "rating": {

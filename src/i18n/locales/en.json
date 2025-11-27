@@ -197,7 +197,25 @@
     "updateError": "Profile update failed",
     "selectFromGallery": "Select from Gallery",
     "takePhoto": "Take Photo",
-    "removePhoto": "Remove Photo"
+    "removePhoto": "Remove Photo",
+    "myStats": "My Stats",
+    "myAchievements": "My Achievements",
+    "statsAndAchievements": "Statistics & Achievements",
+    "viewActivityHistory": "View activity history",
+    "discoverBadges": "Discover badges and achievements",
+    "social": "Social",
+    "manageFriendsList": "Manage friends list",
+    "blockedUsers": "Blocked Users",
+    "blockedUsersDesc": "View blocked users",
+    "themeOn": "On",
+    "themeOff": "Off",
+    "generalSettings": "General Settings",
+    "editAppPreferences": "Edit app preferences",
+    "anonymous": "Anonymous",
+    "photoUpdateSuccess": "Profile photo updated",
+    "photoUploadError": "Failed to upload photo",
+    "logoutConfirm": "Are you sure you want to logout?",
+    "profileNotFound": "Profile not found"
   },
 
   "rating": {
