@@ -363,11 +363,36 @@
     "requestSent": "Friend request sent",
     "requestAccepted": "Friend request accepted",
     "requestRejected": "Friend request rejected",
+    "requestCanceled": "Friend request canceled",
     "noFriends": "No friends yet",
     "noRequests": "No friend requests",
+    "noSentRequests": "No sent requests",
+    "noUsersFound": "No users found",
     "searchFriends": "Search Friends",
+    "searchUsers": "Search Users",
+    "searchPlaceholder": "Start searching for friends",
     "mutualFriends": "Mutual Friends",
-    "onlineFriends": "Online Friends"
+    "onlineFriends": "Online Friends",
+    "friend": "Friend",
+    "pending": "Pending",
+    "sent": "Sent",
+    "requestPending": "Request Pending",
+    "accept": "Accept",
+    "reject": "Reject",
+    "confirmRemove": "Are you sure you want to remove this person from your friends?",
+    "friendRemoved": "Friend removed",
+    "tabs": {
+      "friends": "Friends",
+      "requests": "Requests",
+      "sent": "Sent"
+    },
+    "errors": {
+      "sendRequestFailed": "Failed to send friend request",
+      "acceptFailed": "Failed to accept friend request",
+      "rejectFailed": "Failed to reject friend request",
+      "cancelFailed": "Failed to cancel friend request",
+      "removeFailed": "Failed to remove friend"
+    }
   },
 
   "chat": {

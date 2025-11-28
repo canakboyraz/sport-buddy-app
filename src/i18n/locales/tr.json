@@ -363,11 +363,36 @@
     "requestSent": "Arkadaşlık isteği gönderildi",
     "requestAccepted": "Arkadaşlık isteği kabul edildi",
     "requestRejected": "Arkadaşlık isteği reddedildi",
+    "requestCanceled": "Arkadaşlık isteği iptal edildi",
     "noFriends": "Henüz arkadaşınız yok",
     "noRequests": "Arkadaşlık isteği yok",
+    "noSentRequests": "Gönderilmiş istek yok",
+    "noUsersFound": "Kullanıcı bulunamadı",
     "searchFriends": "Arkadaş Ara",
+    "searchUsers": "Kullanıcı Ara",
+    "searchPlaceholder": "Arkadaş aramaya başla",
     "mutualFriends": "Ortak Arkadaşlar",
-    "onlineFriends": "Çevrimiçi Arkadaşlar"
+    "onlineFriends": "Çevrimiçi Arkadaşlar",
+    "friend": "Arkadaş",
+    "pending": "Beklemede",
+    "sent": "Gönderildi",
+    "requestPending": "İstek Bekliyor",
+    "accept": "Kabul Et",
+    "reject": "Reddet",
+    "confirmRemove": "Bu kişiyi arkadaşlıktan çıkarmak istediğinize emin misiniz?",
+    "friendRemoved": "Arkadaşlıktan çıkarıldı",
+    "tabs": {
+      "friends": "Arkadaşlar",
+      "requests": "İstekler",
+      "sent": "Gönderilen"
+    },
+    "errors": {
+      "sendRequestFailed": "Arkadaşlık isteği gönderilemedi",
+      "acceptFailed": "Arkadaşlık isteği kabul edilemedi",
+      "rejectFailed": "Arkadaşlık isteği reddedilemedi",
+      "cancelFailed": "Arkadaşlık isteği iptal edilemedi",
+      "removeFailed": "Arkadaşlıktan çıkarılamadı"
+    }
   },
 
   "chat": {
