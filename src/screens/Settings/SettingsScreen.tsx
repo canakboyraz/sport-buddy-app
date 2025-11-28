@@ -65,8 +65,8 @@ export default function SettingsScreen() {
           title: t('settings.help'),
           subtitle: t('settings.feedback'),
           onPress: () => {
-            // Open help/support URL
-            Linking.openURL('https://github.com/anthropics/claude-code/issues');
+            // TODO: Replace with your actual support URL
+            Linking.openURL('mailto:support@sportbuddy.app');
           },
           showChevron: true,
         },
@@ -74,7 +74,12 @@ export default function SettingsScreen() {
           icon: 'file-document',
           title: t('settings.termsOfService'),
           onPress: () => {
-            // Open terms URL
+            // TODO: Replace with your actual terms of service URL
+            // Example: Linking.openURL('https://www.sportbuddy.app/terms');
+            const termsUrl = currentLanguage === 'tr'
+              ? 'https://www.sportbuddy.app/legal/terms-tr'
+              : 'https://www.sportbuddy.app/legal/terms-en';
+            Linking.openURL(termsUrl);
           },
           showChevron: true,
         },
@@ -82,7 +87,22 @@ export default function SettingsScreen() {
           icon: 'shield-check',
           title: t('settings.privacyPolicy'),
           onPress: () => {
-            // Open privacy policy URL
+            // TODO: Replace with your actual privacy policy URL
+            // Example: Linking.openURL('https://www.sportbuddy.app/privacy');
+            const privacyUrl = currentLanguage === 'tr'
+              ? 'https://www.sportbuddy.app/legal/privacy-tr'
+              : 'https://www.sportbuddy.app/legal/privacy-en';
+            Linking.openURL(privacyUrl);
+          },
+          showChevron: true,
+        },
+        {
+          icon: 'file-certificate',
+          title: t('settings.kvkk'),
+          onPress: () => {
+            // TODO: Replace with your actual KVKK URL
+            // This is specifically for Turkish users
+            Linking.openURL('https://www.sportbuddy.app/legal/kvkk');
           },
           showChevron: true,
         },
