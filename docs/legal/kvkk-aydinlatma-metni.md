@@ -4,9 +4,10 @@
 
 ## Veri Sorumlusu
 
-**Veri Sorumlusu**: Sport Buddy
-**Adres**: [Şirket Adresiniz]
+**Veri Sorumlusu**: Can Akboyraz (Sport Buddy Geliştirici)
+**Adres**: Kocaeli, Türkiye
 **İletişim**: privacy@sportbuddy.app
+**Telefon**: +90 507 499 8785
 
 ## 1. Kişisel Verilerin İşlenme Amacı
 
@@ -183,8 +184,8 @@ Yukarıda belirtilen haklarınızı kullanmak için aşağıdaki yöntemlerle ba
 **Konu**: KVKK Başvurusu
 
 #### 8.1.2 Yazılı Başvuru
-**Adres**: [Şirket Adresiniz]
-**Başvuru Formu**: [Web sitesinden indirilebilir]
+**Adres**: Can Akboyraz, Kocaeli, Türkiye
+**Başvuru Formu**: privacy@sportbuddy.app adresine e-posta ile talep edilebilir
 
 #### 8.1.3 Uygulama İçi
 Ayarlar > Hesap > Veri Talepleri menüsünden
@@ -242,10 +243,10 @@ Bu aydınlatma metni, yasal değişiklikler veya iş süreçlerindeki değişikl
 
 KVKK ile ilgili sorularınız için:
 
-**Veri Sorumlusu**: Sport Buddy
-**Adres**: [Şirket Adresiniz]
+**Veri Sorumlusu**: Can Akboyraz (Sport Buddy)
+**Adres**: Kocaeli, Türkiye
 **E-posta**: privacy@sportbuddy.app
-**Telefon**: [İletişim Numaranız]
+**Telefon**: +90 507 499 8785
 
 **Kişisel Verileri Koruma Kurumu**
 Web: https://www.kvkk.gov.tr

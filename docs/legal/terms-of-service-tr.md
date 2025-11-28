@@ -208,7 +208,7 @@ Kullanım şartlarını ihlal etmeniz durumunda, Sport Buddy'ye ve ortaklarına 
 Bu şartlar Türkiye Cumhuriyeti yasalarına tabidir.
 
 ### 14.2 Yargı Yetkisi
-Uyuşmazlıklar [Şehir] mahkemelerinde çözülür.
+Uyuşmazlıklar Kocaeli mahkemelerinde çözülür.
 
 ### 14.3 Dostane Çözüm
 Yasal yola başvurmadan önce, uyuşmazlığı dostane çözmeye çalışırız.
@@ -232,7 +232,9 @@ Bu şartlar altındaki haklarınızı başkasına devredemezsiniz. Sport Buddy h
 Kullanım şartları hakkında sorularınız için:
 
 **E-posta**: legal@sportbuddy.app
-**Adres**: [Şirket Adresiniz]
+**Geliştirici**: Can Akboyraz
+**Telefon**: +90 507 499 8785
+**Konum**: Kocaeli, Türkiye
 **Destek**: support@sportbuddy.app
 
 ## 17. Kabul Beyanı

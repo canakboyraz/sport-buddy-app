@@ -150,8 +150,9 @@ Bu Gizlilik Politikası'nı zaman zaman güncelleyebiliriz. Önemli değişiklik
 Gizlilik politikamız veya verileriniz hakkında sorularınız varsa, bizimle iletişime geçebilirsiniz:
 
 **E-posta**: privacy@sportbuddy.app
-**Adres**: [Şirket Adresiniz]
-**Telefon**: [İletişim Numaranız]
+**Geliştirici**: Can Akboyraz
+**Telefon**: +90 507 499 8785
+**Konum**: Kocaeli, Türkiye
 
 ---
 

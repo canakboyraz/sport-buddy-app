@@ -149,8 +149,9 @@ We may update this Privacy Policy from time to time. When there are significant 
 If you have questions about our privacy policy or your data, you can contact us:
 
 **Email**: privacy@sportbuddy.app
-**Address**: [Your Company Address]
-**Phone**: [Your Contact Number]
+**Developer**: Can Akboyraz
+**Phone**: +90 507 499 8785
+**Location**: Kocaeli, Turkey
 
 ---
 

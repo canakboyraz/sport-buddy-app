@@ -208,7 +208,7 @@ You agree to indemnify Sport Buddy and its partners for all damages resulting fr
 These terms are subject to the laws of the Republic of Turkey.
 
 ### 14.2 Jurisdiction
-Disputes will be resolved in [City] courts.
+Disputes will be resolved in Kocaeli courts.
 
 ### 14.3 Amicable Resolution
 Before resorting to legal action, we will attempt to resolve disputes amicably.
@@ -232,7 +232,9 @@ You cannot transfer your rights under these terms to another party. Sport Buddy 
 For questions about terms of service:
 
 **Email**: legal@sportbuddy.app
-**Address**: [Your Company Address]
+**Developer**: Can Akboyraz
+**Phone**: +90 507 499 8785
+**Location**: Kocaeli, Turkey
 **Support**: support@sportbuddy.app
 
 ## 17. Acceptance Statement

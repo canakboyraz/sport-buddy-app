@@ -29,9 +29,10 @@ Sorularınız, önerileriniz veya sorunlarınız için bizimle iletişime geçeb
 ## 📍 Posta Adresi
 
 **Sport Buddy**
-[Şirket Adresiniz]
-[Şehir, Posta Kodu]
+Can Akboyraz
+Kocaeli
 Türkiye
+**Telefon**: +90 507 499 8785
 
 ## 📱 Uygulama İçi Destek
 
