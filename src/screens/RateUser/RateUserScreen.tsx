@@ -107,12 +107,12 @@ export default function RateUserScreen({ navigation, route }: Props) {
 
   const handleSubmit = async () => {
     if (rating === 0) {
-      Alert.alert('Hata', 'Lütfen bir puan seçin');
+      Alert.alert(t('common.error'), t('rating.selectRating'));
       return;
     }
 
     if (!user) {
-      Alert.alert('Hata', 'Kullanıcı bilgisi bulunamadı');
+      Alert.alert(t('common.error'), t('rating.userNotFound'));
       return;
     }
 
@@ -130,14 +130,14 @@ export default function RateUserScreen({ navigation, route }: Props) {
     setLoading(false);
 
     if (!result.success) {
-      Alert.alert('Hata', result.error || 'Değerlendirme kaydedilemedi');
+      Alert.alert(t('common.error'), result.error || t('rating.ratingSaveFailed'));
     } else {
       Alert.alert(
-        'Başarılı!',
-        'Değerlendirmeniz kaydedildi. Olumlu yorumlarınız sayesinde kullanıcılar rozet kazanabilir!',
+        t('rating.ratingSuccess'),
+        t('rating.ratingSuccessMessage'),
         [
           {
-            text: 'Tamam',
+            text: t('common.ok'),
             onPress: () => navigation.goBack(),
           },
         ]
@@ -146,7 +146,7 @@ export default function RateUserScreen({ navigation, route }: Props) {
   };
 
   const renderStars = () => {
-    const labels = ['Çok Kötü', 'Kötü', 'Orta', 'İyi', 'Mükemmel'];
+    const labels = [t('rating.veryPoor'), t('rating.poor'), t('rating.average'), t('rating.good'), t('rating.excellent')];
     const labelColors = ['#F44336', '#FF9800', '#FFC107', '#8BC34A', '#4CAF50'];
 
     return (
@@ -229,7 +229,7 @@ export default function RateUserScreen({ navigation, route }: Props) {
       <View style={[styles.centerContainer, { backgroundColor: theme.colors.background }]}>
         <ActivityIndicator size="large" color={theme.colors.primary} />
         <Text style={[styles.loadingText, { color: theme.colors.onBackground }]}>
-          Kontrol ediliyor...
+          {t('rating.checking')}
         </Text>
       </View>
     );
@@ -246,7 +246,7 @@ export default function RateUserScreen({ navigation, route }: Props) {
               color={theme.colors.error}
             />
             <Text style={[styles.errorTitle, { color: theme.colors.onErrorContainer }]}>
-              Değerlendirme Yapılamıyor
+              {t('rating.cannotRate')}
             </Text>
             <Text style={[styles.errorMessage, { color: theme.colors.onErrorContainer }]}>
               {errorMessage}
@@ -256,7 +256,7 @@ export default function RateUserScreen({ navigation, route }: Props) {
               onPress={() => navigation.goBack()}
               style={styles.backButton}
             >
-              Geri Dön
+              {t('rating.goBack')}
             </Button>
           </Card.Content>
         </Card>
@@ -293,7 +293,7 @@ export default function RateUserScreen({ navigation, route }: Props) {
               </View>
             </View>
             <Text style={[styles.title, { color: theme.colors.onSurface }]}>
-              Kullanıcıyı Değerlendir
+              {t('rating.rateUser')}
             </Text>
             <Text style={[styles.userName, { color: theme.colors.primary }]}>{userName}</Text>
           </LinearGradient>
@@ -305,7 +305,7 @@ export default function RateUserScreen({ navigation, route }: Props) {
             <View style={styles.ratingTitleRow}>
               <MaterialCommunityIcons name="star-circle" size={24} color={theme.colors.primary} />
               <Text style={[styles.sectionTitle, { color: theme.colors.onSurface }]}>
-                Puanınız
+                {t('rating.yourRating')}
               </Text>
             </View>
 
@@ -320,7 +320,7 @@ export default function RateUserScreen({ navigation, route }: Props) {
               >
                 <MaterialCommunityIcons name="information-outline" size={18} color="#4CAF50" />
                 <Text style={[styles.helperText, { color: '#4CAF50' }]}>
-                  4+ yıldız olumlu değerlendirme sayılır ve rozet kazanmaya yardımcı olur
+                  {t('rating.badgeHelper')}
                 </Text>
               </LinearGradient>
             </Surface>
@@ -333,7 +333,7 @@ export default function RateUserScreen({ navigation, route }: Props) {
             <View style={styles.commentTitleRow}>
               <MaterialCommunityIcons name="message-text" size={22} color={theme.colors.primary} />
               <Text style={[styles.commentTitle, { color: theme.colors.onSurface }]}>
-                Yorumunuz (İsteğe bağlı)
+                {t('rating.commentOptional')}
               </Text>
             </View>
 
@@ -345,7 +345,7 @@ export default function RateUserScreen({ navigation, route }: Props) {
               numberOfLines={5}
               style={styles.input}
               maxLength={500}
-              placeholder="Bu kullanıcı ile oynarken deneyiminizi paylaşın..."
+              placeholder={t('rating.commentPlaceholder')}
               outlineColor={theme.colors.outline}
               activeOutlineColor={theme.colors.primary}
               textColor={theme.colors.onSurface}
@@ -353,7 +353,7 @@ export default function RateUserScreen({ navigation, route }: Props) {
 
             <View style={styles.characterCount}>
               <Text style={[styles.characterCountText, { color: theme.colors.onSurfaceVariant }]}>
-                {comment.length}/500 karakter
+                {t('rating.charactersCount', { count: comment.length, max: 500 })}
               </Text>
             </View>
           </Card.Content>
@@ -382,7 +382,7 @@ export default function RateUserScreen({ navigation, route }: Props) {
               ) : (
                 <>
                   <MaterialCommunityIcons name="check-circle" size={24} color="#FFFFFF" />
-                  <Text style={styles.submitText}>Değerlendirmeyi Kaydet</Text>
+                  <Text style={styles.submitText}>{t('rating.saveRating')}</Text>
                 </>
               )}
             </TouchableOpacity>
@@ -403,7 +403,7 @@ export default function RateUserScreen({ navigation, route }: Props) {
               color={theme.colors.secondary}
             />
             <Text style={[styles.infoText, { color: theme.colors.onSecondaryContainer }]}>
-              Değerlendirmeleriniz sayesinde kullanıcılar rozet kazanır ve toplulukta güven oluşturulur.
+              {t('rating.communityTrust')}
             </Text>
           </LinearGradient>
         </Surface>

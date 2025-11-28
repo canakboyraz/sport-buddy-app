@@ -317,6 +317,7 @@
     "ratingSuccessMessage": "Değerlendirmeniz kaydedildi. Olumlu yorumlarınız sayesinde kullanıcılar rozet kazanabilir!",
     "ratingError": "Değerlendirme gönderilemedi",
     "ratingErrorSaved": "Değerlendirme kaydedilemedi",
+    "ratingSaveFailed": "Değerlendirme kaydedilemedi",
     "alreadyRated": "Bu kullanıcıyı zaten değerlendirdiniz",
     "cannotRateYet": "Değerlendirme yapmak için seans bitiminden 1 saat geçmesi gerekiyor",
     "cannotRate": "Değerlendirme Yapılamıyor",

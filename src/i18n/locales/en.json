@@ -317,6 +317,7 @@
     "ratingSuccessMessage": "Your rating has been saved. Positive reviews help users earn badges!",
     "ratingError": "Rating submission failed",
     "ratingErrorSaved": "Failed to save rating",
+    "ratingSaveFailed": "Failed to save rating",
     "alreadyRated": "You already rated this user",
     "cannotRateYet": "You need to wait 1 hour after session ends to rate",
     "cannotRate": "Cannot Rate",
