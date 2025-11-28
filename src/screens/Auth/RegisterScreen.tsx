@@ -20,7 +20,6 @@ export default function RegisterScreen({ navigation }: Props) {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [fullName, setFullName] = useState('');
-  const [phone, setPhone] = useState('');
   const [loading, setLoading] = useState(false);
 
   const handleRegister = async () => {
@@ -63,7 +62,6 @@ export default function RegisterScreen({ navigation }: Props) {
         id: authData.user.id,
         email,
         full_name: fullName.trim() || null,
-        phone: phone.trim() || null,
       });
 
       setLoading(false);
@@ -113,16 +111,6 @@ export default function RegisterScreen({ navigation }: Props) {
               autoCapitalize="none"
               style={[styles.input, { backgroundColor: theme.colors.surface }]}
               left={<TextInput.Icon icon="email" />}
-            />
-
-            <TextInput
-              label={t('auth.phone')}
-              value={phone}
-              onChangeText={setPhone}
-              mode="outlined"
-              keyboardType="phone-pad"
-              style={[styles.input, { backgroundColor: theme.colors.surface }]}
-              left={<TextInput.Icon icon="phone" />}
             />
 
             <TextInput

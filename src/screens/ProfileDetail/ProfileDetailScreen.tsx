@@ -325,26 +325,6 @@ export default function ProfileDetailScreen({ route, navigation }: any) {
         </Surface>
       )}
 
-      {/* Contact Info */}
-      <Surface style={styles.section} elevation={1}>
-        <View style={styles.sectionHeader}>
-          <MaterialCommunityIcons name="card-account-details" size={24} color="#6200ee" />
-          <Text style={styles.sectionTitle}>İletişim Bilgileri</Text>
-        </View>
-
-        <View style={styles.contactItem}>
-          <MaterialCommunityIcons name="email" size={20} color="#666" />
-          <Text style={styles.contactText}>{profile.email}</Text>
-        </View>
-
-        {profile.phone && (
-          <View style={styles.contactItem}>
-            <MaterialCommunityIcons name="phone" size={20} color="#666" />
-            <Text style={styles.contactText}>{profile.phone}</Text>
-          </View>
-        )}
-      </Surface>
-
       {/* Ratings & Reviews */}
       <Surface style={styles.section} elevation={1}>
         <View style={styles.sectionHeader}>
@@ -530,16 +510,6 @@ const styles = StyleSheet.create({
     fontSize: 15,
     color: '#666',
     lineHeight: 22,
-  },
-  contactItem: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginBottom: 12,
-  },
-  contactText: {
-    fontSize: 15,
-    color: '#333',
-    marginLeft: 12,
   },
   emptyText: {
     fontSize: 14,

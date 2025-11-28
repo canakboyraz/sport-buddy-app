@@ -23,7 +23,6 @@ export default function EditProfileScreen() {
 
   // Form fields
   const [fullName, setFullName] = useState('');
-  const [phone, setPhone] = useState('');
   const [bio, setBio] = useState('');
   const [city, setCity] = useState('');
   const [favoriteSports, setFavoriteSports] = useState('');
@@ -31,7 +30,6 @@ export default function EditProfileScreen() {
   // Validation errors
   const [errors, setErrors] = useState({
     fullName: '',
-    phone: '',
     bio: '',
   });
 
@@ -57,7 +55,6 @@ export default function EditProfileScreen() {
     if (!error && data) {
       setProfile(data);
       setFullName(data.full_name || '');
-      setPhone(data.phone || '');
       setBio(data.bio || '');
       setCity(data.city || '');
       setFavoriteSports(data.favorite_sports || '');
@@ -67,7 +64,6 @@ export default function EditProfileScreen() {
   const validateForm = (): boolean => {
     const newErrors = {
       fullName: '',
-      phone: '',
       bio: '',
     };
 
@@ -76,11 +72,6 @@ export default function EditProfileScreen() {
       newErrors.fullName = t('profile.fullNameRequired');
     } else if (!validateName(fullName)) {
       newErrors.fullName = t('profile.fullNameMinLength');
-    }
-
-    // Validate phone
-    if (phone && !/^[0-9]{10,11}$/.test(phone.replace(/\s/g, ''))) {
-      newErrors.phone = t('validation.phone');
     }
 
     // Validate bio
@@ -92,7 +83,7 @@ export default function EditProfileScreen() {
     }
 
     setErrors(newErrors);
-    return !newErrors.fullName && !newErrors.phone && !newErrors.bio;
+    return !newErrors.fullName && !newErrors.bio;
   };
 
   const handleSave = async () => {
@@ -104,23 +95,32 @@ export default function EditProfileScreen() {
 
     setSaving(true);
 
-    const { error } = await supabase
+    console.log('[EditProfile] Updating profile with:', {
+      full_name: fullName.trim(),
+      bio: bio.trim() || null,
+      city: city.trim() || null,
+      favorite_sports: favoriteSports.trim() || null,
+    });
+
+    const { data, error } = await supabase
       .from('profiles')
       .update({
         full_name: fullName.trim(),
-        phone: phone.trim() || null,
         bio: bio.trim() || null,
         city: city.trim() || null,
         favorite_sports: favoriteSports.trim() || null,
         updated_at: new Date().toISOString(),
       })
-      .eq('id', user.id);
+      .eq('id', user.id)
+      .select();
 
     setSaving(false);
 
+    console.log('[EditProfile] Update result:', { data, error });
+
     if (error) {
       Alert.alert(t('common.error'), t('profile.updateError'));
-      console.error('Profile update error:', error);
+      console.error('[EditProfile] Profile update error:', error);
     } else {
       Alert.alert(t('common.success'), t('profile.updateSuccess'), [
         {
@@ -190,33 +190,6 @@ export default function EditProfileScreen() {
               />
               <HelperText type="error" visible={!!errors.fullName} style={{ color: theme.colors.error }}>
                 {errors.fullName}
-              </HelperText>
-            </View>
-
-            {/* Phone */}
-            <View style={styles.inputContainer}>
-              <View style={styles.inputHeader}>
-                <MaterialCommunityIcons name="phone" size={20} color={theme.colors.primary} />
-                <Text style={[styles.inputLabel, { color: theme.colors.onSurface }]}>
-                  {t('profile.phone')}
-                </Text>
-              </View>
-              <TextInput
-                value={phone}
-                onChangeText={setPhone}
-                mode="outlined"
-                style={[styles.input, { backgroundColor: theme.colors.surface }]}
-                keyboardType="phone-pad"
-                placeholder={t('profile.phonePlaceholder')}
-                error={!!errors.phone}
-                outlineColor={theme.colors.outline}
-                activeOutlineColor={theme.colors.primary}
-                textColor={theme.colors.onSurface}
-                placeholderTextColor={theme.colors.onSurfaceVariant}
-                left={<TextInput.Icon icon="phone" color={theme.colors.onSurfaceVariant} />}
-              />
-              <HelperText type="error" visible={!!errors.phone} style={{ color: theme.colors.error }}>
-                {errors.phone}
               </HelperText>
             </View>
 
