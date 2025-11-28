@@ -65,7 +65,6 @@ export default function SettingsScreen() {
           title: t('settings.help'),
           subtitle: t('settings.feedback'),
           onPress: () => {
-            // TODO: Replace with your actual support URL
             Linking.openURL('mailto:support@sportbuddy.app');
           },
           showChevron: true,
@@ -74,11 +73,9 @@ export default function SettingsScreen() {
           icon: 'file-document',
           title: t('settings.termsOfService'),
           onPress: () => {
-            // TODO: Replace with your actual terms of service URL
-            // Example: Linking.openURL('https://www.sportbuddy.app/terms');
             const termsUrl = currentLanguage === 'tr'
-              ? 'https://www.sportbuddy.app/legal/terms-tr'
-              : 'https://www.sportbuddy.app/legal/terms-en';
+              ? 'https://canakboyraz.github.io/sportbuddy-legal-docs/terms-of-service-tr'
+              : 'https://canakboyraz.github.io/sportbuddy-legal-docs/terms-of-service-en';
             Linking.openURL(termsUrl);
           },
           showChevron: true,
@@ -87,11 +84,9 @@ export default function SettingsScreen() {
           icon: 'shield-check',
           title: t('settings.privacyPolicy'),
           onPress: () => {
-            // TODO: Replace with your actual privacy policy URL
-            // Example: Linking.openURL('https://www.sportbuddy.app/privacy');
             const privacyUrl = currentLanguage === 'tr'
-              ? 'https://www.sportbuddy.app/legal/privacy-tr'
-              : 'https://www.sportbuddy.app/legal/privacy-en';
+              ? 'https://canakboyraz.github.io/sportbuddy-legal-docs/privacy-policy-tr'
+              : 'https://canakboyraz.github.io/sportbuddy-legal-docs/privacy-policy-en';
             Linking.openURL(privacyUrl);
           },
           showChevron: true,
@@ -100,9 +95,7 @@ export default function SettingsScreen() {
           icon: 'file-certificate',
           title: t('settings.kvkk'),
           onPress: () => {
-            // TODO: Replace with your actual KVKK URL
-            // This is specifically for Turkish users
-            Linking.openURL('https://www.sportbuddy.app/legal/kvkk');
+            Linking.openURL('https://canakboyraz.github.io/sportbuddy-legal-docs/kvkk-aydinlatma-metni');
           },
           showChevron: true,
         },
