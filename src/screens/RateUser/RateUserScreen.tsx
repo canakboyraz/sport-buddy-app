@@ -8,6 +8,7 @@ import { useAuth } from '../../hooks/useAuth';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { submitRating, canRateSession } from '../../services/ratingService';
 import { useTheme } from '../../contexts/ThemeContext';
+import { useLanguage } from '../../contexts/LanguageContext';
 import { LinearGradient } from 'expo-linear-gradient';
 
 const { width } = Dimensions.get('window');
@@ -24,6 +25,7 @@ export default function RateUserScreen({ navigation, route }: Props) {
   const { sessionId, userId, userName } = route.params;
   const { user } = useAuth();
   const { theme } = useTheme();
+  const { t } = useLanguage();
   const [rating, setRating] = useState(0);
   const [comment, setComment] = useState('');
   const [loading, setLoading] = useState(false);
