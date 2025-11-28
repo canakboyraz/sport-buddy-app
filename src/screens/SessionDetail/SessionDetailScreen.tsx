@@ -93,7 +93,7 @@ export default function SessionDetailScreen({ navigation, route }: Props) {
       if (error) {
         console.error('[SessionDetail] Error loading session:', error);
         console.error('[SessionDetail] Session ID:', sessionId);
-        Alert.alert('Hata', `Seans yüklenirken hata oluştu: ${error.message}`);
+        Alert.alert(t('common.error'), `${t('session.loadError')}: ${error.message}`);
         setSession(null);
       } else if (data) {
         console.log('[SessionDetail] Session loaded successfully:', data.id);
@@ -159,7 +159,7 @@ export default function SessionDetailScreen({ navigation, route }: Props) {
     setActionLoading(false);
 
     if (error) {
-      Alert.alert('Hata', error.message);
+      Alert.alert(t('common.error'), error.message);
     } else {
       // Send push notification to session creator
       try {
@@ -177,7 +177,7 @@ export default function SessionDetailScreen({ navigation, route }: Props) {
             .eq('id', session.creator_id)
             .single();
 
-          const participantName = currentUserProfile?.full_name || currentUserProfile?.email || 'Bir kullanıcı';
+          const participantName = currentUserProfile?.full_name || currentUserProfile?.email || t('common.unknown');
 
           if (creatorProfile?.push_token) {
             await fetch('https://exp.host/--/api/v2/push/send', {
@@ -187,8 +187,8 @@ export default function SessionDetailScreen({ navigation, route }: Props) {
               },
               body: JSON.stringify({
                 to: creatorProfile.push_token,
-                title: '🔔 Yeni Katılım Talebi',
-                body: `${participantName} "${session.title}" seansına katılmak istiyor`,
+                title: '🔔 ' + t('session.pendingRequests'),
+                body: `${participantName} "${session.title}" ${t('session.joinRequestSent')}`,
                 data: {
                   type: 'join_request',
                   sessionId: session.id,
@@ -203,7 +203,7 @@ export default function SessionDetailScreen({ navigation, route }: Props) {
         // Don't block the join request if notification fails
       }
 
-      Alert.alert('Başarılı', 'Katılım talebiniz gönderildi!');
+      Alert.alert(t('common.success'), t('session.joinRequestSent'));
       loadSession();
     }
   };
@@ -225,9 +225,9 @@ export default function SessionDetailScreen({ navigation, route }: Props) {
     setActionLoading(false);
 
     if (error) {
-      Alert.alert('Hata', error.message);
+      Alert.alert(t('common.error'), error.message);
     } else {
-      Alert.alert('Başarılı', 'Katılımcı onaylandı!');
+      Alert.alert(t('common.success'), t('session.participantApproved'));
 
       // Schedule reminders for the approved participant if they are the current user
       if (session && participant && participant.user_id === user?.id) {
@@ -261,8 +261,8 @@ export default function SessionDetailScreen({ navigation, route }: Props) {
               },
               body: JSON.stringify({
                 to: participantProfile.push_token,
-                title: '✅ Katılım Onaylandı',
-                body: `"${session.title}" seansına katılımınız onaylandı!`,
+                title: '✅ ' + t('session.joinRequestApproved'),
+                body: `"${session.title}" ${t('session.joinRequestApproved')}`,
                 data: {
                   type: 'join_approved',
                   sessionId: session.id,
@@ -290,9 +290,9 @@ export default function SessionDetailScreen({ navigation, route }: Props) {
     setActionLoading(false);
 
     if (error) {
-      Alert.alert('Hata', error.message);
+      Alert.alert(t('common.error'), error.message);
     } else {
-      Alert.alert('Başarılı', 'Katılımcı reddedildi');
+      Alert.alert(t('common.success'), t('session.participantRejected'));
       loadSession();
     }
   };
@@ -312,7 +312,7 @@ export default function SessionDetailScreen({ navigation, route }: Props) {
     if (userId === user?.id) return; // Don't navigate for current user
 
     if (!userId) {
-      Alert.alert('Hata', 'Kullanıcı bilgileri yüklenemedi');
+      Alert.alert(t('common.error'), t('session.errors.userNotFound'));
       return;
     }
 
@@ -331,7 +331,7 @@ export default function SessionDetailScreen({ navigation, route }: Props) {
   if (!session) {
     return (
       <View style={styles.loadingContainer}>
-        <Text>Seans bulunamadı</Text>
+        <Text>{t('session.notFound')}</Text>
       </View>
     );
   }
@@ -398,7 +398,7 @@ export default function SessionDetailScreen({ navigation, route }: Props) {
           <View style={styles.infoGrid}>
             <View style={[styles.infoBox, { backgroundColor: theme.colors.primaryContainer + '40' }]}>
               <MaterialCommunityIcons name="calendar-clock" size={18} color={theme.colors.primary} />
-              <Text style={[styles.infoBoxLabel, { color: theme.colors.onSurfaceVariant }]}>Tarih & Saat</Text>
+              <Text style={[styles.infoBoxLabel, { color: theme.colors.onSurfaceVariant }]}>{t('session.dateAndTime')}</Text>
               <Text style={[styles.infoBoxValue, { color: theme.colors.onSurface }]}>
                 {format(new Date(session.session_date), 'd MMM yyyy', { locale: getDateLocale() })}
               </Text>
@@ -409,12 +409,12 @@ export default function SessionDetailScreen({ navigation, route }: Props) {
 
             <View style={[styles.infoBox, { backgroundColor: theme.colors.secondaryContainer + '40' }]}>
               <MaterialCommunityIcons name="account-multiple" size={18} color={theme.colors.primary} />
-              <Text style={[styles.infoBoxLabel, { color: theme.colors.onSurfaceVariant }]}>Katılımcı</Text>
+              <Text style={[styles.infoBoxLabel, { color: theme.colors.onSurfaceVariant }]}>{t('session.participantsCount')}</Text>
               <Text style={[styles.infoBoxValue, { color: theme.colors.onSurface }]}>
                 {approvedParticipants.length}/{session.max_participants}
               </Text>
               <Text style={[styles.infoBoxSubvalue, { color: theme.colors.onSurfaceVariant }]}>
-                {isFull ? 'DOLU' : 'Müsait'}
+                {isFull ? t('session.full') : t('session.available')}
               </Text>
             </View>
           </View>
@@ -427,7 +427,7 @@ export default function SessionDetailScreen({ navigation, route }: Props) {
           >
             <MaterialCommunityIcons name="map-marker" size={20} color={theme.colors.primary} />
             <View style={styles.locationTextContainer}>
-              <Text style={[styles.locationLabel, { color: theme.colors.onSurfaceVariant }]}>Konum</Text>
+              <Text style={[styles.locationLabel, { color: theme.colors.onSurfaceVariant }]}>{t('session.locationLabel')}</Text>
               <Text style={[styles.locationText, { color: theme.colors.onSurface }]} numberOfLines={2}>
                 {session.location}
               </Text>
@@ -457,13 +457,13 @@ export default function SessionDetailScreen({ navigation, route }: Props) {
           {session.description && (
             <>
               <Divider style={styles.divider} />
-              <Text style={styles.descriptionLabel}>Açıklama:</Text>
+              <Text style={styles.descriptionLabel}>{t('session.descriptionLabel')}</Text>
               <Text style={styles.description}>{session.description}</Text>
             </>
           )}
 
           <Divider style={styles.divider} />
-          <Text style={styles.creatorLabel}>Oluşturan:</Text>
+          <Text style={styles.creatorLabel}>{t('session.createdBy')}</Text>
           <TouchableOpacity
             style={styles.creatorRow}
             onPress={() => handleUserClick(session.creator_id, session.creator?.full_name)}
@@ -473,7 +473,7 @@ export default function SessionDetailScreen({ navigation, route }: Props) {
             ) : (
               <Avatar.Text size={40} label={session.creator?.full_name?.charAt(0) || 'U'} />
             )}
-            <Text style={styles.creatorName}>{session.creator?.full_name || session.creator?.email || 'Oluşturan'}</Text>
+            <Text style={styles.creatorName}>{session.creator?.full_name || session.creator?.email || t('session.creator')}</Text>
           </TouchableOpacity>
         </Card.Content>
       </Card>
@@ -486,20 +486,20 @@ export default function SessionDetailScreen({ navigation, route }: Props) {
           disabled={actionLoading}
           style={styles.joinButton}
         >
-          Katılma İsteği Gönder
+          {t('session.joinRequest')}
         </Button>
       )}
 
       {userParticipant && userParticipant.status === 'pending' && (
         <Chip icon="clock" style={styles.statusChip}>
-          Katılım talebiniz beklemede
+          {t('session.joinRequestPending')}
         </Chip>
       )}
 
       {userParticipant && userParticipant.status === 'approved' && (
         <>
           <Chip icon="check" style={styles.statusChip}>
-            Katılım onaylandı
+            {t('session.joinRequestApproved')}
           </Chip>
           <Button
             mode="contained"
@@ -507,7 +507,7 @@ export default function SessionDetailScreen({ navigation, route }: Props) {
             style={styles.chatButton}
             icon="chat"
           >
-            Sohbete Git
+            {t('session.goToChat')}
           </Button>
         </>
       )}
@@ -519,20 +519,20 @@ export default function SessionDetailScreen({ navigation, route }: Props) {
           style={styles.chatButton}
           icon="chat"
         >
-          Sohbete Git
+          {t('session.goToChat')}
         </Button>
       )}
 
       <Card style={styles.card}>
         <Card.Content>
-          <Text style={styles.sectionTitle}>Katılımcılar ({allRatableParticipants.length})</Text>
+          <Text style={styles.sectionTitle}>{t('session.participantsWithCount', { count: allRatableParticipants.length })}</Text>
           {allRatableParticipants.map((participant) => {
             const userProfile = participant.user;
             const averageRating = userProfile?.average_rating || 0;
             const totalRatings = userProfile?.total_ratings || 0;
             const positiveReviews = userProfile?.positive_reviews_count || 0;
             const badgeInfo = getBadgeLevel(positiveReviews);
-            const displayName = participant.user?.full_name || participant.user?.email || 'Katılımcı';
+            const displayName = participant.user?.full_name || participant.user?.email || t('session.participantsCount');
             const avatarLabel = (participant.user?.full_name || participant.user?.email || 'U').charAt(0).toUpperCase();
             const isSessionCreator = participant.user_id === session.creator_id;
 
@@ -558,7 +558,7 @@ export default function SessionDetailScreen({ navigation, route }: Props) {
                           style={{ backgroundColor: theme.colors.primaryContainer, height: 20, marginLeft: 6 }}
                           textStyle={{ color: theme.colors.primary, fontSize: 10, marginVertical: 0 }}
                         >
-                          Organizatör
+                          {t('session.organizer')}
                         </Chip>
                       )}
                       {positiveReviews >= 3 && (
@@ -594,7 +594,7 @@ export default function SessionDetailScreen({ navigation, route }: Props) {
                         style={[styles.ratedChip, { backgroundColor: theme.colors.primaryContainer }]}
                         textStyle={{ color: theme.colors.primary, fontSize: 12, fontWeight: '600' }}
                       >
-                        Değerlendirildi
+                        {t('session.rated')}
                       </Chip>
                       <View style={styles.ratingStarsSmall}>
                         {[1, 2, 3, 4, 5].map((star) => (
@@ -621,7 +621,7 @@ export default function SessionDetailScreen({ navigation, route }: Props) {
                         })
                       }
                     >
-                      Değerlendir
+                      {t('session.rateUser')}
                     </Button>
                   )
                 )}
@@ -634,9 +634,9 @@ export default function SessionDetailScreen({ navigation, route }: Props) {
       {isCreator && pendingParticipants.length > 0 && (
         <Card style={styles.card}>
           <Card.Content>
-            <Text style={styles.sectionTitle}>Bekleyen Talepler ({pendingParticipants.length})</Text>
+            <Text style={styles.sectionTitle}>{t('session.pendingRequestsCount', { count: pendingParticipants.length })}</Text>
             {pendingParticipants.map((participant) => {
-              const userName = participant.user?.full_name || participant.user?.email || 'Katılımcı';
+              const userName = participant.user?.full_name || participant.user?.email || t('session.participantsCount');
               const userInitial = (participant.user?.full_name || participant.user?.email || 'U').charAt(0).toUpperCase();
 
               return (
@@ -660,7 +660,7 @@ export default function SessionDetailScreen({ navigation, route }: Props) {
                       disabled={actionLoading || isFull}
                       style={styles.approveButton}
                     >
-                      Onayla
+                      {t('session.approveShort')}
                     </Button>
                     <Button
                       mode="outlined"
@@ -668,7 +668,7 @@ export default function SessionDetailScreen({ navigation, route }: Props) {
                       onPress={() => handleReject(participant.id)}
                       disabled={actionLoading}
                     >
-                      Reddet
+                      {t('session.rejectShort')}
                     </Button>
                   </View>
                 </View>
@@ -682,7 +682,7 @@ export default function SessionDetailScreen({ navigation, route }: Props) {
         <Portal>
           <Modal visible={mapVisible} onDismiss={() => setMapVisible(false)} contentContainerStyle={styles.mapModal}>
             <View style={styles.mapContainer}>
-              <Text style={styles.mapTitle}>Konum</Text>
+              <Text style={styles.mapTitle}>{t('session.locationLabel')}</Text>
               {MapView && (
                 <MapView
                   style={styles.map}
@@ -706,7 +706,7 @@ export default function SessionDetailScreen({ navigation, route }: Props) {
                 </MapView>
               )}
               <Button mode="contained" onPress={() => setMapVisible(false)} style={styles.closeMapButton}>
-                Kapat
+                {t('session.close')}
               </Button>
             </View>
           </Modal>
