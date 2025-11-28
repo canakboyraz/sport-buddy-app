@@ -1,12 +1,13 @@
 import React, { useState, useEffect } from 'react';
 import { View, StyleSheet, Alert, KeyboardAvoidingView, Platform } from 'react-native';
-import { TextInput, Button, Text, Checkbox, Surface, useTheme } from 'react-native-paper';
+import { TextInput, Button, Text, Checkbox, Surface, useTheme, Divider } from 'react-native-paper';
 import { LinearGradient } from 'expo-linear-gradient';
 import { supabase } from '../../services/supabase';
 import { validateEmail } from '../../utils/validation';
 import { StackNavigationProp } from '@react-navigation/stack';
 import { AuthStackParamList } from '../../navigation/AuthNavigator';
 import { secureStore } from '../../services/secureStore';
+import * as AppleAuthentication from 'expo-apple-authentication';
 import { useLanguage } from '../../contexts/LanguageContext';
 
 type LoginScreenNavigationProp = StackNavigationProp<AuthStackParamList, 'Login'>;
@@ -28,10 +29,17 @@ export default function LoginScreen({ navigation }: Props) {
   const [loading, setLoading] = useState(false);
   const [rememberMe, setRememberMe] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
+  const [appleAuthAvailable, setAppleAuthAvailable] = useState(false);
 
   useEffect(() => {
     loadSavedCredentials();
+    checkAppleAuthAvailability();
   }, []);
+
+  const checkAppleAuthAvailability = async () => {
+    const available = await AppleAuthentication.isAvailableAsync();
+    setAppleAuthAvailable(available);
+  };
 
   const loadSavedCredentials = async () => {
     try {
@@ -88,6 +96,80 @@ export default function LoginScreen({ navigation }: Props) {
     }
   };
 
+  const handleAppleLogin = async () => {
+    try {
+      setLoading(true);
+
+      const credential = await AppleAuthentication.signInAsync({
+        requestedScopes: [
+          AppleAuthentication.AppleAuthenticationScope.FULL_NAME,
+          AppleAuthentication.AppleAuthenticationScope.EMAIL,
+        ],
+      });
+
+      if (credential.identityToken) {
+        // Apple'dan gelen ad-soyad bilgisini hazırla
+        let fullName = '';
+        if (credential.fullName) {
+          const firstName = credential.fullName.givenName || '';
+          const lastName = credential.fullName.familyName || '';
+          fullName = `${firstName} ${lastName}`.trim();
+          console.log('[LoginScreen] Apple fullName received:', fullName);
+        } else {
+          console.log('[LoginScreen] Apple did not provide fullName (user logged in before)');
+        }
+
+        const { data, error } = await supabase.auth.signInWithIdToken({
+          provider: 'apple',
+          token: credential.identityToken,
+        });
+
+        if (error) throw error;
+
+        console.log('[LoginScreen] Supabase user data:', data?.user);
+
+        // Check if profile already has a full_name
+        const { data: existingProfile } = await supabase
+          .from('profiles')
+          .select('full_name')
+          .eq('id', data.user.id)
+          .single();
+
+        console.log('[LoginScreen] Existing profile:', existingProfile);
+
+        // Only update if we have a new fullName OR if profile doesn't have a name yet
+        if (data?.user) {
+          if (fullName) {
+            // We got a name from Apple, save it
+            await supabase.from('profiles').upsert({
+              id: data.user.id,
+              full_name: fullName,
+              email: data.user.email,
+              updated_at: new Date().toISOString(),
+            }, {
+              onConflict: 'id'
+            });
+            console.log('[LoginScreen] Profile updated with Apple fullName');
+          } else if (!existingProfile?.full_name) {
+            // No name from Apple and profile has no name - prompt user
+            Alert.alert(
+              t('auth.welcome'),
+              t('auth.pleaseEnterName'),
+              [{ text: t('common.ok') }]
+            );
+          }
+        }
+      }
+    } catch (error: any) {
+      if (error.code === 'ERR_REQUEST_CANCELED') {
+        // User cancelled
+        return;
+      }
+      Alert.alert(t('common.error'), error.message || t('auth.appleLoginFailed'));
+    } finally {
+      setLoading(false);
+    }
+  };
 
   return (
     <LinearGradient
@@ -153,6 +235,27 @@ export default function LoginScreen({ navigation }: Props) {
             {t('auth.login')}
           </Button>
 
+          {appleAuthAvailable && Platform.OS === 'ios' && (
+            <>
+              <View style={styles.dividerContainer}>
+                <Divider style={styles.divider} />
+                <Text style={[styles.dividerText, { color: theme.colors.onSurfaceVariant }]}>{t('auth.or')}</Text>
+                <Divider style={styles.divider} />
+              </View>
+
+              <Button
+                mode="outlined"
+                onPress={handleAppleLogin}
+                disabled={loading}
+                style={styles.socialButton}
+                contentStyle={{ height: 48 }}
+                icon="apple"
+              >
+                {t('auth.loginWithApple')}
+              </Button>
+            </>
+          )}
+
           <Button
             mode="text"
             onPress={() => navigation.navigate('Register')}
@@ -206,6 +309,22 @@ const styles = StyleSheet.create({
   button: {
     borderRadius: 8,
     marginBottom: 16,
+  },
+  dividerContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginVertical: 16,
+  },
+  divider: {
+    flex: 1,
+  },
+  dividerText: {
+    marginHorizontal: 16,
+    fontSize: 14,
+  },
+  socialButton: {
+    borderRadius: 8,
+    marginBottom: 12,
   },
   registerButton: {
     marginTop: 8,
