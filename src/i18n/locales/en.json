@@ -276,6 +276,9 @@
     "myStats": "My Stats",
     "myAchievements": "My Achievements",
     "statsAndAchievements": "Statistics & Achievements",
+    "notFound": "Profile not found",
+    "memberSince": "Member Since",
+    "about": "About",
     "viewActivityHistory": "View activity history",
     "discoverBadges": "Discover badges and achievements",
     "social": "Social",
@@ -431,11 +434,14 @@
     },
     "errors": {
       "sendRequestFailed": "Failed to send friend request",
+      "sendFailed": "Failed to send friend request",
       "acceptFailed": "Failed to accept friend request",
       "rejectFailed": "Failed to reject friend request",
       "cancelFailed": "Failed to cancel friend request",
       "removeFailed": "Failed to remove friend"
-    }
+    },
+    "newFriendRequest": "New Friend Request",
+    "sentYouRequest": "sent you a friend request"
   },
 
   "chat": {
@@ -744,6 +750,7 @@
     "general": "General Statistics",
     "sessionsCreated": "Sessions Created",
     "sessionsJoined": "Sessions Joined",
+    "positiveReviews": "Positive Reviews",
     "upcomingSessions": "Upcoming Sessions",
     "completedSessions": "Completed Sessions",
     "ratings": "Ratings",

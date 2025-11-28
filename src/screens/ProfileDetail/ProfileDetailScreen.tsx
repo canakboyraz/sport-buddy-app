@@ -6,6 +6,7 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { supabase } from '../../services/supabase';
 import { format } from 'date-fns';
 import { getDateLocale } from '../../utils/dateLocale';
+import { useLanguage } from '../../contexts/LanguageContext';
 
 const { width } = Dimensions.get('window');
 
@@ -37,6 +38,7 @@ interface Rating {
 
 export default function ProfileDetailScreen({ route, navigation }: any) {
   const { userId } = route.params;
+  const { t } = useLanguage();
   const [profile, setProfile] = useState<Profile | null>(null);
   const [ratings, setRatings] = useState<Rating[]>([]);
   const [loading, setLoading] = useState(true);
@@ -144,7 +146,7 @@ export default function ProfileDetailScreen({ route, navigation }: any) {
 
       if (error) {
         console.error('Error sending friend request:', error);
-        alert('Arkadaşlık isteği gönderilemedi');
+        alert(t('friends.errors.sendFailed'));
       } else {
         setFriendshipStatus('pending');
 
@@ -170,8 +172,8 @@ export default function ProfileDetailScreen({ route, navigation }: any) {
               },
               body: JSON.stringify({
                 to: receiverProfile.push_token,
-                title: 'Yeni Arkadaşlık İsteği',
-                body: `${senderProfile?.full_name || 'Bir kullanıcı'} size arkadaşlık isteği gönderdi`,
+                title: t('friends.newFriendRequest'),
+                body: `${senderProfile?.full_name || t('common.unknown')} ${t('friends.sentYouRequest')}`,
                 data: {
                   type: 'friend_request',
                   userId: user.id,
@@ -183,7 +185,7 @@ export default function ProfileDetailScreen({ route, navigation }: any) {
           console.error('Error sending friend request notification:', notifError);
         }
 
-        alert('Arkadaşlık isteği gönderildi!');
+        alert(t('friends.requestSent'));
       }
     } catch (error) {
       console.error('Error:', error);
@@ -218,7 +220,7 @@ export default function ProfileDetailScreen({ route, navigation }: any) {
   if (!profile) {
     return (
       <View style={styles.loadingContainer}>
-        <Text>Profil bulunamadı</Text>
+        <Text>{t('profile.notFound')}</Text>
       </View>
     );
   }
@@ -250,7 +252,7 @@ export default function ProfileDetailScreen({ route, navigation }: any) {
 
         {/* Member Since */}
         <Text style={styles.memberSince}>
-          Üyelik: {format(new Date(profile.created_at), 'MMM yyyy', { locale: getDateLocale() })}
+          {t('profile.memberSince')}: {format(new Date(profile.created_at), 'MMM yyyy', { locale: getDateLocale() })}
         </Text>
 
         {/* Friend Request Button */}
@@ -264,17 +266,17 @@ export default function ProfileDetailScreen({ route, navigation }: any) {
             style={styles.friendButton}
             labelStyle={{ color: '#fff' }}
           >
-            Arkadaş Ekle
+            {t('friends.addFriend')}
           </Button>
         )}
         {friendshipStatus === 'pending' && (
           <Chip icon="clock-outline" style={styles.pendingChip}>
-            İstek Gönderildi
+            {t('friends.requestSent')}
           </Chip>
         )}
         {friendshipStatus === 'accepted' && (
           <Chip icon="check" style={styles.acceptedChip}>
-            Arkadaş
+            {t('friends.friend')}
           </Chip>
         )}
 
@@ -285,7 +287,7 @@ export default function ProfileDetailScreen({ route, navigation }: any) {
             {profile.average_rating ? profile.average_rating.toFixed(1) : 'N/A'}
           </Text>
           <Text style={styles.ratingCount}>
-            ({profile.total_ratings} değerlendirme)
+            ({profile.total_ratings} {t('rating.reviews')})
           </Text>
         </View>
       </LinearGradient>
@@ -295,22 +297,19 @@ export default function ProfileDetailScreen({ route, navigation }: any) {
         <Surface style={styles.statCard} elevation={2}>
           <MaterialCommunityIcons name="trophy" size={32} color="#6200ee" />
           <Text style={styles.statValue}>{stats.sessionsCreated}</Text>
-          <Text style={styles.statLabel}>Oluşturulan</Text>
-          <Text style={styles.statLabel}>Etkinlik</Text>
+          <Text style={styles.statLabel}>{t('stats.sessionsCreated')}</Text>
         </Surface>
 
         <Surface style={styles.statCard} elevation={2}>
           <MaterialCommunityIcons name="account-group" size={32} color="#6200ee" />
           <Text style={styles.statValue}>{stats.sessionsAttended}</Text>
-          <Text style={styles.statLabel}>Katılınan</Text>
-          <Text style={styles.statLabel}>Etkinlik</Text>
+          <Text style={styles.statLabel}>{t('stats.sessionsJoined')}</Text>
         </Surface>
 
         <Surface style={styles.statCard} elevation={2}>
           <MaterialCommunityIcons name="thumb-up" size={32} color="#4CAF50" />
           <Text style={styles.statValue}>{profile.positive_reviews_count}</Text>
-          <Text style={styles.statLabel}>Olumlu</Text>
-          <Text style={styles.statLabel}>Yorum</Text>
+          <Text style={styles.statLabel}>{t('stats.positiveReviews')}</Text>
         </Surface>
       </View>
 
@@ -319,7 +318,7 @@ export default function ProfileDetailScreen({ route, navigation }: any) {
         <Surface style={styles.section} elevation={1}>
           <View style={styles.sectionHeader}>
             <MaterialCommunityIcons name="information" size={24} color="#6200ee" />
-            <Text style={styles.sectionTitle}>Hakkında</Text>
+            <Text style={styles.sectionTitle}>{t('profile.about')}</Text>
           </View>
           <Text style={styles.bioText}>{profile.bio}</Text>
         </Surface>
@@ -330,12 +329,12 @@ export default function ProfileDetailScreen({ route, navigation }: any) {
         <View style={styles.sectionHeader}>
           <MaterialCommunityIcons name="star-box-multiple" size={24} color="#6200ee" />
           <Text style={styles.sectionTitle}>
-            Değerlendirmeler ({ratings.length})
+            {t('rating.ratingsAndReviews')} ({ratings.length})
           </Text>
         </View>
 
         {ratings.length === 0 ? (
-          <Text style={styles.emptyText}>Henüz değerlendirme yapılmamış</Text>
+          <Text style={styles.emptyText}>{t('rating.noRatings')}</Text>
         ) : (
           ratings.map((rating) => (
             <Card key={rating.id} style={styles.ratingCard}>

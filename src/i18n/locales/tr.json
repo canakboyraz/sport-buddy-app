@@ -276,6 +276,9 @@
     "myStats": "İstatistiklerim",
     "myAchievements": "Başarılarım",
     "statsAndAchievements": "İstatistikler ve Başarılar",
+    "notFound": "Profil bulunamadı",
+    "memberSince": "Üyelik",
+    "about": "Hakkında",
     "viewActivityHistory": "Aktivite geçmişini görüntüle",
     "discoverBadges": "Rozetleri ve başarıları keşfet",
     "social": "Sosyal",
@@ -431,11 +434,14 @@
     },
     "errors": {
       "sendRequestFailed": "Arkadaşlık isteği gönderilemedi",
+      "sendFailed": "Arkadaşlık isteği gönderilemedi",
       "acceptFailed": "Arkadaşlık isteği kabul edilemedi",
       "rejectFailed": "Arkadaşlık isteği reddedilemedi",
       "cancelFailed": "Arkadaşlık isteği iptal edilemedi",
       "removeFailed": "Arkadaşlıktan çıkarılamadı"
-    }
+    },
+    "newFriendRequest": "Yeni Arkadaşlık İsteği",
+    "sentYouRequest": "size arkadaşlık isteği gönderdi"
   },
 
   "chat": {
@@ -744,6 +750,7 @@
     "general": "Genel İstatistikler",
     "sessionsCreated": "Oluşturulan Seanslar",
     "sessionsJoined": "Katılınan Seanslar",
+    "positiveReviews": "Olumlu Yorum",
     "upcomingSessions": "Yaklaşan Seanslar",
     "completedSessions": "Tamamlanan Seanslar",
     "ratings": "Değerlendirmeler",
