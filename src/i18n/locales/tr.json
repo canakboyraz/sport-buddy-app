@@ -33,7 +33,8 @@
     "more": "Daha Fazla",
     "less": "Daha Az",
     "all": "Tümü",
-    "unknown": "Bilinmeyen"
+    "unknown": "Bilinmeyen",
+    "report": "Şikayet Et"
   },
 
   "auth": {
@@ -766,5 +767,97 @@
     "messages": "Mesajlar",
     "ratingsCount": "Değerlendirme",
     "loadError": "İstatistikler yüklenemedi"
+  },
+
+  "privacyConsent": {
+    "title": "Gizlilik ve Veri Kullanımı",
+    "subtitle": "Gizliliğinize önem veriyoruz ve verilerinizi nasıl kullandığımız konusunda şeffaf olmak istiyoruz",
+    "dataWeCollect": "Topladığımız Veriler",
+    "dataTypes": {
+      "profile": "Profil Bilgileri",
+      "profileDesc": "İsim, e-posta, doğum tarihi ve profil fotoğrafı",
+      "location": "Konum Verisi",
+      "locationDesc": "Yakınınızdaki etkinlikleri göstermek ve aktivite bulmanıza yardımcı olmak için",
+      "messages": "Mesajlar ve İletişim",
+      "messagesDesc": "Uygulama içi mesajlar ve etkinlik katılım geçmişi",
+      "photos": "Fotoğraf ve Medya",
+      "photosDesc": "Yüklemeyi seçtiğiniz profil ve etkinlik fotoğrafları",
+      "notifications": "Bildirimler",
+      "notificationsDesc": "Etkinlik hatırlatmaları ve yeni mesaj bildirimleri"
+    },
+    "safetyTitle": "Güvenliğiniz Önemli",
+    "safetyDesc": "Sizi ve topluluğumuzu korumak için güvenlik özellikleri oluşturduk:",
+    "features": {
+      "report": "Uygunsuz içerik veya kullanıcıları raporlayın",
+      "block": "İstenmeyen etkileşimleri önlemek için kullanıcıları engelleyin",
+      "moderation": "Güvenlik için otomatik içerik filtreleme"
+    },
+    "yourRights": "Haklarınız",
+    "rightsDesc": "Verilerinize istediğiniz zaman erişebilir, güncelleyebilir veya silebilirsiniz. Ayrıca uygulama ayarlarından hangi verileri topladığımızı kontrol edebilirsiniz.",
+    "readPrivacyPolicy": "Tam Gizlilik Politikasını Oku",
+    "readTerms": "Hizmet Şartlarını Oku",
+    "acceptText": "Gizlilik Politikası ve Hizmet Şartlarını anladım ve kabul ediyorum",
+    "continue": "Uygulamaya Devam Et"
+  },
+
+  "chat": {
+    "typeMessage": "Mesaj yaz...",
+    "reportMessage": "Mesajı Şikayet Et",
+    "reportMessageConfirm": "Bu mesajı şikayet etmek istiyor musunuz? Bu, güvenli bir topluluk sürdürmemize yardımcı olacaktır.",
+    "rateLimitTitle": "Yavaşla",
+    "rateLimitMessage": "Çok hızlı mesaj gönderiyorsunuz. Lütfen başka bir mesaj göndermeden önce biraz bekleyin.",
+    "contentWarningTitle": "İçerik Uyarısı",
+    "contentWarningMessage": "Mesajınız uygunsuz içerik içeriyor. Lütfen mesajınızı gözden geçirin.",
+    "sendError": "Mesaj gönderilemedi",
+    "uploadError": "Resim yüklenemedi"
+  },
+
+  "guidelines": {
+    "title": "Topluluk Kuralları",
+    "subtitle": "Birlikte Güvenli ve Saygılı Bir Spor Topluluğu Oluşturuyoruz",
+    "rulesTitle": "Kurallarımız",
+    "respectTitle": "Saygılı Olun",
+    "respectDesc": "Tüm üyelere saygı ve nezaketle davranın. Taciz, ayrımcılık ve zorbalık tolere edilmeyecektir.",
+    "safetyTitle": "Güvenliği Öncelikli Tutun",
+    "safetyDesc": "Halka açık yerlerde buluşun, konumunuzu güvendiğiniz kişilerle paylaşın ve içgüdülerinize güvenin. Güvenliğiniz her şeyden önemlidir.",
+    "appropriateTitle": "İçeriği Uygun Tutun",
+    "appropriateDesc": "Yalnızca her yaş için uygun içerik paylaşın. Açık, saldırgan veya uygunsuz içeriğe izin verilmez.",
+    "noSpamTitle": "Spam veya Dolandırıcılık Yok",
+    "noSpamDesc": "Spam yapmayın, yetkisiz ticari faaliyetler tanıtmayın veya dolandırıcılık davranışlarına girmeyin.",
+    "followLawsTitle": "Yasalara Uyun",
+    "followLawsDesc": "Tüm aktiviteler yerel yasa ve düzenlemelere uygun olmalıdır. Yasadışı faaliyetler kesinlikle yasaktır.",
+    "violationTitle": "İhlaller ve Sonuçlar",
+    "violationIntro": "Bu kuralların ihlali şu sonuçlara yol açabilir:",
+    "consequences": {
+      "warning": "Uyarı bildirimi",
+      "contentRemoval": "İçerik kaldırma",
+      "suspension": "Geçici hesap askıya alma",
+      "permanentBan": "Kalıcı hesap kapatma"
+    },
+    "reportTitle": "İhlalleri Raporlayın",
+    "reportDesc": "Bu kurallara aykırı içerik veya davranış görürseniz, lütfen bildirin. Raporlarınız topluluğumuzu güvenli tutmaya yardımcı olur.",
+    "acceptText": "Topluluk Kurallarını okudum ve takip etmeyi kabul ediyorum",
+    "continue": "Devam Et"
+  },
+
+  "aiAssistant": {
+    "title": "AI Asistan",
+    "welcomeMessage": "Merhaba! Ben SportBot, senin AI asistanınım. Bugün sana nasıl yardımcı olabilirim?",
+    "typeMessage": "Bir şey sor...",
+    "thinking": "düşünüyor...",
+    "errorMessage": "Üzgünüm, bunu işleyemedim. Lütfen tekrar dene.",
+    "quickActions": "Hızlı İşlemler",
+    "findEvents": "Etkinlik Bul",
+    "findEventsQuery": "Yakınımda spor etkinlikleri bulmak istiyorum",
+    "sportTips": "Spor İpuçları",
+    "sportTipsQuery": "Aktif kalmak için ipuçları ver",
+    "howToUse": "Uygulama Nasıl Kullanılır",
+    "howToUseQuery": "Bu uygulamayı nasıl kullanırım?",
+    "autoGenerate": "AI ile Oluştur",
+    "generating": "Oluşturuluyor..."
+  },
+
+  "common": {
+    "languageCode": "tr"
   }
 }

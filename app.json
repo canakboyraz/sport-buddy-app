@@ -23,9 +23,10 @@
       "bundleIdentifier": "com.sportbuddy.app2",
       "buildNumber": "1.0.0",
       "infoPlist": {
-        "NSLocationWhenInUseUsageDescription": "Spor etkinliklerinizin konumunu belirlemek için konum erişimine ihtiyacımız var.",
-        "NSCameraUsageDescription": "Profil fotoğrafı eklemek için kamera erişimine ihtiyacımız var.",
-        "NSPhotoLibraryUsageDescription": "Profil fotoğrafı seçmek için fotoğraf kütüphanesine erişim gerekiyor.",
+        "NSLocationWhenInUseUsageDescription": "Sport Buddy uses your location to show nearby sports events and help you find activities in your area. Your exact location is never shared with other users.",
+        "NSCameraUsageDescription": "Sport Buddy needs access to your camera to take profile photos and share event images with your sports community.",
+        "NSPhotoLibraryUsageDescription": "Sport Buddy needs access to your photo library to upload profile photos and event images. We only access the specific photos you choose to share.",
+        "NSUserTrackingUsageDescription": "This information helps us provide better recommendations and improve your experience. You can change this preference anytime in Settings.",
         "ITSAppUsesNonExemptEncryption": false
       }
     },
@@ -51,7 +52,7 @@
       [
         "expo-location",
         {
-          "locationAlwaysAndWhenInUsePermission": "Spor etkinliklerinizin konumunu belirlemek için konum erişimine ihtiyacımız var."
+          "locationAlwaysAndWhenInUsePermission": "Sport Buddy uses your location to show nearby sports events and help you find activities in your area. Your exact location is never shared with other users."
         }
       ],
       [

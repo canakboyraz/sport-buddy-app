@@ -12,6 +12,8 @@ import { useAuth } from '../../hooks/useAuth';
 import { pickImageFromGallery } from '../../services/imageService';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { useLanguage } from '../../contexts/LanguageContext';
+import { moderateChatMessage, checkRateLimit } from '../../services/contentModerationService';
+import { getBlockedUserIds, getBlockerUserIds } from '../../services/blockService';
 
 type ChatScreenNavigationProp = StackNavigationProp<RootStackParamList, 'Chat'>;
 type ChatScreenRouteProp = RouteProp<RootStackParamList, 'Chat'>;
@@ -31,8 +33,15 @@ export default function EnhancedChatScreen({ navigation, route }: Props) {
   const [sending, setSending] = useState(false);
   const [uploadingImage, setUploadingImage] = useState(false);
   const [typingUsers, setTypingUsers] = useState<string[]>([]);
+  const [blockedUserIds, setBlockedUserIds] = useState<string[]>([]);
   const flatListRef = useRef<FlatList>(null);
   const typingTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+
+  useEffect(() => {
+    if (user) {
+      loadBlockedUsers();
+    }
+  }, [user]);
 
   useEffect(() => {
     loadMessages();
@@ -82,7 +91,24 @@ export default function EnhancedChatScreen({ navigation, route }: Props) {
       supabase.removeChannel(typingChannel);
       setTypingIndicator(false);
     };
-  }, [sessionId]);
+  }, [sessionId, blockedUserIds]);
+
+  const loadBlockedUsers = async () => {
+    if (!user) return;
+
+    try {
+      const [blocked, blockers] = await Promise.all([
+        getBlockedUserIds(user.id),
+        getBlockerUserIds(user.id)
+      ]);
+
+      // Combine both lists - hide messages from users we blocked and users who blocked us
+      const allBlockedIds = [...new Set([...blocked, ...blockers])];
+      setBlockedUserIds(allBlockedIds);
+    } catch (error) {
+      console.error('Error loading blocked users:', error);
+    }
+  };
 
   const loadMessages = async () => {
     const { data, error } = await supabase
@@ -95,7 +121,9 @@ export default function EnhancedChatScreen({ navigation, route }: Props) {
       .order('created_at', { ascending: true });
 
     if (!error && data) {
-      setMessages(data);
+      // Filter out messages from blocked users
+      const filteredMessages = data.filter(msg => !blockedUserIds.includes(msg.user_id));
+      setMessages(filteredMessages);
       setTimeout(() => {
         flatListRef.current?.scrollToEnd({ animated: true });
       }, 100);
@@ -172,19 +200,40 @@ export default function EnhancedChatScreen({ navigation, route }: Props) {
   const handleSend = async () => {
     if (!newMessage.trim() || !user) return;
 
+    // Check rate limit
+    if (checkRateLimit(user.id, 10, 60000)) {
+      Alert.alert(
+        t('chat.rateLimitTitle'),
+        t('chat.rateLimitMessage')
+      );
+      return;
+    }
+
+    // Content moderation check
+    const moderationResult = moderateChatMessage(newMessage);
+    if (!moderationResult.isAllowed) {
+      Alert.alert(
+        t('chat.contentWarningTitle'),
+        moderationResult.reason || t('chat.contentWarningMessage')
+      );
+      return;
+    }
+
     setSending(true);
     setTypingIndicator(false);
 
     const { error } = await supabase.from('chat_messages').insert({
       session_id: sessionId,
       user_id: user.id,
-      content: newMessage.trim(),
+      content: moderationResult.filteredContent || newMessage.trim(),
     });
 
     setSending(false);
 
     if (!error) {
       setNewMessage('');
+    } else {
+      Alert.alert(t('common.error'), t('chat.sendError'));
     }
   };
 
@@ -234,73 +283,106 @@ export default function EnhancedChatScreen({ navigation, route }: Props) {
     }
   };
 
+  const handleReportMessage = (messageId: number, senderId: string, senderName: string) => {
+    Alert.alert(
+      t('chat.reportMessage'),
+      t('chat.reportMessageConfirm'),
+      [
+        {
+          text: t('common.cancel'),
+          style: 'cancel',
+        },
+        {
+          text: t('common.report'),
+          style: 'destructive',
+          onPress: () => {
+            navigation.navigate('ReportUser', {
+              userId: senderId,
+              userName: senderName,
+            });
+          },
+        },
+      ]
+    );
+  };
+
   const renderMessage = ({ item }: { item: any }) => {
     const isOwnMessage = item.user_id === user?.id;
     const hasImage = !!item.image_url;
 
     return (
-      <View
-        style={[
-          styles.messageContainer,
-          isOwnMessage ? styles.ownMessageContainer : styles.otherMessageContainer,
-        ]}
+      <TouchableOpacity
+        activeOpacity={0.9}
+        onLongPress={() => {
+          if (!isOwnMessage) {
+            handleReportMessage(item.id, item.user_id, item.user?.full_name);
+          }
+        }}
+        delayLongPress={500}
       >
-        {!isOwnMessage && (
-          <Avatar.Text
-            size={32}
-            label={item.user?.full_name?.charAt(0) || 'U'}
-            style={styles.avatar}
-          />
-        )}
         <View
           style={[
-            styles.messageBubble,
-            isOwnMessage
-              ? { backgroundColor: theme.colors.primary }
-              : {
-                  backgroundColor: theme.colors.surface,
-                  borderWidth: 1,
-                  borderColor: theme.colors.outline
-                },
+            styles.messageContainer,
+            isOwnMessage ? styles.ownMessageContainer : styles.otherMessageContainer,
           ]}
         >
           {!isOwnMessage && (
-            <Text style={[styles.senderName, { color: theme.colors.primary }]}>
-              {item.user?.full_name}
-            </Text>
+            <Avatar.Text
+              size={32}
+              label={item.user?.full_name?.charAt(0) || 'U'}
+              style={styles.avatar}
+            />
           )}
-
-          {hasImage && (
-            <Image source={{ uri: item.image_url }} style={styles.messageImage} />
-          )}
-
-          {item.content && (
-            <Text style={[
-              styles.messageText,
-              { color: isOwnMessage ? theme.colors.onPrimary : theme.colors.onSurface }
-            ]}>
-              {item.content}
-            </Text>
-          )}
-
-          <View style={styles.messageFooter}>
-            <Text style={[
-              styles.messageTime,
-              { color: isOwnMessage ? 'rgba(255, 255, 255, 0.8)' : theme.colors.onSurfaceVariant }
-            ]}>
-              {format(new Date(item.created_at), 'HH:mm', { locale: getDateLocale() })}
-            </Text>
-            {isOwnMessage && item.is_read && (
-              <MaterialCommunityIcons
-                name="check-all"
-                size={16}
-                color="rgba(255, 255, 255, 0.8)"
-                style={styles.readIcon}
-              />
+          <View
+            style={[
+              styles.messageBubble,
+              isOwnMessage
+                ? { backgroundColor: theme.colors.primary }
+                : {
+                    backgroundColor: theme.colors.surface,
+                    borderWidth: 1,
+                    borderColor: theme.colors.outline
+                  },
+            ]}
+          >
+            {!isOwnMessage && (
+              <Text style={[styles.senderName, { color: theme.colors.primary }]}>
+                {item.user?.full_name}
+              </Text>
             )}
+
+            {hasImage && (
+              <Image source={{ uri: item.image_url }} style={styles.messageImage} />
+            )}
+
+            {item.content && (
+              <Text style={[
+                styles.messageText,
+                { color: isOwnMessage ? theme.colors.onPrimary : theme.colors.onSurface }
+              ]}>
+                {item.content}
+              </Text>
+            )}
+
+            <View style={styles.messageFooter}>
+              <Text style={[
+                styles.messageTime,
+                { color: isOwnMessage ? 'rgba(255, 255, 255, 0.8)' : theme.colors.onSurfaceVariant }
+              ]}>
+                {format(new Date(item.created_at), 'HH:mm', { locale: getDateLocale() })}
+              </Text>
+              {isOwnMessage && item.is_read && (
+                <MaterialCommunityIcons
+                  name="check-all"
+                  size={16}
+                  color="rgba(255, 255, 255, 0.8)"
+                  style={styles.readIcon}
+                />
+              )}
+            </View>
           </View>
         </View>
-      </View>
+      </TouchableOpacity>
     );
   };
 

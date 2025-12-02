@@ -454,6 +454,16 @@ export default function ProfileScreen() {
         </Surface>
       )}
 
+      {/* AI Assistant Button */}
+      <Button
+        mode="contained"
+        onPress={() => navigation.navigate('AIAssistant')}
+        style={styles.aiAssistantButton}
+        icon="robot"
+      >
+        {t('aiAssistant.title')}
+      </Button>
+
       <Button
         mode="contained"
         onPress={handleLogout}
@@ -749,9 +759,15 @@ const styles = StyleSheet.create({
   ratingDate: {
     fontSize: 12,
   },
-  logoutButton: {
+  aiAssistantButton: {
     marginHorizontal: 16,
     marginTop: 16,
+    marginBottom: 8,
+    borderRadius: 12,
+  },
+  logoutButton: {
+    marginHorizontal: 16,
+    marginTop: 8,
     marginBottom: 24,
     borderRadius: 12,
   },

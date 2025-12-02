@@ -10,6 +10,7 @@ import { validateBio, validateName } from '../../utils/validation';
 import { useLanguage } from '../../contexts/LanguageContext';
 import { useTheme } from '../../contexts/ThemeContext';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
+import { moderateUserBio } from '../../services/contentModerationService';
 
 export default function EditProfileScreen() {
   const { t } = useLanguage();
@@ -92,6 +93,18 @@ export default function EditProfileScreen() {
     }
 
     if (!user) return;
+
+    // Content moderation for bio
+    if (bio.trim()) {
+      const bioModeration = moderateUserBio(bio);
+      if (!bioModeration.isAllowed) {
+        Alert.alert(
+          t('profile.contentWarning'),
+          bioModeration.reason || t('profile.inappropriateBio')
+        );
+        return;
+      }
+    }
 
     setSaving(true);
 

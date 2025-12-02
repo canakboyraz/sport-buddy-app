@@ -18,7 +18,9 @@ import {
   validateCoordinates
 } from '../../utils/validation';
 import { useLanguage } from '../../contexts/LanguageContext';
+import { moderateSessionTitle, moderateSessionDescription } from '../../services/contentModerationService';
 import { getDateLocale } from '../../utils/dateLocale';
+import { generateSessionDescription } from '../../services/aiService';
 
 // Spor türlerine göre simge eşleştirme
 const getSportIcon = (sportName: string): string => {
@@ -115,6 +117,9 @@ export default function CreateSessionScreen({ navigation }: any) {
   const [recurrenceDay, setRecurrenceDay] = useState<number>(0); // 0-6 for days of week, 1-31 for day of month
   const [endDate, setEndDate] = useState<Date | null>(null);
   const [showEndDatePicker, setShowEndDatePicker] = useState(false);
+
+  // AI generation state
+  const [generatingDescription, setGeneratingDescription] = useState(false);
 
   useEffect(() => {
     loadSports();
@@ -218,6 +223,46 @@ export default function CreateSessionScreen({ navigation }: any) {
     setShowTimePickerModal(false);
   };
 
+  const handleGenerateDescription = async () => {
+    // Validate required fields for AI generation
+    if (!selectedSport || !title || !location) {
+      Alert.alert(
+        t('common.error'),
+        'Please fill in sport, title, and location first to generate description.'
+      );
+      return;
+    }
+
+    setGeneratingDescription(true);
+
+    try {
+      const sportName = sports.find(s => s.id === selectedSport)?.name || '';
+      const dateStr = format(sessionDate, 'PPP', { locale: getDateLocale() });
+      const timeStr = format(sessionTime, 'p', { locale: getDateLocale() });
+
+      const generatedDesc = await generateSessionDescription({
+        sportName,
+        date: dateStr,
+        time: timeStr,
+        location,
+        skillLevel: skillLevel === 'any' ? 'All levels' : skillLevel,
+        maxParticipants,
+        language: t('common.languageCode') as 'tr' | 'en',
+      });
+
+      if (generatedDesc) {
+        setDescription(generatedDesc);
+      } else {
+        Alert.alert(t('common.error'), 'Could not generate description. Please try again.');
+      }
+    } catch (error) {
+      console.error('AI generation error:', error);
+      Alert.alert(t('common.error'), 'Failed to generate description. Please try again.');
+    } finally {
+      setGeneratingDescription(false);
+    }
+  };
+
   const handleCreate = async () => {
     // Validate required fields
     if (!selectedSport || !title || !location || !maxParticipants) {
@@ -237,11 +282,31 @@ export default function CreateSessionScreen({ navigation }: any) {
       return;
     }
 
+    // Content moderation for title
+    const titleModeration = moderateSessionTitle(title);
+    if (!titleModeration.isAllowed) {
+      Alert.alert(
+        t('createSession.contentWarning'),
+        titleModeration.reason || t('createSession.inappropriateTitle')
+      );
+      return;
+    }
+
     // Validate description
     if (description) {
       const descValidation = validateSessionDescription(description);
       if (!descValidation.isValid) {
         Alert.alert(t('common.error'), descValidation.message);
+        return;
+      }
+
+      // Content moderation for description
+      const descModeration = moderateSessionDescription(description);
+      if (!descModeration.isAllowed) {
+        Alert.alert(
+          t('createSession.contentWarning'),
+          descModeration.reason || t('createSession.inappropriateDescription')
+        );
         return;
       }
     }
@@ -456,6 +521,18 @@ export default function CreateSessionScreen({ navigation }: any) {
           numberOfLines={3}
           style={[styles.input, { backgroundColor: theme.colors.surface }]}
         />
+
+        {/* AI Generate Description Button */}
+        <Button
+          mode="outlined"
+          onPress={handleGenerateDescription}
+          loading={generatingDescription}
+          disabled={generatingDescription || !selectedSport || !title || !location}
+          icon="robot"
+          style={styles.aiGenerateButton}
+        >
+          {generatingDescription ? t('aiAssistant.generating') : t('aiAssistant.autoGenerate')}
+        </Button>
 
         <TextInput
           label={t('createSession.location') + ' *'}
@@ -809,6 +886,10 @@ const styles = StyleSheet.create({
   },
   input: {
     marginBottom: 15,
+  },
+  aiGenerateButton: {
+    marginBottom: 15,
+    marginTop: -5,
   },
   mapButton: {
     marginBottom: 15,

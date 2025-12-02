@@ -17,6 +17,7 @@ import { getBadgeLevel } from '../../services/ratingService';
 import { useTheme } from '../../contexts/ThemeContext';
 import { useLanguage } from '../../contexts/LanguageContext';
 import { getSkillLevelLabel } from '../../utils/skillLevelUtils';
+import { hasBlockRelationship } from '../../services/blockService';
 
 let MapView: any = null;
 let Marker: any = null;
@@ -149,6 +150,18 @@ export default function SessionDetailScreen({ navigation, route }: Props) {
     if (!user || !session) return;
 
     setActionLoading(true);
+
+    // Check if there's a block relationship
+    const isBlocked = await hasBlockRelationship(user.id, session.creator_id);
+
+    if (isBlocked) {
+      setActionLoading(false);
+      Alert.alert(
+        t('session.cannotJoin'),
+        t('session.blockedRelationship')
+      );
+      return;
+    }
 
     const { error } = await supabase.from('session_participants').insert({
       session_id: session.id,
@@ -463,7 +476,23 @@ export default function SessionDetailScreen({ navigation, route }: Props) {
           )}
 
           <Divider style={styles.divider} />
-          <Text style={styles.creatorLabel}>{t('session.createdBy')}</Text>
+          <View style={styles.creatorHeaderRow}>
+            <Text style={styles.creatorLabel}>{t('session.createdBy')}</Text>
+            {!isCreator && (
+              <TouchableOpacity
+                onPress={() => navigation.navigate('ReportUser', {
+                  userId: session.creator_id,
+                  userName: session.creator?.full_name || t('session.creator')
+                })}
+                style={styles.reportButton}
+              >
+                <MaterialCommunityIcons name="flag-outline" size={20} color={theme.colors.error} />
+                <Text style={[styles.reportText, { color: theme.colors.error }]}>
+                  {t('common.report')}
+                </Text>
+              </TouchableOpacity>
+            )}
+          </View>
           <TouchableOpacity
             style={styles.creatorRow}
             onPress={() => handleUserClick(session.creator_id, session.creator?.full_name)}
@@ -817,10 +846,26 @@ const styles = StyleSheet.create({
     fontSize: 14,
     lineHeight: 20,
   },
+  creatorHeaderRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 10,
+  },
   creatorLabel: {
     fontSize: 14,
     fontWeight: '700',
-    marginBottom: 10,
+  },
+  reportButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingVertical: 4,
+    paddingHorizontal: 8,
+  },
+  reportText: {
+    fontSize: 13,
+    fontWeight: '600',
+    marginLeft: 4,
   },
   creatorRow: {
     flexDirection: 'row',

@@ -26,6 +26,7 @@ import SettingsScreen from '../screens/Settings/SettingsScreen';
 import LanguageSelectionScreen from '../screens/Settings/LanguageSelectionScreen';
 import NotificationSettingsScreen from '../screens/Settings/NotificationSettingsScreen';
 import NotificationsScreen from '../screens/Notifications/NotificationsScreen';
+import AIAssistantScreen from '../screens/AIAssistant/AIAssistantScreen';
 
 export type MainTabParamList = {
   Home: undefined;
@@ -53,6 +54,7 @@ export type RootStackParamList = {
   LanguageSelection: undefined;
   NotificationSettings: undefined;
   Notifications: undefined;
+  AIAssistant: undefined;
 };
 
 const MainTab = createBottomTabNavigator<MainTabParamList>();
@@ -249,6 +251,11 @@ export default function AppNavigator() {
         name="Notifications"
         component={NotificationsScreen}
         options={{ title: t('navigation.notifications') }}
+      />
+      <RootStack.Screen
+        name="AIAssistant"
+        component={AIAssistantScreen}
+        options={{ title: t('aiAssistant.title') }}
       />
     </RootStack.Navigator>
   );

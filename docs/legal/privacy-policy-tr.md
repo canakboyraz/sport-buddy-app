@@ -66,40 +66,62 @@ Aşağıdaki üçüncü taraf hizmetleri kullanıyoruz:
 ### 3.3 Yasal Yükümlülükler
 Yasal gereksinimleri karşılamak, kullanıcı güvenliğini sağlamak veya hukuki süreçlere yanıt vermek için bilgilerinizi yetkili makamlarla paylaşabiliriz.
 
-## 4. Veri Güvenliği
+## 4. İçerik Moderasyonu ve Güvenlik
+
+Tüm kullanıcılar için güvenli ve saygılı bir ortam sağlamayı taahhüt ediyoruz:
+
+### 4.1 İçerik Moderasyonu
+- Tüm kullanıcı tarafından oluşturulan içerik (mesajlar, etkinlik açıklamaları, profil bilgileri) otomatik içerik filtrelerine tabidir
+- Topluluk kurallarını ihlal eden içerikler otomatik olarak işaretlenebilir veya engellenebilir
+- Moderasyon sistemimiz uygunsuz dil, spam ve taciz içeren içerikleri kontrol eder
+- Tekrarlayan ihlaller hesap askıya alma veya sonlandırma ile sonuçlanabilir
+
+### 4.2 Şikayet ve Engelleme
+- **Şikayet Özelliği**: Kullanıcılar uygunsuz içerik, mesaj veya kullanıcıları raporlayabilir
+- **Engelleme Özelliği**: Kullanıcılar istenmeyen etkileşimleri önlemek için diğer kullanıcıları engelleyebilir
+- **İnceleme Süreci**: Tüm şikayetler moderasyon ekibimiz tarafından incelenir
+- **Yanıt Süresi**: Şikayetlere 24-48 saat içinde yanıt vermeyi hedefliyoruz
+
+### 4.3 Kullanıcı Sorumlulukları
+- Kullanıcılar paylaştıkları içerikten sorumludur
+- Yanlış veya kötü niyetli şikayetler hesap cezalarına yol açabilir
+- Kullanıcılar başkalarına saygı göstermeli ve topluluk kurallarına uymalıdır
+
+## 5. Veri Güvenliği
 
 Bilgilerinizin güvenliğini sağlamak için aşağıdaki önlemleri alıyoruz:
 - **Şifreleme**: Tüm veri iletimi SSL/TLS ile şifrelenir
 - **Güvenli Kimlik Doğrulama**: Şifreler hash'lenerek saklanır
 - **Erişim Kontrolü**: Row Level Security (RLS) politikaları ile veri erişimi kısıtlanır
 - **Düzenli Güvenlik Güncellemeleri**: Sistemlerimiz düzenli olarak güncellenir
+- **İçerik Moderasyonu**: Kullanıcı güvenliğini sağlamak için otomatik ve manuel içerik moderasyonu
 
-## 5. Veri Saklama Süresi
+## 6. Veri Saklama Süresi
 
 - **Aktif Hesaplar**: Hesabınız aktif olduğu sürece verileriniz saklanır
 - **Silinmiş Hesaplar**: Hesap silme talebinden sonra 30 gün içinde tüm verileriniz kalıcı olarak silinir
 - **Yedekleme**: Güvenlik amaçlı yedeklemeler 90 gün süreyle saklanır
 
-## 6. Kullanıcı Hakları
+## 7. Kullanıcı Hakları
 
 Aşağıdaki haklara sahipsiniz:
 
-### 6.1 Erişim Hakkı
+### 7.1 Erişim Hakkı
 Hakkınızda sakladığımız kişisel bilgilere erişim talep edebilirsiniz.
 
-### 6.2 Düzeltme Hakkı
+### 7.2 Düzeltme Hakkı
 Yanlış veya eksik bilgilerinizin düzeltilmesini talep edebilirsiniz.
 
-### 6.3 Silme Hakkı (Unutulma Hakkı)
+### 7.3 Silme Hakkı (Unutulma Hakkı)
 Kişisel verilerinizin silinmesini talep edebilirsiniz. Hesap ayarlarından "Hesabı Sil" seçeneğini kullanabilirsiniz.
 
-### 6.4 İtiraz Hakkı
+### 7.4 İtiraz Hakkı
 Verilerinizin işlenmesine itiraz edebilirsiniz.
 
-### 6.5 Veri Taşınabilirliği
+### 7.5 Veri Taşınabilirliği
 Verilerinizin yapılandırılmış bir formatta size verilmesini talep edebilirsiniz.
 
-## 7. Çocukların Gizliliği
+## 8. Çocukların Gizliliği
 
 Uygulamamız 13 yaşın altındaki çocuklara yönelik değildir. Bilerek 13 yaşından küçük çocuklardan kişisel bilgi toplamıyoruz. Eğer 13 yaşından küçük bir çocuğun bilgilerini topladığımızı fark edersek, bu bilgileri derhal sileriz.
 

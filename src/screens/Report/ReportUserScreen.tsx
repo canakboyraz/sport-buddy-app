@@ -7,6 +7,7 @@ import {
   TextInput,
   RadioButton,
   ActivityIndicator,
+  Checkbox,
 } from 'react-native-paper';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { supabase } from '../../services/supabase';
@@ -34,6 +35,7 @@ export default function ReportUserScreen({ navigation, route }: Props) {
   const [reportType, setReportType] = useState<string>('');
   const [description, setDescription] = useState('');
   const [submitting, setSubmitting] = useState(false);
+  const [alsoBlockUser, setAlsoBlockUser] = useState(false);
 
   const handleSubmit = async () => {
     if (!user) return;
@@ -70,18 +72,35 @@ export default function ReportUserScreen({ navigation, route }: Props) {
           console.error('Error reporting user:', error);
           Alert.alert('Hata', 'Şikayet gönderilirken bir hata oluştu.');
         }
-      } else {
-        Alert.alert(
-          'Başarılı',
-          'Şikayetiniz alındı. İnceleme sonucu size bildirilecektir.',
-          [
-            {
-              text: 'Tamam',
-              onPress: () => navigation.goBack(),
-            },
-          ]
-        );
+        setSubmitting(false);
+        return;
       }
+
+      // If user chose to also block, block the user
+      if (alsoBlockUser) {
+        const { error: blockError } = await supabase.rpc('block_user', {
+          p_blocker_id: user.id,
+          p_blocked_id: userId,
+          p_reason: `Reported for: ${reportType}`,
+        });
+
+        if (blockError) {
+          console.error('Error blocking user:', blockError);
+        }
+      }
+
+      Alert.alert(
+        'Başarılı',
+        alsoBlockUser
+          ? 'Şikayetiniz alındı ve kullanıcı engellendi.'
+          : 'Şikayetiniz alındı. İnceleme sonucu size bildirilecektir.',
+        [
+          {
+            text: 'Tamam',
+            onPress: () => navigation.goBack(),
+          },
+        ]
+      );
     } catch (error) {
       console.error('Error reporting user:', error);
       Alert.alert('Hata', 'Şikayet gönderilirken bir hata oluştu.');
@@ -154,6 +173,20 @@ export default function ReportUserScreen({ navigation, route }: Props) {
             maxLength={500}
           />
           <Text style={styles.charCount}>{description.length}/500</Text>
+
+          <View style={styles.checkboxContainer}>
+            <Checkbox
+              status={alsoBlockUser ? 'checked' : 'unchecked'}
+              onPress={() => setAlsoBlockUser(!alsoBlockUser)}
+              color="#6200ee"
+            />
+            <Text
+              style={styles.checkboxLabel}
+              onPress={() => setAlsoBlockUser(!alsoBlockUser)}
+            >
+              Bu kullanıcıyı da engelle (önerilir)
+            </Text>
+          </View>
 
           <Button
             mode="contained"
@@ -259,6 +292,24 @@ const styles = StyleSheet.create({
     color: '#999',
     textAlign: 'right',
     marginTop: 4,
+  },
+  checkboxContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginTop: 20,
+    marginBottom: 4,
+    backgroundColor: '#FFF3E0',
+    padding: 12,
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: '#FFB74D',
+  },
+  checkboxLabel: {
+    flex: 1,
+    fontSize: 14,
+    color: '#333',
+    marginLeft: 8,
+    fontWeight: '500',
   },
   submitButton: {
     marginTop: 20,

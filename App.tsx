@@ -19,6 +19,8 @@ import ErrorBoundary from './src/components/ErrorBoundary';
 // NOTE: i18n is now initialized in LanguageContext, not here
 import * as Sentry from '@sentry/react-native';
 import { ActivityIndicator, View } from 'react-native';
+import PrivacyConsentScreen, { checkPrivacyConsent } from './src/screens/PrivacyConsent/PrivacyConsentScreen';
+import CommunityGuidelinesScreen, { checkGuidelinesConsent } from './src/screens/CommunityGuidelines/CommunityGuidelinesScreen';
 
 // Initialize Sentry (only if DSN is configured)
 const sentryDsn = process.env.EXPO_PUBLIC_SENTRY_DSN;
@@ -41,6 +43,9 @@ if (sentryDsn && !sentryDsn.includes('your-sentry-dsn')) {
 function AppContent() {
   const [session, setSession] = useState<Session | null>(null);
   const [loading, setLoading] = useState(true);
+  const [privacyConsentAccepted, setPrivacyConsentAccepted] = useState<boolean>(false);
+  const [guidelinesAccepted, setGuidelinesAccepted] = useState<boolean>(false);
+  const [checkingConsent, setCheckingConsent] = useState(true);
   const notificationListener = useRef<any>();
   const responseListener = useRef<any>();
   const navigationRef = useRef<NavigationContainerRef<any>>(null);
@@ -60,6 +65,23 @@ function AppContent() {
 
     return () => subscription.unsubscribe();
   }, []);
+
+  // Check privacy consent and guidelines when session exists
+  useEffect(() => {
+    const checkConsent = async () => {
+      if (session) {
+        const [hasAcceptedPrivacy, hasAcceptedGuidelines] = await Promise.all([
+          checkPrivacyConsent(),
+          checkGuidelinesConsent()
+        ]);
+        setPrivacyConsentAccepted(hasAcceptedPrivacy);
+        setGuidelinesAccepted(hasAcceptedGuidelines);
+      }
+      setCheckingConsent(false);
+    };
+
+    checkConsent();
+  }, [session]);
 
   // Push notification kurulumu
   useEffect(() => {
@@ -112,11 +134,33 @@ function AppContent() {
   }, [session]);
 
   // Show loading while auth is initializing
-  if (loading) {
+  if (loading || checkingConsent) {
     return (
       <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: theme.colors.background }}>
         <ActivityIndicator size="large" color={theme.colors.primary} />
       </View>
+    );
+  }
+
+  // Show privacy consent screen if user is logged in but hasn't accepted
+  if (session && !privacyConsentAccepted) {
+    return (
+      <ErrorBoundary>
+        <PaperProvider theme={theme}>
+          <PrivacyConsentScreen onAccept={() => setPrivacyConsentAccepted(true)} />
+        </PaperProvider>
+      </ErrorBoundary>
+    );
+  }
+
+  // Show community guidelines screen if privacy accepted but guidelines not accepted
+  if (session && privacyConsentAccepted && !guidelinesAccepted) {
+    return (
+      <ErrorBoundary>
+        <PaperProvider theme={theme}>
+          <CommunityGuidelinesScreen onAccept={() => setGuidelinesAccepted(true)} />
+        </PaperProvider>
+      </ErrorBoundary>
     );
   }
 

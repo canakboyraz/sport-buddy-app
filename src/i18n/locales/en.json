@@ -33,7 +33,8 @@
     "more": "More",
     "less": "Less",
     "all": "All",
-    "unknown": "Unknown"
+    "unknown": "Unknown",
+    "report": "Report"
   },
 
   "auth": {
@@ -766,5 +767,97 @@
     "messages": "Messages",
     "ratingsCount": "Ratings",
     "loadError": "Could not load statistics"
+  },
+
+  "privacyConsent": {
+    "title": "Privacy & Data Usage",
+    "subtitle": "We care about your privacy and want to be transparent about how we use your data",
+    "dataWeCollect": "Data We Collect",
+    "dataTypes": {
+      "profile": "Profile Information",
+      "profileDesc": "Name, email, date of birth, and profile photo",
+      "location": "Location Data",
+      "locationDesc": "To show nearby events and help you find activities",
+      "messages": "Messages & Communication",
+      "messagesDesc": "In-app messages and event participation history",
+      "photos": "Photos & Media",
+      "photosDesc": "Profile and event photos you choose to upload",
+      "notifications": "Push Notifications",
+      "notificationsDesc": "Event reminders and new message alerts"
+    },
+    "safetyTitle": "Your Safety Matters",
+    "safetyDesc": "We've built safety features to protect you and our community:",
+    "features": {
+      "report": "Report inappropriate content or users",
+      "block": "Block users to prevent unwanted interactions",
+      "moderation": "Automatic content filtering for safety"
+    },
+    "yourRights": "Your Rights",
+    "rightsDesc": "You can access, update, or delete your data at any time. You can also control what data we collect through app settings.",
+    "readPrivacyPolicy": "Read Full Privacy Policy",
+    "readTerms": "Read Terms of Service",
+    "acceptText": "I understand and accept the Privacy Policy and Terms of Service",
+    "continue": "Continue to App"
+  },
+
+  "chat": {
+    "typeMessage": "Type a message...",
+    "reportMessage": "Report Message",
+    "reportMessageConfirm": "Do you want to report this message? This will help us maintain a safe community.",
+    "rateLimitTitle": "Slow Down",
+    "rateLimitMessage": "You're sending messages too quickly. Please wait a moment before sending another message.",
+    "contentWarningTitle": "Content Warning",
+    "contentWarningMessage": "Your message contains inappropriate content. Please revise your message.",
+    "sendError": "Failed to send message",
+    "uploadError": "Failed to upload image"
+  },
+
+  "guidelines": {
+    "title": "Community Guidelines",
+    "subtitle": "Building a Safe and Respectful Sports Community Together",
+    "rulesTitle": "Our Guidelines",
+    "respectTitle": "Be Respectful",
+    "respectDesc": "Treat all members with respect and kindness. Harassment, discrimination, and bullying will not be tolerated.",
+    "safetyTitle": "Prioritize Safety",
+    "safetyDesc": "Meet in public places, share your location with trusted contacts, and trust your instincts. Your safety is paramount.",
+    "appropriateTitle": "Keep Content Appropriate",
+    "appropriateDesc": "Share only content that is suitable for all ages. No explicit, offensive, or inappropriate material is allowed.",
+    "noSpamTitle": "No Spam or Scams",
+    "noSpamDesc": "Don't spam, promote unauthorized commercial activities, or engage in fraudulent behavior.",
+    "followLawsTitle": "Follow the Law",
+    "followLawsDesc": "All activities must comply with local laws and regulations. Illegal activities are strictly prohibited.",
+    "violationTitle": "Violations & Consequences",
+    "violationIntro": "Violations of these guidelines may result in:",
+    "consequences": {
+      "warning": "Warning notification",
+      "contentRemoval": "Content removal",
+      "temporary": "Temporary account suspension",
+      "permanentBan": "Permanent account termination"
+    },
+    "reportTitle": "Report Violations",
+    "reportDesc": "If you see content or behavior that violates these guidelines, please report it. Your reports help keep our community safe.",
+    "acceptText": "I have read and agree to follow the Community Guidelines",
+    "continue": "Continue"
+  },
+
+  "aiAssistant": {
+    "title": "AI Assistant",
+    "welcomeMessage": "Hi! I'm SportBot, your AI assistant. How can I help you today?",
+    "typeMessage": "Ask me anything...",
+    "thinking": "is thinking...",
+    "errorMessage": "Sorry, I couldn't process that. Please try again.",
+    "quickActions": "Quick Actions",
+    "findEvents": "Find Events",
+    "findEventsQuery": "I want to find sports events near me",
+    "sportTips": "Sport Tips",
+    "sportTipsQuery": "Give me tips for staying active",
+    "howToUse": "How to Use App",
+    "howToUseQuery": "How do I use this app?",
+    "autoGenerate": "Generate with AI",
+    "generating": "Generating..."
+  },
+
+  "common": {
+    "languageCode": "en"
   }
 }
