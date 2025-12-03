@@ -177,22 +177,26 @@ Start your active life with Sport Buddy! 🎾⚽🏀
 
 **Önerilen Limitler:**
 ```
-Hard Limit (Zorunlu Limit): $10
+Hard Limit (Zorunlu Limit): $5
 - Bu limite ulaşınca tüm API çağrıları durdurulur
-- Beklenmedik yüksek faturayı engeller
+- OpenAI'ın ücretsiz $5 kredisi bitince otomatik durur
+- HİÇBİR ÜCRET ÖDEMEZSİNİZ! 🎉
 
-Soft Limit (Uyarı Limiti): $5
+Soft Limit (Uyarı Limiti): $3
 - Bu limite ulaşınca email uyarısı gelir
 - API çağrıları devam eder
+- Ücretsiz krediniz bitmeye yaklaşıyor uyarısı
 ```
 
 **Nasıl Ayarlanır:**
 1. https://platform.openai.com/account/billing/limits adresine git
 2. "Set a monthly budget" kısmını bul
-3. Hard limit: $10
-4. Soft limit: $5
+3. Hard limit: $5 (ÖNEMLİ: Tam 5 yazın, ücretsiz krediniz bitince durur)
+4. Soft limit: $3 (Uyarı için)
 5. Email adresini doğrula
 6. Save
+
+**SONUÇ:** Hiç ücret ödemeden aylar boyunca test edebilirsiniz!
 
 #### Usage Monitoring (Kullanım Takibi)
 📍 **Konum:** https://platform.openai.com/usage
@@ -298,7 +302,7 @@ Soft Limit (Uyarı Limiti): $5
 
 1. ✅ Privacy policy güncellendi
 2. ✅ Review notes hazırlandı
-3. ⏳ OpenAI spending limit ayarla ($10)
+3. ⏳ OpenAI spending limit ayarla ($5 - ücretsiz krediniz bitince durur)
 4. ⏳ Test account'u doğrula
 5. ⏳ App Store Connect'te review notes ekle
 6. ⏳ Build oluştur ve gönder
