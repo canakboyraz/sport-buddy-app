@@ -34,7 +34,8 @@
     "less": "Less",
     "all": "All",
     "unknown": "Unknown",
-    "report": "Report"
+    "report": "Report",
+    "languageCode": "en"
   },
 
   "auth": {
@@ -855,9 +856,5 @@
     "howToUseQuery": "How do I use this app?",
     "autoGenerate": "Generate with AI",
     "generating": "Generating..."
-  },
-
-  "common": {
-    "languageCode": "en"
   }
 }

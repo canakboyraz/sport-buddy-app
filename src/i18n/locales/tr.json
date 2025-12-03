@@ -34,7 +34,8 @@
     "less": "Daha Az",
     "all": "Tümü",
     "unknown": "Bilinmeyen",
-    "report": "Şikayet Et"
+    "report": "Şikayet Et",
+    "languageCode": "tr"
   },
 
   "auth": {
@@ -855,9 +856,5 @@
     "howToUseQuery": "Bu uygulamayı nasıl kullanırım?",
     "autoGenerate": "AI ile Oluştur",
     "generating": "Oluşturuluyor..."
-  },
-
-  "common": {
-    "languageCode": "tr"
   }
 }
