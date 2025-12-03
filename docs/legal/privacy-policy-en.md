@@ -1,6 +1,6 @@
 # Privacy Policy
 
-**Last Updated:** November 28, 2024
+**Last Updated:** December 3, 2024
 
 Sport Buddy ("We", "Application") is committed to protecting the privacy of our users. This Privacy Policy explains what information is collected when using our mobile application, how it is used, and how it is protected.
 
@@ -65,6 +65,28 @@ We use the following third-party services:
 
 ### 3.3 Legal Obligations
 We may share your information with authorities to comply with legal requirements, ensure user safety, or respond to legal processes.
+
+### 3.4 Artificial Intelligence (AI) Services
+Our application uses OpenAI GPT-4o-mini artificial intelligence model to enhance user experience:
+- **OpenAI**: AI chat assistant, content generation, and moderation services
+
+**Data Sent to AI:**
+- User messages (only when you use the AI assistant feature)
+- Event information (sport type, location, date - when generating descriptions)
+- User-generated content (for moderation purposes)
+
+**Data NOT Sent to AI:**
+- Email address, phone number
+- Password and authentication credentials
+- Your full name (only username is sent)
+- Financial information
+- Device information
+
+**Data Security:**
+- All data is transmitted over encrypted channels (HTTPS)
+- OpenAI stores your data for 30 days, then deletes it
+- OpenAI API-0 agreement: Your data is not used for model training
+- More info: https://openai.com/privacy
 
 ## 4. Content Moderation and Safety
 

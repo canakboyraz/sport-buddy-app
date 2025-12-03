@@ -1,6 +1,6 @@
 # Gizlilik Politikası
 
-**Son Güncelleme:** 28 Kasım 2024
+**Son Güncelleme:** 3 Aralık 2024
 
 Sport Buddy ("Biz", "Uygulama") olarak, kullanıcılarımızın gizliliğini korumayı taahhüt ediyoruz. Bu Gizlilik Politikası, mobil uygulamamızı kullanırken hangi bilgilerin toplandığını, nasıl kullanıldığını ve korunduğunu açıklar.
 
@@ -65,6 +65,28 @@ Aşağıdaki üçüncü taraf hizmetleri kullanıyoruz:
 
 ### 3.3 Yasal Yükümlülükler
 Yasal gereksinimleri karşılamak, kullanıcı güvenliğini sağlamak veya hukuki süreçlere yanıt vermek için bilgilerinizi yetkili makamlarla paylaşabiliriz.
+
+### 3.4 Yapay Zeka (AI) Hizmetleri
+Uygulamamız, kullanıcı deneyimini geliştirmek için OpenAI GPT-4o-mini yapay zeka modelini kullanır:
+- **OpenAI**: AI sohbet asistanı, içerik oluşturma ve moderasyon hizmetleri
+
+**AI'ya Gönderilen Veriler:**
+- Kullanıcı mesajları (sadece AI asistan özelliğini kullandığınızda)
+- Etkinlik bilgileri (spor türü, konum, tarih - açıklama oluştururken)
+- Kullanıcı tarafından oluşturulan içerik (moderasyon için)
+
+**AI'ya GÖNDERİLMEYEN Veriler:**
+- E-posta adresi, telefon numarası
+- Şifre ve kimlik doğrulama bilgileri
+- Tam adınız (sadece kullanıcı adı gönderilir)
+- Finansal bilgiler
+- Cihaz bilgileri
+
+**Veri Güvenliği:**
+- Tüm veriler şifreli kanal (HTTPS) üzerinden gönderilir
+- OpenAI verilerinizi 30 gün saklar, ardından siler
+- OpenAI API-0 sözleşmesi: Verileriniz model eğitiminde kullanılmaz
+- Detaylı bilgi: https://openai.com/privacy
 
 ## 4. İçerik Moderasyonu ve Güvenlik
 
