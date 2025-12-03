@@ -1,0 +1,36 @@
+tree 6d9436f14af729bc474fa8b6d70daaf6f5341ba4
+parent 65a4e61f669192c97f1cec8ac7103a5cc6686137
+author Can Akboyraz <canakboyraz@gmail.com> 1763528497 +0300
+committer Can Akboyraz <canakboyraz@gmail.com> 1763528497 +0300
+
+feat: Add smart push notifications for session reminders
+
+Implemented intelligent notification system with automated session reminders:
+
+Smart Session Reminders:
+- Automatic notifications at 2 hours, 1 hour, and 30 minutes before session
+- scheduleSessionReminders() function for setting up all reminders
+- cancelSessionReminders() to remove notifications when user leaves
+- getScheduledSessionReminders() to view all scheduled notifications
+
+Notification Types:
+- Session reminders with time-based priority
+- Achievement unlock notifications
+- New message notifications
+- Participant joined notifications
+
+Integration:
+- Auto-schedule reminders when participant is approved
+- Notify session creator when new participant joins
+- Uses Expo Notifications API for cross-platform support
+- Proper error handling and logging
+
+Features:
+- High priority for 30-minute reminder
+- Custom data payload for deep linking
+- Sound and vibration support
+- Android notification channels configured
+
+🤖 Generated with [Claude Code](https://claude.com/claude-code)
+
+Co-Authored-By: Claude <noreply@anthropic.com>
