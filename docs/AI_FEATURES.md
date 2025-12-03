@@ -1,6 +1,6 @@
 # 🤖 AI Features Documentation
 
-Sport Buddy now includes powerful AI features powered by OpenAI GPT-4 to enhance user experience and engagement.
+Sport Buddy now includes powerful AI features powered by OpenAI GPT-4o-mini to enhance user experience and engagement.
 
 ## 🎯 Features Overview
 
@@ -216,28 +216,29 @@ if (!result.isAllowed) {
 
 ## 💰 Cost Estimation
 
-**OpenAI GPT-4 Pricing:**
-- Input: $0.03 / 1K tokens
-- Output: $0.06 / 1K tokens
+**OpenAI GPT-4o-mini Pricing:**
+- Input: $0.00015 / 1K tokens (200x cheaper than GPT-4)
+- Output: $0.0006 / 1K tokens (100x cheaper than GPT-4)
 
 **Approximate Costs Per Action:**
-- Chatbot message: ~$0.002
-- Description generation: ~$0.005
-- Content moderation: ~$0.001
-- Notification personalization: ~$0.001
+- Chatbot message: ~$0.00001 (1000 messages = $0.01)
+- Description generation: ~$0.00003 (1000 generations = $0.03)
+- Content moderation: ~$0.000005 (1000 moderations = $0.005)
+- Notification personalization: ~$0.000005 (1000 notifications = $0.005)
 
 **Monthly Estimate (1000 active users):**
-- 5 chatbot messages/user: $10
-- 2 description generations/user: $10
-- 50 moderations/user: $50
-- 20 notifications/user: $20
-- **Total: ~$90/month**
+- 5 chatbot messages/user: $0.05
+- 2 description generations/user: $0.06
+- 50 moderations/user: $0.25
+- 20 notifications/user: $0.10
+- **Total: ~$0.50/month** (180x cheaper than GPT-4!)
 
 **Optimization Tips:**
-- Cache common responses
-- Use GPT-3.5-Turbo for simpler tasks (10x cheaper)
-- Implement rate limiting
-- Batch similar requests
+- Cache common responses to reduce API calls
+- Implement rate limiting (e.g., 20 AI requests/user/hour)
+- Batch similar requests when possible
+- Monitor usage with analytics
+- Consider increasing feature limits with these low costs
 
 ---
 
@@ -303,21 +304,23 @@ max_tokens: 250,  // Increase/decrease
 temperature: 0.8,  // 0.0 = deterministic, 1.0 = creative
 ```
 
-### Switch to GPT-3.5-Turbo (Cheaper)
+### Model Selection
 
-For less critical features, use GPT-3.5-Turbo:
+**Currently Using: GPT-4o-mini** ✅
 
-```typescript
-const response = await openai.chat.completions.create({
-  model: 'gpt-3.5-turbo',  // Changed from 'gpt-4'
-  // ... rest of config
-});
-```
+We're already using the most cost-effective model! GPT-4o-mini provides:
+- 🎯 High quality responses
+- ⚡ Fast response times
+- 💰 Lowest cost of all GPT models
+- 🌍 Excellent multilingual support (Turkish & English)
 
 **Cost Comparison:**
 - GPT-4: $0.03 input / $0.06 output
 - GPT-3.5-Turbo: $0.001 input / $0.002 output
-- **30x cheaper!**
+- **GPT-4o-mini: $0.00015 input / $0.0006 output** (Best value!)
+- **200x cheaper than GPT-4, 7x cheaper than GPT-3.5-Turbo!**
+
+No need to optimize further - you're already using the best model for cost efficiency!
 
 ---
 
@@ -330,8 +333,9 @@ Add logging to track costs:
 ```typescript
 // In aiService.ts
 const logAIUsage = (feature: string, inputTokens: number, outputTokens: number) => {
-  const cost = (inputTokens * 0.03 + outputTokens * 0.06) / 1000;
-  console.log(`[AI] ${feature}: $${cost.toFixed(4)}`);
+  // GPT-4o-mini pricing: $0.00015 input, $0.0006 output per 1K tokens
+  const cost = (inputTokens * 0.00015 + outputTokens * 0.0006) / 1000;
+  console.log(`[AI] ${feature}: $${cost.toFixed(6)}`);
 
   // Send to analytics service
   analytics.track('ai_usage', {
