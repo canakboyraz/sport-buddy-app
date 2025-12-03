@@ -162,10 +162,28 @@ Tone: Friendly, energetic, motivating`;
       response_format: { type: 'json_object' },
     });
 
-    const result = JSON.parse(response.choices[0].message.content || '{}');
+    const content = response.choices[0].message.content || '{}';
+
+    // Safe JSON parsing with error handling
+    let result;
+    try {
+      result = JSON.parse(content);
+    } catch (parseError) {
+      console.error('Generate session content - JSON parse error:', parseError);
+      console.error('Raw content:', content);
+      return { title: '', description: '' };
+    }
+
+    // Clean and validate output (PostgreSQL handles escaping automatically)
+    const cleanText = (text: string): string => {
+      if (!text) return '';
+      // Just trim and remove any null bytes that might cause issues
+      return text.trim().replace(/\0/g, '');
+    };
+
     return {
-      title: result.title || '',
-      description: result.description || '',
+      title: result.title ? cleanText(result.title).substring(0, 200) : '',
+      description: result.description ? cleanText(result.description).substring(0, 5000) : '',
     };
   } catch (error) {
     console.error('Generate session content error:', error);
@@ -311,7 +329,18 @@ Respond in JSON format:
       response_format: { type: 'json_object' },
     });
 
-    const result = JSON.parse(response.choices[0].message.content || '{}');
+    const content = response.choices[0].message.content || '{}';
+
+    // Safe JSON parsing with error handling
+    let result;
+    try {
+      result = JSON.parse(content);
+    } catch (parseError) {
+      console.error('AI moderation - JSON parse error:', parseError);
+      console.error('Raw content:', content);
+      // Fallback to allowing content if parsing fails
+      return { isAllowed: true };
+    }
 
     return {
       isAllowed: language === 'tr' ? result.uygun !== false : result.allowed !== false,

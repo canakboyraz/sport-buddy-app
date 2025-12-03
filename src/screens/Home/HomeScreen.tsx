@@ -283,6 +283,14 @@ export default function HomeScreen({ navigation }: Props) {
 
     if (error) {
       console.error('[HomeScreen] loadSessions error (page ' + pageNum + '):', error);
+      // Log detailed error information for debugging
+      console.error('[HomeScreen] Error details:', {
+        message: error.message,
+        details: error.details,
+        hint: error.hint,
+        code: error.code,
+      });
+
       // Don't spam logs for pagination errors - just stop loading more
       if (append) {
         // Pagination error - just stop, don't clear existing sessions
