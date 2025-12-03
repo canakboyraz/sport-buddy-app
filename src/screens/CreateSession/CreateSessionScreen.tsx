@@ -238,7 +238,7 @@ export default function CreateSessionScreen({ navigation }: any) {
     try {
       const sportName = sports.find(s => s.id === selectedSport)?.name || '';
       const dateStr = format(sessionDate, 'PPP', { locale: getDateLocale() });
-      const timeStr = format(sessionTime, 'p', { locale: getDateLocale() });
+      const timeStr = format(sessionDate, 'p', { locale: getDateLocale() });
 
       const generatedDesc = await generateSessionDescription({
         sportName,
