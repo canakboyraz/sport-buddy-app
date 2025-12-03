@@ -91,7 +91,90 @@ ${userContext?.favoriteSports?.length ? `- Favorite Sports: ${userContext.favori
 }
 
 /**
- * Auto-generate session description
+ * Auto-generate session title and description
+ * Creates engaging title and descriptions for sports sessions
+ */
+export async function generateSessionContent(params: {
+  sportName: string;
+  date: string;
+  time: string;
+  location: string;
+  skillLevel: string;
+  maxParticipants?: number;
+  language?: 'tr' | 'en';
+}): Promise<{ title: string; description: string }> {
+  try {
+    const { sportName, date, time, location, skillLevel, maxParticipants, language = 'tr' } = params;
+
+    const prompt = language === 'tr'
+      ? `Bir spor seansı için çekici başlık ve açıklama yaz.
+
+Bilgiler:
+- Spor: ${sportName}
+- Tarih: ${date}
+- Saat: ${time}
+- Konum: ${location}
+- Seviye: ${skillLevel}
+${maxParticipants ? `- Maksimum Katılımcı: ${maxParticipants}` : ''}
+
+JSON formatında döndür:
+{
+  "title": "Kısa, çekici başlık (emoji ile, max 50 karakter)",
+  "description": "Detaylı açıklama (200-300 kelime, emoji ve hashtag ile)"
+}
+
+Açıklama gereksinimleri:
+- Motive edici giriş paragrafı
+- Bilgiler: 📍 Konum, ⏰ Saat, 🎯 Seviye, 👥 Kontenjan
+- Getirilmesi gerekenler (3-4 madde, emoji ile)
+- Alakalı hashtag'ler (3-4 tane)
+
+Ton: Samimi, enerjik, motive edici`
+      : `Write an engaging title and description for a sports session.
+
+Information:
+- Sport: ${sportName}
+- Date: ${date}
+- Time: ${time}
+- Location: ${location}
+- Skill Level: ${skillLevel}
+${maxParticipants ? `- Max Participants: ${maxParticipants}` : ''}
+
+Return in JSON format:
+{
+  "title": "Short, catchy title (with emoji, max 50 chars)",
+  "description": "Detailed description (200-300 words, with emojis and hashtags)"
+}
+
+Description requirements:
+- Motivating intro paragraph
+- Info: 📍 Location, ⏰ Time, 🎯 Level, 👥 Capacity
+- What to bring (3-4 items with emoji)
+- Relevant hashtags (3-4)
+
+Tone: Friendly, energetic, motivating`;
+
+    const response = await openai.chat.completions.create({
+      model: 'gpt-4o-mini',
+      messages: [{ role: 'user', content: prompt }],
+      max_tokens: 600,
+      temperature: 0.9,
+      response_format: { type: 'json_object' },
+    });
+
+    const result = JSON.parse(response.choices[0].message.content || '{}');
+    return {
+      title: result.title || '',
+      description: result.description || '',
+    };
+  } catch (error) {
+    console.error('Generate session content error:', error);
+    return { title: '', description: '' };
+  }
+}
+
+/**
+ * Auto-generate session description (legacy - kept for backward compatibility)
  * Creates engaging descriptions for sports sessions
  */
 export async function generateSessionDescription(params: {

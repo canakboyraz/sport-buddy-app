@@ -20,7 +20,7 @@ import {
 import { useLanguage } from '../../contexts/LanguageContext';
 import { moderateSessionTitle, moderateSessionDescription } from '../../services/contentModerationService';
 import { getDateLocale } from '../../utils/dateLocale';
-import { generateSessionDescription } from '../../services/aiService';
+import { generateSessionContent } from '../../services/aiService';
 
 // Spor türlerine göre simge eşleştirme
 const getSportIcon = (sportName: string): string => {
@@ -224,11 +224,13 @@ export default function CreateSessionScreen({ navigation }: any) {
   };
 
   const handleGenerateDescription = async () => {
-    // Validate required fields for AI generation
-    if (!selectedSport || !title || !location) {
+    // Only sport and location are required for AI generation
+    if (!selectedSport || !location) {
       Alert.alert(
         t('common.error'),
-        'Please fill in sport, title, and location first to generate description.'
+        t('common.languageCode') === 'tr'
+          ? 'Lütfen önce spor ve konum seçin.'
+          : 'Please select sport and location first.'
       );
       return;
     }
@@ -240,7 +242,7 @@ export default function CreateSessionScreen({ navigation }: any) {
       const dateStr = format(sessionDate, 'PPP', { locale: getDateLocale() });
       const timeStr = format(sessionDate, 'p', { locale: getDateLocale() });
 
-      const generatedDesc = await generateSessionDescription({
+      const { title: generatedTitle, description: generatedDesc } = await generateSessionContent({
         sportName,
         date: dateStr,
         time: timeStr,
@@ -250,14 +252,31 @@ export default function CreateSessionScreen({ navigation }: any) {
         language: t('common.languageCode') as 'tr' | 'en',
       });
 
-      if (generatedDesc) {
-        setDescription(generatedDesc);
+      if (generatedTitle || generatedDesc) {
+        // Set title only if it's currently empty
+        if (!title && generatedTitle) {
+          setTitle(generatedTitle);
+        }
+        // Always set description
+        if (generatedDesc) {
+          setDescription(generatedDesc);
+        }
       } else {
-        Alert.alert(t('common.error'), 'Could not generate description. Please try again.');
+        Alert.alert(
+          t('common.error'),
+          t('common.languageCode') === 'tr'
+            ? 'İçerik oluşturulamadı. Lütfen tekrar deneyin.'
+            : 'Could not generate content. Please try again.'
+        );
       }
     } catch (error) {
       console.error('AI generation error:', error);
-      Alert.alert(t('common.error'), 'Failed to generate description. Please try again.');
+      Alert.alert(
+        t('common.error'),
+        t('common.languageCode') === 'tr'
+          ? 'İçerik oluşturulamadı. Lütfen tekrar deneyin.'
+          : 'Failed to generate content. Please try again.'
+      );
     } finally {
       setGeneratingDescription(false);
     }
@@ -522,12 +541,12 @@ export default function CreateSessionScreen({ navigation }: any) {
           style={[styles.input, { backgroundColor: theme.colors.surface }]}
         />
 
-        {/* AI Generate Description Button */}
+        {/* AI Generate Title & Description Button */}
         <Button
           mode="outlined"
           onPress={handleGenerateDescription}
           loading={generatingDescription}
-          disabled={generatingDescription || !selectedSport || !title || !location}
+          disabled={generatingDescription || !selectedSport || !location}
           icon="robot"
           style={styles.aiGenerateButton}
         >
