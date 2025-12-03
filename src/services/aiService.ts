@@ -1,6 +1,7 @@
 /**
  * AI Service
- * OpenAI GPT-4 integration for intelligent features
+ * OpenAI GPT-4o-mini integration for intelligent features
+ * Using GPT-4o-mini for cost efficiency and faster responses
  */
 
 import OpenAI from 'openai';
@@ -69,7 +70,7 @@ ${userContext?.location ? `- Location: ${userContext.location}` : ''}
 ${userContext?.favoriteSports?.length ? `- Favorite Sports: ${userContext.favoriteSports.join(', ')}` : ''}`;
 
     const response = await openai.chat.completions.create({
-      model: 'gpt-4',
+      model: 'gpt-4o-mini',
       messages: [
         { role: 'system', content: systemPrompt },
         { role: 'user', content: userMessage }
@@ -154,7 +155,7 @@ Tone: Friendly, energetic, motivating
 Length: Medium (200-300 words)`;
 
     const response = await openai.chat.completions.create({
-      model: 'gpt-4',
+      model: 'gpt-4o-mini',
       messages: [{ role: 'user', content: prompt }],
       max_tokens: 500,
       temperature: 0.9,
@@ -220,7 +221,7 @@ Respond in JSON format:
 }`;
 
     const response = await openai.chat.completions.create({
-      model: 'gpt-4',
+      model: 'gpt-4o-mini',
       messages: [{ role: 'user', content: prompt }],
       max_tokens: 150,
       temperature: 0.3,
@@ -319,7 +320,7 @@ Tone: Motivating (max 60 chars, add emoji):`;
     }
 
     const response = await openai.chat.completions.create({
-      model: 'gpt-4',
+      model: 'gpt-4o-mini',
       messages: [{ role: 'user', content: prompt }],
       max_tokens: 50,
       temperature: 0.9,
