@@ -139,14 +139,24 @@ export default function RegisterScreen({ navigation }: Props) {
                 {t('auth.iAccept') || 'I accept the'}{' '}
                 <Text
                   style={[styles.termsLink, { color: theme.colors.primary }]}
-                  onPress={() => Linking.openURL('https://canakboyraz.github.io/sport-buddy-app/terms-of-service-en.html')}
+                  onPress={() => {
+                    const url = t('common.languageCode') === 'tr'
+                      ? 'https://canakboyraz.github.io/sport-buddy-app/legal-docs/terms-of-service-tr.html'
+                      : 'https://canakboyraz.github.io/sport-buddy-app/legal-docs/terms-of-service-en.html';
+                    Linking.openURL(url);
+                  }}
                 >
                   {t('auth.termsOfService') || 'Terms of Service'}
                 </Text>
                 {' '}{t('common.and') || 'and'}{' '}
                 <Text
                   style={[styles.termsLink, { color: theme.colors.primary }]}
-                  onPress={() => Linking.openURL('https://canakboyraz.github.io/sport-buddy-app/community-guidelines-en.html')}
+                  onPress={() => {
+                    const url = t('common.languageCode') === 'tr'
+                      ? 'https://canakboyraz.github.io/sport-buddy-app/legal-docs/community-guidelines-tr.html'
+                      : 'https://canakboyraz.github.io/sport-buddy-app/legal-docs/community-guidelines-en.html';
+                    Linking.openURL(url);
+                  }}
                 >
                   {t('auth.communityGuidelines') || 'Community Guidelines'}
                 </Text>

@@ -269,14 +269,24 @@ export default function LoginScreen({ navigation }: Props) {
               {t('auth.loginTermsDisclaimer') || 'By logging in, you agree to our'}{' '}
               <Text
                 style={[styles.termsLink, { color: theme.colors.primary }]}
-                onPress={() => Linking.openURL('https://canakboyraz.github.io/sport-buddy-app/terms-of-service-en.html')}
+                onPress={() => {
+                  const url = t('common.languageCode') === 'tr'
+                    ? 'https://canakboyraz.github.io/sport-buddy-app/legal-docs/terms-of-service-tr.html'
+                    : 'https://canakboyraz.github.io/sport-buddy-app/legal-docs/terms-of-service-en.html';
+                  Linking.openURL(url);
+                }}
               >
                 {t('auth.termsOfService') || 'Terms of Service'}
               </Text>
               {' '}{t('common.and') || 'and'}{' '}
               <Text
                 style={[styles.termsLink, { color: theme.colors.primary }]}
-                onPress={() => Linking.openURL('https://canakboyraz.github.io/sport-buddy-app/privacy-policy-en.html')}
+                onPress={() => {
+                  const url = t('common.languageCode') === 'tr'
+                    ? 'https://canakboyraz.github.io/sport-buddy-app/legal-docs/privacy-policy-tr.html'
+                    : 'https://canakboyraz.github.io/sport-buddy-app/legal-docs/privacy-policy-en.html';
+                  Linking.openURL(url);
+                }}
               >
                 {t('auth.privacyPolicy') || 'Privacy Policy'}
               </Text>

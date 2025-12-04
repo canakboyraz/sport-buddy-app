@@ -30,7 +30,8 @@
     "continue": "Continue",
     "logout": "Logout",
     "and": "and",
-    "all": "All"
+    "all": "All",
+    "languageCode": "en"
   },
   "auth": {
     "login": "Login",

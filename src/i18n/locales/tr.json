@@ -30,7 +30,8 @@
     "continue": "Devam Et",
     "logout": "Çıkış Yap",
     "and": "ve",
-    "all": "Tümü"
+    "all": "Tümü",
+    "languageCode": "tr"
   },
   "auth": {
     "login": "Giriş Yap",

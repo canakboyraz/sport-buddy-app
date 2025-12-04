@@ -194,8 +194,8 @@ export default function SettingsScreen() {
           title: t('settings.termsOfService'),
           onPress: () => {
             const termsUrl = currentLanguage === 'tr'
-              ? 'https://canakboyraz.github.io/sport-buddy-app/terms-of-service-tr.html'
-              : 'https://canakboyraz.github.io/sport-buddy-app/terms-of-service-en.html';
+              ? 'https://canakboyraz.github.io/sport-buddy-app/legal-docs/terms-of-service-tr.html'
+              : 'https://canakboyraz.github.io/sport-buddy-app/legal-docs/terms-of-service-en.html';
             Linking.openURL(termsUrl);
           },
           showChevron: true,
@@ -205,8 +205,8 @@ export default function SettingsScreen() {
           title: t('settings.privacyPolicy'),
           onPress: () => {
             const privacyUrl = currentLanguage === 'tr'
-              ? 'https://canakboyraz.github.io/sport-buddy-app/privacy-policy-tr.html'
-              : 'https://canakboyraz.github.io/sport-buddy-app/privacy-policy-en.html';
+              ? 'https://canakboyraz.github.io/sport-buddy-app/legal-docs/privacy-policy-tr.html'
+              : 'https://canakboyraz.github.io/sport-buddy-app/legal-docs/privacy-policy-en.html';
             Linking.openURL(privacyUrl);
           },
           showChevron: true,
@@ -215,7 +215,7 @@ export default function SettingsScreen() {
           icon: 'file-certificate',
           title: t('settings.kvkk'),
           onPress: () => {
-            Linking.openURL('https://canakboyraz.github.io/sport-buddy-app/kvkk-aydinlatma-metni.html');
+            Linking.openURL('https://canakboyraz.github.io/sport-buddy-app/legal-docs/kvkk-aydinlatma-metni.html');
           },
           showChevron: true,
         },
