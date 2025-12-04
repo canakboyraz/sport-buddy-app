@@ -1,6 +1,6 @@
-import React, { useState } from 'react';
-import { View, StyleSheet, ScrollView } from 'react-native';
-import { Modal, Text, Button, Switch, Chip, useTheme, Card } from 'react-native-paper';
+import React, { useState, useEffect } from 'react';
+import { View, StyleSheet, ScrollView, TouchableOpacity, Dimensions, Platform } from 'react-native';
+import { Modal, Text, Button, Switch, useTheme, Surface, IconButton } from 'react-native-paper';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import Slider from '@react-native-community/slider';
 import { format } from 'date-fns';
@@ -24,7 +24,7 @@ interface Props {
 }
 
 const SKILL_LEVELS = ['beginner', 'intermediate', 'advanced', 'professional'];
-const DISTANCE_OPTIONS = [1, 5, 10, 25, 50, 100];
+const { width } = Dimensions.get('window');
 
 export default function AdvancedFiltersModal({
   visible,
@@ -36,6 +36,13 @@ export default function AdvancedFiltersModal({
   const theme = useTheme();
   const { t } = useLanguage();
   const [localFilters, setLocalFilters] = useState<AdvancedFilters>(filters);
+
+  // Update local state when prop changes
+  useEffect(() => {
+    if (visible) {
+      setLocalFilters(filters);
+    }
+  }, [visible, filters]);
 
   const handleApply = () => {
     onApply(localFilters);
@@ -57,410 +64,384 @@ export default function AdvancedFiltersModal({
     setLocalFilters({ ...localFilters, [key]: value });
   };
 
+  const renderDateOption = (label: string, icon: string, isSelected: boolean, onPress: () => void) => (
+    <TouchableOpacity
+      onPress={onPress}
+      style={[
+        styles.dateOption,
+        {
+          backgroundColor: isSelected ? theme.colors.primaryContainer : theme.colors.surface,
+          borderColor: isSelected ? theme.colors.primary : theme.colors.outline,
+        }
+      ]}
+    >
+      <MaterialCommunityIcons
+        name={icon as any}
+        size={24}
+        color={isSelected ? theme.colors.primary : theme.colors.onSurfaceVariant}
+      />
+      <Text style={[
+        styles.dateOptionLabel,
+        { color: isSelected ? theme.colors.primary : theme.colors.onSurface }
+      ]}>
+        {label}
+      </Text>
+    </TouchableOpacity>
+  );
+
+  const renderSkillOption = (level: string) => {
+    const isSelected = localFilters.skillLevel === level;
+    return (
+      <TouchableOpacity
+        key={level}
+        onPress={() => updateFilter('skillLevel', isSelected ? null : level)}
+        style={[
+          styles.skillOption,
+          {
+            backgroundColor: isSelected ? theme.colors.primary : theme.colors.surfaceVariant,
+          }
+        ]}
+      >
+        <Text style={[
+          styles.skillOptionText,
+          { color: isSelected ? theme.colors.onPrimary : theme.colors.onSurfaceVariant }
+        ]}>
+          {t(`skillLevel.${level}`)}
+        </Text>
+        {isSelected && (
+          <MaterialCommunityIcons name="check-circle" size={16} color={theme.colors.onPrimary} style={styles.skillCheck} />
+        )}
+      </TouchableOpacity>
+    );
+  };
+
   return (
     <Modal
       visible={visible}
       onDismiss={onDismiss}
-      contentContainerStyle={[styles.modalContainer, { backgroundColor: theme.colors.surface }]}
+      contentContainerStyle={[styles.modalContainer, { backgroundColor: theme.colors.background }]}
     >
-      <ScrollView showsVerticalScrollIndicator={false}>
-        <View style={[styles.header, { backgroundColor: theme.colors.primaryContainer }]}>
-          <MaterialCommunityIcons name="filter-variant" size={18} color={theme.colors.primary} />
-          <Text style={[styles.title, { color: theme.colors.primary }]}>{t('filters.advancedFilters')}</Text>
-          <Button
-            mode="text"
-            onPress={onDismiss}
-            style={styles.closeButton}
-            textColor={theme.colors.primary}
-          >
-            <MaterialCommunityIcons name="close" size={18} color={theme.colors.primary} />
-          </Button>
-        </View>
+      <View style={styles.header}>
+        <Text style={[styles.headerTitle, { color: theme.colors.onBackground }]}>{t('filters.advancedFilters')}</Text>
+        <IconButton
+          icon="close"
+          size={24}
+          onPress={onDismiss}
+          style={styles.closeButton}
+        />
+      </View>
 
-        {/* Distance Filter */}
-        {hasLocation ? (
-          <View style={styles.section}>
-            <Text style={styles.sectionTitle}>{t('filters.distance')}</Text>
-            <Text style={styles.sectionSubtitle}>
-              {t('filters.maxDistanceFromLocation')}
-            </Text>
-            <View style={styles.distanceControl}>
+      <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.scrollContent}>
+
+        {/* Distance Section */}
+        <View style={styles.section}>
+          <View style={styles.sectionHeader}>
+            <MaterialCommunityIcons name="map-marker-radius" size={24} color={theme.colors.primary} />
+            <Text style={[styles.sectionTitle, { color: theme.colors.onBackground }]}>{t('filters.distance')}</Text>
+          </View>
+
+          {hasLocation ? (
+            <Surface style={[styles.card, { backgroundColor: theme.colors.surface }]} elevation={1}>
+              <View style={styles.distanceValueContainer}>
+                <Text style={[styles.distanceValue, { color: theme.colors.primary }]}>
+                  {localFilters.maxDistance ? `${localFilters.maxDistance} km` : '∞'}
+                </Text>
+                <Text style={[styles.distanceLabel, { color: theme.colors.onSurfaceVariant }]}>
+                  {localFilters.maxDistance ? t('filters.maxDistanceFromLocation') : t('filters.distanceLimit')}
+                </Text>
+              </View>
+
+              <Slider
+                style={styles.slider}
+                minimumValue={1}
+                maximumValue={100}
+                step={1}
+                value={localFilters.maxDistance || 100}
+                onValueChange={(value) => updateFilter('maxDistance', value)}
+                minimumTrackTintColor={theme.colors.primary}
+                maximumTrackTintColor={theme.colors.surfaceVariant}
+                thumbTintColor={theme.colors.primary}
+              />
+
               <View style={styles.switchRow}>
-                <Text style={styles.switchTitle}>{t('filters.distanceLimit')}</Text>
+                <Text style={{ color: theme.colors.onSurface }}>{t('filters.distanceLimit')}</Text>
                 <Switch
                   value={localFilters.maxDistance !== null}
                   onValueChange={(value) => updateFilter('maxDistance', value ? 50 : null)}
+                  color={theme.colors.primary}
                 />
               </View>
-
-              {localFilters.maxDistance !== null && (
-                <View style={styles.sliderContainer}>
-                  <Text style={styles.sliderValue}>{localFilters.maxDistance} {t('map.km')}</Text>
-                  <Slider
-                    style={styles.slider}
-                    minimumValue={1}
-                    maximumValue={100}
-                    step={1}
-                    value={localFilters.maxDistance}
-                    onValueChange={(value) => updateFilter('maxDistance', value)}
-                    minimumTrackTintColor="#6200ee"
-                    maximumTrackTintColor="#000000"
-                    thumbTintColor="#6200ee"
-                  />
-                  <View style={styles.sliderLabels}>
-                    <Text style={styles.sliderLabel}>1 {t('map.km')}</Text>
-                    <Text style={styles.sliderLabel}>100 {t('map.km')}</Text>
-                  </View>
-                </View>
-              )}
-            </View>
-          </View>
-        ) : (
-          <View style={styles.section}>
-            <View style={styles.disabledSection}>
-              <MaterialCommunityIcons name="map-marker-off" size={32} color="#999" />
-              <Text style={styles.disabledText}>
+            </Surface>
+          ) : (
+            <Surface style={[styles.card, styles.disabledCard]} elevation={0}>
+              <MaterialCommunityIcons name="map-marker-off" size={32} color={theme.colors.onSurfaceVariant} />
+              <Text style={[styles.disabledText, { color: theme.colors.onSurfaceVariant }]}>
                 {t('filters.enableLocationForDistance')}
               </Text>
-            </View>
+            </Surface>
+          )}
+        </View>
+
+        {/* Date Section */}
+        <View style={styles.section}>
+          <View style={styles.sectionHeader}>
+            <MaterialCommunityIcons name="calendar-month" size={24} color={theme.colors.primary} />
+            <Text style={[styles.sectionTitle, { color: theme.colors.onBackground }]}>{t('filters.dateRange')}</Text>
           </View>
-        )}
 
-        {/* Date Range Filter */}
-        <Card style={[styles.filterCard, { backgroundColor: theme.colors.surfaceVariant }]} mode="elevated">
-          <Card.Content>
-            <View style={styles.cardHeader}>
-              <MaterialCommunityIcons name="calendar-range" size={20} color={theme.colors.primary} />
-              <Text style={[styles.sectionTitle, { color: theme.colors.onSurface }]}>{t('filters.dateRange')}</Text>
-            </View>
-
-            <View style={styles.quickDateButtons}>
-              <Chip
-                selected={false}
-                onPress={() => {
-                  const today = new Date();
-                  updateFilter('dateFrom', today);
-                  updateFilter('dateTo', null);
-                }}
-                compact
-                style={styles.quickDateChip}
-              >
-                {t('date.today')}
-              </Chip>
-              <Chip
-                selected={false}
-                onPress={() => {
-                  const today = new Date();
-                  const nextWeek = new Date(today.getTime() + 7 * 24 * 60 * 60 * 1000);
-                  updateFilter('dateFrom', today);
-                  updateFilter('dateTo', nextWeek);
-                }}
-                compact
-                style={styles.quickDateChip}
-              >
-                {t('date.thisWeek')}
-              </Chip>
-              <Chip
-                selected={false}
-                onPress={() => {
-                  const today = new Date();
-                  const nextMonth = new Date(today.getFullYear(), today.getMonth() + 1, today.getDate());
-                  updateFilter('dateFrom', today);
-                  updateFilter('dateTo', nextMonth);
-                }}
-                compact
-                style={styles.quickDateChip}
-              >
-                {t('date.thisMonth')}
-              </Chip>
-            </View>
-
-            {(localFilters.dateFrom || localFilters.dateTo) && (
-              <View style={[styles.selectedDatesContainer, { backgroundColor: theme.colors.surface }]}>
-                <View style={styles.selectedDateRow}>
-                  <MaterialCommunityIcons name="calendar-start" size={14} color={theme.colors.primary} />
-                  <Text style={[styles.selectedDateText, { color: theme.colors.onSurface }]}>
-                    {localFilters.dateFrom ? format(localFilters.dateFrom, 'dd MMM yyyy', { locale: getDateLocale() }) : t('filters.noStartDate')}
-                  </Text>
-                </View>
-                <MaterialCommunityIcons name="arrow-right" size={14} color={theme.colors.onSurfaceVariant} />
-                <View style={styles.selectedDateRow}>
-                  <MaterialCommunityIcons name="calendar-end" size={14} color={theme.colors.primary} />
-                  <Text style={[styles.selectedDateText, { color: theme.colors.onSurface }]}>
-                    {localFilters.dateTo ? format(localFilters.dateTo, 'dd MMM yyyy', { locale: getDateLocale() }) : t('filters.noEndDate')}
-                  </Text>
-                </View>
-                <Button
-                  mode="text"
-                  onPress={() => {
-                    updateFilter('dateFrom', null);
-                    updateFilter('dateTo', null);
-                  }}
-                  compact
-                  textColor={theme.colors.error}
-                >
-                  {t('common.clear')}
-                </Button>
-              </View>
+          <View style={styles.dateGrid}>
+            {renderDateOption(t('date.today'), 'calendar-today',
+              !!localFilters.dateFrom && format(localFilters.dateFrom, 'yyyy-MM-dd') === format(new Date(), 'yyyy-MM-dd') && !localFilters.dateTo,
+              () => {
+                const today = new Date();
+                updateFilter('dateFrom', today);
+                updateFilter('dateTo', null);
+              }
             )}
-          </Card.Content>
-        </Card>
 
-        {/* Skill Level Filter */}
-        <Card style={[styles.filterCard, { backgroundColor: theme.colors.surfaceVariant }]} mode="elevated">
-          <Card.Content>
-            <View style={styles.cardHeader}>
-              <MaterialCommunityIcons name="account-star" size={20} color={theme.colors.primary} />
-              <Text style={[styles.sectionTitle, { color: theme.colors.onSurface }]}>{t('session.skillLevel')}</Text>
-            </View>
-            <View style={styles.chipContainer}>
-            {SKILL_LEVELS.map((level) => (
-              <Chip
-                key={level}
-                selected={localFilters.skillLevel === level}
-                onPress={() =>
-                  updateFilter(
-                    'skillLevel',
-                    localFilters.skillLevel === level ? null : level
-                  )
-                }
-                style={styles.chip}
-                textStyle={{ fontSize: 12 }}
-                compact
-              >
-                {t(`skillLevel.${level}`)}
-              </Chip>
-            ))}
-            </View>
-          </Card.Content>
-        </Card>
+            {renderDateOption(t('date.thisWeek'), 'calendar-week',
+              !!localFilters.dateTo && localFilters.dateTo > new Date(),
+              () => {
+                const today = new Date();
+                const nextWeek = new Date(today.getTime() + 7 * 24 * 60 * 60 * 1000);
+                updateFilter('dateFrom', today);
+                updateFilter('dateTo', nextWeek);
+              }
+            )}
 
-        {/* Only Available Sessions */}
-        <Card style={[styles.filterCard, { backgroundColor: theme.colors.surfaceVariant }]} mode="elevated">
-          <Card.Content>
-            <View style={styles.switchRow}>
-            <View style={styles.switchLabel}>
-              <MaterialCommunityIcons name="account-check" size={20} color={theme.colors.primary} />
-              <View style={styles.switchTextContainer}>
-                <Text style={[styles.switchTitle, { color: theme.colors.onSurface }]}>{t('filters.onlyAvailableSessions')}</Text>
-                <Text style={[styles.switchSubtitle, { color: theme.colors.onSurfaceVariant }]}>
-                  {t('filters.hideFullSessions')}
-                </Text>
+            {renderDateOption(t('date.thisMonth'), 'calendar-month',
+              !!localFilters.dateTo && localFilters.dateTo > new Date(new Date().getTime() + 10 * 24 * 60 * 60 * 1000), // Rough check
+              () => {
+                const today = new Date();
+                const nextMonth = new Date(today.getFullYear(), today.getMonth() + 1, today.getDate());
+                updateFilter('dateFrom', today);
+                updateFilter('dateTo', nextMonth);
+              }
+            )}
+
+            {renderDateOption(t('common.all'), 'calendar-remove',
+              !localFilters.dateFrom && !localFilters.dateTo,
+              () => {
+                updateFilter('dateFrom', null);
+                updateFilter('dateTo', null);
+              }
+            )}
+          </View>
+        </View>
+
+        {/* Skill Level Section */}
+        <View style={styles.section}>
+          <View style={styles.sectionHeader}>
+            <MaterialCommunityIcons name="trophy-outline" size={24} color={theme.colors.primary} />
+            <Text style={[styles.sectionTitle, { color: theme.colors.onBackground }]}>{t('session.skillLevel')}</Text>
+          </View>
+
+          <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.skillList}>
+            {SKILL_LEVELS.map(renderSkillOption)}
+          </ScrollView>
+        </View>
+
+        {/* Availability Section */}
+        <View style={styles.section}>
+          <Surface style={[styles.card, styles.availabilityCard, { backgroundColor: theme.colors.surface }]} elevation={1}>
+            <View style={styles.availabilityInfo}>
+              <MaterialCommunityIcons name="account-check-outline" size={24} color={theme.colors.primary} />
+              <View style={styles.availabilityText}>
+                <Text style={[styles.cardTitle, { color: theme.colors.onSurface }]}>{t('filters.onlyAvailableSessions')}</Text>
+                <Text style={[styles.cardSubtitle, { color: theme.colors.onSurfaceVariant }]}>{t('filters.hideFullSessions')}</Text>
               </View>
             </View>
             <Switch
               value={localFilters.onlyAvailable}
               onValueChange={(value) => updateFilter('onlyAvailable', value)}
+              color={theme.colors.primary}
             />
-            </View>
-          </Card.Content>
-        </Card>
-
-        {/* Action Buttons */}
-        <View style={styles.actions}>
-          <Button
-            mode="outlined"
-            onPress={handleReset}
-            style={styles.actionButton}
-          >
-            {t('filters.reset')}
-          </Button>
-          <Button
-            mode="contained"
-            onPress={handleApply}
-            style={styles.actionButton}
-          >
-            {t('common.apply')}
-          </Button>
+          </Surface>
         </View>
+
+        <View style={{ height: 100 }} />
       </ScrollView>
+
+      <View style={[styles.footer, { backgroundColor: theme.colors.background, borderTopColor: theme.colors.outline }]}>
+        <Button
+          mode="outlined"
+          onPress={handleReset}
+          style={styles.resetButton}
+          textColor={theme.colors.onSurface}
+        >
+          {t('filters.reset')}
+        </Button>
+        <Button
+          mode="contained"
+          onPress={handleApply}
+          style={styles.applyButton}
+          contentStyle={{ height: 50 }}
+          labelStyle={{ fontSize: 16, fontWeight: 'bold' }}
+        >
+          {t('common.apply')}
+        </Button>
+      </View>
     </Modal>
   );
 }
 
 const styles = StyleSheet.create({
   modalContainer: {
-    backgroundColor: 'white',
-    margin: 8,
-    marginTop: 24,
-    marginBottom: 24,
-    borderRadius: 16,
-    maxHeight: '95%',
-    elevation: 8,
+    flex: 1,
+    margin: 0,
+    marginTop: Platform.OS === 'ios' ? 40 : 0,
   },
   header: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    padding: 12,
-    paddingBottom: 8,
-    borderTopLeftRadius: 16,
-    borderTopRightRadius: 16,
+    paddingHorizontal: 20,
+    paddingVertical: 16,
+  },
+  headerTitle: {
+    fontSize: 28,
+    fontWeight: 'bold',
   },
   closeButton: {
     margin: 0,
-    padding: 0,
   },
-  title: {
-    fontSize: 15,
-    fontWeight: 'bold',
-    marginLeft: 8,
-    flex: 1,
-  },
-  filterCard: {
-    margin: 10,
-    marginTop: 6,
-    marginBottom: 6,
-    borderRadius: 10,
-    elevation: 2,
-  },
-  cardHeader: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginBottom: 8,
+  scrollContent: {
+    paddingBottom: 20,
   },
   section: {
-    padding: 14,
-    paddingTop: 8,
-    paddingBottom: 8,
+    marginBottom: 20,
+    paddingHorizontal: 20,
+  },
+  sectionHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 12,
+    gap: 8,
   },
   sectionTitle: {
-    fontSize: 15,
+    fontSize: 16,
+    fontWeight: '600',
+  },
+  card: {
+    borderRadius: 12,
+    padding: 16,
+  },
+  distanceValueContainer: {
+    alignItems: 'center',
+    marginBottom: 12,
+  },
+  distanceValue: {
+    fontSize: 32,
     fontWeight: 'bold',
-    marginLeft: 6,
-    color: '#333',
   },
-  sectionSubtitle: {
-    fontSize: 11,
-    color: '#666',
-    marginBottom: 6,
+  distanceLabel: {
+    fontSize: 12,
   },
-  chipContainer: {
-    flexDirection: 'row',
-    flexWrap: 'nowrap',
-    gap: 6,
-    justifyContent: 'space-between',
-  },
-  chip: {
-    flex: 1,
-    height: 32,
-    marginHorizontal: 2,
-  },
-  quickDateButtons: {
-    flexDirection: 'row',
-    gap: 6,
+  slider: {
+    width: '100%',
+    height: 30,
     marginBottom: 8,
-  },
-  quickDateChip: {
-    flex: 1,
-  },
-  selectedDatesContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    padding: 8,
-    borderRadius: 6,
-    gap: 6,
-    marginTop: 4,
-  },
-  selectedDateRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 4,
-    flex: 1,
-  },
-  selectedDateText: {
-    fontSize: 11,
-    fontWeight: '500',
-  },
-  disabledSection: {
-    alignItems: 'center',
-    padding: 20,
-    backgroundColor: '#f5f5f5',
-    borderRadius: 8,
-  },
-  disabledText: {
-    marginTop: 10,
-    textAlign: 'center',
-    color: '#999',
-    fontSize: 14,
-  },
-  dateRow: {
-    flexDirection: 'row',
-    gap: 10,
-  },
-  dateColumn: {
-    flex: 1,
-  },
-  dateLabel: {
-    fontSize: 14,
-    color: '#666',
-    marginBottom: 5,
-  },
-  dateButton: {
-    marginBottom: 5,
   },
   switchRow: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
+    marginTop: 4,
   },
-  switchLabel: {
+  disabledCard: {
+    alignItems: 'center',
+    justifyContent: 'center',
+    padding: 24,
+    backgroundColor: '#f5f5f5',
+  },
+  disabledText: {
+    marginTop: 8,
+    textAlign: 'center',
+    fontSize: 14,
+  },
+  dateGrid: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 8,
+  },
+  dateOption: {
+    width: (width - 48) / 2,
+    padding: 12,
+    borderRadius: 10,
+    borderWidth: 1,
+    alignItems: 'center',
+    gap: 6,
+    flexDirection: 'row',
+    justifyContent: 'center',
+  },
+  dateOptionLabel: {
+    fontSize: 13,
+    fontWeight: '500',
+  },
+  skillList: {
+    gap: 8,
+    paddingRight: 20,
+  },
+  skillOption: {
+    paddingHorizontal: 16,
+    paddingVertical: 10,
+    borderRadius: 20,
     flexDirection: 'row',
     alignItems: 'center',
-    flex: 1,
-    marginRight: 10,
+    gap: 6,
   },
-  switchTextContainer: {
-    marginLeft: 10,
-    flex: 1,
-  },
-  switchTitle: {
+  skillOptionText: {
     fontSize: 14,
-    fontWeight: '500',
-    color: '#333',
+    fontWeight: '600',
   },
-  switchSubtitle: {
+  skillCheck: {
+    marginLeft: 2,
+  },
+  availabilityCard: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingVertical: 12,
+  },
+  availabilityInfo: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 12,
+    flex: 1,
+  },
+  availabilityText: {
+    flex: 1,
+  },
+  cardTitle: {
+    fontSize: 14,
+    fontWeight: '600',
+  },
+  cardSubtitle: {
     fontSize: 11,
-    color: '#666',
     marginTop: 1,
   },
-  actions: {
+  footer: {
+    position: 'absolute',
+    bottom: 0,
+    left: 0,
+    right: 0,
+    padding: 20,
+    paddingBottom: Platform.OS === 'ios' ? 34 : 20,
     flexDirection: 'row',
-    justifyContent: 'space-between',
-    padding: 12,
-    paddingTop: 8,
-    gap: 10,
+    gap: 16,
+    borderTopWidth: 1,
+    elevation: 8,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: -2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
   },
-  actionButton: {
+  resetButton: {
     flex: 1,
-    borderRadius: 8,
-    paddingVertical: 2,
+    borderColor: '#ddd',
   },
-  distanceControl: {
-    marginTop: 5,
-  },
-  sliderContainer: {
-    marginTop: 10,
-    alignItems: 'center',
-  },
-  slider: {
-    width: '100%',
-    height: 40,
-  },
-  sliderValue: {
-    fontSize: 18,
-    fontWeight: 'bold',
-    color: '#6200ee',
-    marginBottom: 5,
-  },
-  sliderLabels: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    width: '100%',
-    paddingHorizontal: 5,
-  },
-  sliderLabel: {
-    fontSize: 12,
-    color: '#666',
+  applyButton: {
+    flex: 2,
+    borderRadius: 12,
   },
 });

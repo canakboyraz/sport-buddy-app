@@ -29,15 +29,15 @@ export default function PrivacyConsentScreen({ onAccept }: Props) {
 
   const openPrivacyPolicy = () => {
     const url = currentLanguage === 'tr'
-      ? 'https://canakboyraz.github.io/sport-buddy-privacy/privacy-policy-tr.html'
-      : 'https://canakboyraz.github.io/sport-buddy-privacy/privacy-policy-en.html';
+      ? 'https://canakboyraz.github.io/sport-buddy-app/privacy-policy-tr.html'
+      : 'https://canakboyraz.github.io/sport-buddy-app/privacy-policy-en.html';
     Linking.openURL(url);
   };
 
   const openTerms = () => {
     const url = currentLanguage === 'tr'
-      ? 'https://canakboyraz.github.io/sport-buddy-privacy/terms-of-service-tr.html'
-      : 'https://canakboyraz.github.io/sport-buddy-privacy/terms-of-service-en.html';
+      ? 'https://canakboyraz.github.io/sport-buddy-app/terms-of-service-tr.html'
+      : 'https://canakboyraz.github.io/sport-buddy-app/terms-of-service-en.html';
     Linking.openURL(url);
   };
 

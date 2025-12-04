@@ -19,6 +19,7 @@ import { errorLogger } from '../../services/errorLogger';
 import EmptyState from '../../components/EmptyState';
 import { getSportIcon } from '../../utils/sportIcons';
 import { useLanguage } from '../../contexts/LanguageContext';
+import { getBlockedUserIds, getBlockerUserIds } from '../../services/blockService';
 
 type HomeScreenNavigationProp = StackNavigationProp<RootStackParamList>;
 
@@ -49,11 +50,14 @@ export default function HomeScreen({ navigation }: Props) {
     skillLevel: null,
   });
 
+  const [blockedUserIds, setBlockedUserIds] = useState<Set<string>>(new Set());
+
   // Load initial data on mount
   useEffect(() => {
     loadSports();
     loadSessions();
     getUserLocation();
+    loadBlockedUsers();
   }, []);
 
   // Reload sessions when selectedSport changes
@@ -68,10 +72,26 @@ export default function HomeScreen({ navigation }: Props) {
     const unsubscribe = navigation.addListener('focus', () => {
       // Refresh sessions when coming back from CreateSession
       loadSessions(0, false);
+      loadBlockedUsers();
     });
 
     return unsubscribe;
   }, [navigation]);
+
+  const loadBlockedUsers = async () => {
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (user) {
+        const [blocked, blockers] = await Promise.all([
+          getBlockedUserIds(user.id),
+          getBlockerUserIds(user.id)
+        ]);
+        setBlockedUserIds(new Set([...blocked, ...blockers]));
+      }
+    } catch (error) {
+      console.error('[HomeScreen] Error loading blocked users:', error);
+    }
+  };
 
   const getUserLocation = async () => {
     try {
@@ -112,6 +132,11 @@ export default function HomeScreen({ navigation }: Props) {
       const sessionDate = new Date(session.session_date);
       return sessionDate >= now;
     });
+
+    // Filter out blocked users
+    if (blockedUserIds.size > 0) {
+      filtered = filtered.filter(session => !blockedUserIds.has(session.creator_id));
+    }
 
     // Distance filter
     if (advancedFilters.maxDistance && userLocation) {

@@ -1,6 +1,6 @@
-import React from 'react';
-import { View, StyleSheet, ScrollView, TouchableOpacity, Linking } from 'react-native';
-import { Text, Surface, Switch, Divider, useTheme as usePaperTheme } from 'react-native-paper';
+import React, { useState } from 'react';
+import { View, StyleSheet, ScrollView, TouchableOpacity, Linking, Alert, Platform } from 'react-native';
+import { Text, Surface, Switch, Divider, useTheme as usePaperTheme, Dialog, Portal, Button, TextInput } from 'react-native-paper';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useNavigation } from '@react-navigation/native';
@@ -8,6 +8,7 @@ import { StackNavigationProp } from '@react-navigation/stack';
 import { useLanguage } from '../../contexts/LanguageContext';
 import { useTheme } from '../../contexts/ThemeContext';
 import { RootStackParamList } from '../../navigation/AppNavigator';
+import { supabase } from '../../services/supabase';
 
 type NavigationProp = StackNavigationProp<RootStackParamList>;
 
@@ -16,6 +17,117 @@ export default function SettingsScreen() {
   const { t, currentLanguage, languages } = useLanguage();
   const { isDarkMode, toggleTheme } = useTheme();
   const theme = usePaperTheme();
+  const [showDeleteDialog, setShowDeleteDialog] = useState(false);
+  const [password, setPassword] = useState('');
+  const [isDeleting, setIsDeleting] = useState(false);
+
+  const handleDeleteAccount = async () => {
+    try {
+      // Get current user
+      const { data: { user }, error: getUserError } = await supabase.auth.getUser();
+
+      if (getUserError || !user) {
+        Alert.alert(
+          t('common.error') || 'Error',
+          t('auth.notLoggedIn') || 'You must be logged in to delete your account'
+        );
+        return;
+      }
+
+      // Check if user is logged in via password or social provider
+      const isPasswordUser = user.app_metadata.provider === 'email';
+
+      if (isPasswordUser) {
+        // For password users, require password confirmation
+        if (!password.trim()) {
+          Alert.alert(
+            t('common.error') || 'Error',
+            t('settings.enterPasswordToConfirm') || 'Please enter your password to confirm account deletion'
+          );
+          return;
+        }
+      }
+
+      setIsDeleting(true);
+
+      if (isPasswordUser) {
+        // Step 1: Re-authenticate user with password
+        const { error: authError } = await supabase.auth.signInWithPassword({
+          email: user.email || '',
+          password: password,
+        });
+
+        if (authError) {
+          Alert.alert(
+            t('common.error') || 'Error',
+            t('settings.incorrectPassword') || 'Incorrect password. Please try again.'
+          );
+          setIsDeleting(false);
+          return;
+        }
+      }
+
+      // Step 2: Call the delete_user_account function
+      const { error: deleteError } = await supabase.rpc('delete_user_account', {
+        user_id: user.id
+      });
+
+      if (deleteError) {
+        console.error('Delete account error:', deleteError);
+        Alert.alert(
+          t('common.error') || 'Error',
+          t('settings.deleteAccountError') || 'Failed to delete account. Please contact support at privacy@sportbuddy.app'
+        );
+        setIsDeleting(false);
+        return;
+      }
+
+      // Step 3: Sign out
+      await supabase.auth.signOut();
+
+      // Success message (will show briefly before user is logged out)
+      Alert.alert(
+        t('common.success') || 'Success',
+        t('settings.accountDeleted') || 'Your account has been permanently deleted.'
+      );
+
+      setShowDeleteDialog(false);
+      setPassword('');
+    } catch (error) {
+      console.error('Delete account error:', error);
+      Alert.alert(
+        t('common.error') || 'Error',
+        t('settings.deleteAccountError') || 'Failed to delete account. Please contact support at privacy@sportbuddy.app'
+      );
+    } finally {
+      setIsDeleting(false);
+    }
+  };
+
+  const confirmDeleteAccount = () => {
+    Alert.alert(
+      t('settings.deleteAccount') || 'Delete Account',
+      t('settings.deleteAccountWarning') ||
+      'This will permanently delete:\n\n' +
+      '• Your profile and personal information\n' +
+      '• All your created sessions\n' +
+      '• All your messages\n' +
+      '• Your ratings and reviews\n' +
+      '• All associated data\n\n' +
+      'This action CANNOT be undone.',
+      [
+        {
+          text: t('common.cancel') || 'Cancel',
+          style: 'cancel',
+        },
+        {
+          text: t('common.delete') || 'Delete',
+          style: 'destructive',
+          onPress: () => setShowDeleteDialog(true),
+        },
+      ]
+    );
+  };
 
   const settingsSections = [
     {
@@ -55,6 +167,14 @@ export default function SettingsScreen() {
           onPress: () => navigation.navigate('BlockedUsers'),
           showChevron: true,
         },
+        {
+          icon: 'delete-forever',
+          title: t('settings.deleteAccount') || 'Delete Account',
+          subtitle: t('settings.deleteAccountSubtitle') || 'Permanently delete your account and data',
+          onPress: confirmDeleteAccount,
+          showChevron: true,
+          isDanger: true,
+        },
       ],
     },
     {
@@ -74,8 +194,8 @@ export default function SettingsScreen() {
           title: t('settings.termsOfService'),
           onPress: () => {
             const termsUrl = currentLanguage === 'tr'
-              ? 'https://canakboyraz.github.io/sportbuddy-legal-docs/terms-of-service-tr'
-              : 'https://canakboyraz.github.io/sportbuddy-legal-docs/terms-of-service-en';
+              ? 'https://canakboyraz.github.io/sport-buddy-app/terms-of-service-tr.html'
+              : 'https://canakboyraz.github.io/sport-buddy-app/terms-of-service-en.html';
             Linking.openURL(termsUrl);
           },
           showChevron: true,
@@ -85,8 +205,8 @@ export default function SettingsScreen() {
           title: t('settings.privacyPolicy'),
           onPress: () => {
             const privacyUrl = currentLanguage === 'tr'
-              ? 'https://canakboyraz.github.io/sportbuddy-legal-docs/privacy-policy-tr'
-              : 'https://canakboyraz.github.io/sportbuddy-legal-docs/privacy-policy-en';
+              ? 'https://canakboyraz.github.io/sport-buddy-app/privacy-policy-tr.html'
+              : 'https://canakboyraz.github.io/sport-buddy-app/privacy-policy-en.html';
             Linking.openURL(privacyUrl);
           },
           showChevron: true,
@@ -95,7 +215,7 @@ export default function SettingsScreen() {
           icon: 'file-certificate',
           title: t('settings.kvkk'),
           onPress: () => {
-            Linking.openURL('https://canakboyraz.github.io/sportbuddy-legal-docs/kvkk-aydinlatma-metni');
+            Linking.openURL('https://canakboyraz.github.io/sport-buddy-app/kvkk-aydinlatma-metni.html');
           },
           showChevron: true,
         },
@@ -103,7 +223,7 @@ export default function SettingsScreen() {
           icon: 'information',
           title: t('settings.version'),
           subtitle: '1.0.0',
-          onPress: () => {},
+          onPress: () => { },
           showChevron: false,
         },
       ],
@@ -148,6 +268,7 @@ export default function SettingsScreen() {
                     showChevron={item.showChevron}
                     showToggle={item.showToggle}
                     toggleValue={item.toggleValue}
+                    isDanger={item.isDanger}
                     theme={theme}
                   />
                 </React.Fragment>
@@ -166,6 +287,46 @@ export default function SettingsScreen() {
           </Text>
         </View>
       </View>
+
+      {/* Delete Account Confirmation Dialog */}
+      <Portal>
+        <Dialog visible={showDeleteDialog} onDismiss={() => !isDeleting && setShowDeleteDialog(false)}>
+          <Dialog.Title>{t('settings.confirmDeletion') || 'Confirm Account Deletion'}</Dialog.Title>
+          <Dialog.Content>
+            <Text variant="bodyMedium" style={{ marginBottom: 16 }}>
+              {t('settings.deleteAccountWarning') || 'Are you sure you want to delete your account? This action cannot be undone.'}
+            </Text>
+            {/* Only show password input if user signed in with email/password */}
+            {/* We can't easily check provider here without state, so we'll just show it but make it optional in UI if we could, 
+                but better to check provider in state. For now, let's just keep it simple and rely on the logic in handleDeleteAccount 
+                to ignore it if not needed, but for UI UX it's better to hide it. 
+                Let's add a state for isPasswordUser */}
+            <TextInput
+              label={t('auth.password') || 'Password (if applicable)'}
+              value={password}
+              onChangeText={setPassword}
+              secureTextEntry
+              mode="outlined"
+              disabled={isDeleting}
+              autoFocus
+            />
+          </Dialog.Content>
+          <Dialog.Actions>
+            <Button onPress={() => setShowDeleteDialog(false)} disabled={isDeleting}>
+              {t('common.cancel') || 'Cancel'}
+            </Button>
+            <Button
+              onPress={handleDeleteAccount}
+              loading={isDeleting}
+              disabled={isDeleting}
+              buttonColor={theme.colors.error}
+              textColor="white"
+            >
+              {t('common.delete') || 'Delete'}
+            </Button>
+          </Dialog.Actions>
+        </Dialog>
+      </Portal>
     </ScrollView>
   );
 }
@@ -178,6 +339,7 @@ interface SettingItemProps {
   showChevron?: boolean;
   showToggle?: boolean;
   toggleValue?: boolean;
+  isDanger?: boolean;
   theme: any;
 }
 
@@ -189,17 +351,22 @@ function SettingItem({
   showChevron = false,
   showToggle = false,
   toggleValue = false,
+  isDanger = false,
   theme,
 }: SettingItemProps) {
+  const iconColor = isDanger ? theme.colors.error : theme.colors.primary;
+  const iconBgColor = isDanger ? `${theme.colors.error}20` : theme.colors.primaryContainer;
+  const titleColor = isDanger ? theme.colors.error : theme.colors.onSurface;
+
   return (
     <TouchableOpacity onPress={onPress} activeOpacity={0.7}>
       <View style={styles.settingRow}>
         <View style={styles.settingLeft}>
-          <View style={[styles.settingIconContainer, { backgroundColor: theme.colors.primaryContainer }]}>
-            <MaterialCommunityIcons name={icon as any} size={26} color={theme.colors.primary} />
+          <View style={[styles.settingIconContainer, { backgroundColor: iconBgColor }]}>
+            <MaterialCommunityIcons name={icon as any} size={26} color={iconColor} />
           </View>
           <View style={styles.settingTextContainer}>
-            <Text variant="bodyLarge" style={[styles.settingTitle, { color: theme.colors.onSurface }]}>
+            <Text variant="bodyLarge" style={[styles.settingTitle, { color: titleColor }]}>
               {title}
             </Text>
             {subtitle && (

@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
-import { View, StyleSheet, Alert, KeyboardAvoidingView, Platform, ScrollView } from 'react-native';
-import { TextInput, Button, Text, Surface, useTheme } from 'react-native-paper';
+import { View, StyleSheet, Alert, KeyboardAvoidingView, Platform, ScrollView, Linking } from 'react-native';
+import { TextInput, Button, Text, Surface, useTheme, Checkbox } from 'react-native-paper';
 import { LinearGradient } from 'expo-linear-gradient';
 import { supabase } from '../../services/supabase';
 import { validateEmail, validatePassword, validateName } from '../../utils/validation';
@@ -21,6 +21,7 @@ export default function RegisterScreen({ navigation }: Props) {
   const [password, setPassword] = useState('');
   const [fullName, setFullName] = useState('');
   const [loading, setLoading] = useState(false);
+  const [acceptedTerms, setAcceptedTerms] = useState(false);
 
   const handleRegister = async () => {
     if (!email || !password || !fullName) {
@@ -41,6 +42,11 @@ export default function RegisterScreen({ navigation }: Props) {
     const passwordValidation = validatePassword(password);
     if (!passwordValidation.isValid) {
       Alert.alert(t('common.error'), passwordValidation.message || t('auth.invalidPassword'));
+      return;
+    }
+
+    if (!acceptedTerms) {
+      Alert.alert(t('common.error'), t('auth.mustAcceptTerms') || 'You must accept the Terms of Service and Community Guidelines');
       return;
     }
 
@@ -123,11 +129,35 @@ export default function RegisterScreen({ navigation }: Props) {
               left={<TextInput.Icon icon="lock" />}
             />
 
+            <View style={styles.termsContainer}>
+              <Checkbox
+                status={acceptedTerms ? 'checked' : 'unchecked'}
+                onPress={() => setAcceptedTerms(!acceptedTerms)}
+                color={theme.colors.primary}
+              />
+              <Text style={[styles.termsText, { color: theme.colors.onSurfaceVariant }]}>
+                {t('auth.iAccept') || 'I accept the'}{' '}
+                <Text
+                  style={[styles.termsLink, { color: theme.colors.primary }]}
+                  onPress={() => Linking.openURL('https://canakboyraz.github.io/sport-buddy-app/terms-of-service-en.html')}
+                >
+                  {t('auth.termsOfService') || 'Terms of Service'}
+                </Text>
+                {' '}{t('common.and') || 'and'}{' '}
+                <Text
+                  style={[styles.termsLink, { color: theme.colors.primary }]}
+                  onPress={() => Linking.openURL('https://canakboyraz.github.io/sport-buddy-app/community-guidelines-en.html')}
+                >
+                  {t('auth.communityGuidelines') || 'Community Guidelines'}
+                </Text>
+              </Text>
+            </View>
+
             <Button
               mode="contained"
               onPress={handleRegister}
               loading={loading}
-              disabled={loading}
+              disabled={loading || !acceptedTerms}
               style={styles.button}
               contentStyle={{ height: 48 }}
             >
@@ -178,6 +208,22 @@ const styles = StyleSheet.create({
   },
   input: {
     marginBottom: 16,
+  },
+  termsContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginTop: 8,
+    marginBottom: 8,
+  },
+  termsText: {
+    flex: 1,
+    fontSize: 14,
+    lineHeight: 20,
+    marginLeft: 8,
+  },
+  termsLink: {
+    textDecorationLine: 'underline',
+    fontWeight: '600',
   },
   button: {
     marginTop: 8,

@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { View, StyleSheet, Alert, KeyboardAvoidingView, Platform } from 'react-native';
+import { View, StyleSheet, Alert, KeyboardAvoidingView, Platform, Linking } from 'react-native';
 import { TextInput, Button, Text, Checkbox, Surface, useTheme, Divider } from 'react-native-paper';
 import { LinearGradient } from 'expo-linear-gradient';
 import { supabase } from '../../services/supabase';
@@ -263,6 +263,25 @@ export default function LoginScreen({ navigation }: Props) {
           >
             {t('auth.dontHaveAccount')} {t('auth.register')}
           </Button>
+
+          <View style={styles.termsContainer}>
+            <Text style={[styles.termsText, { color: theme.colors.onSurfaceVariant }]}>
+              {t('auth.loginTermsDisclaimer') || 'By logging in, you agree to our'}{' '}
+              <Text
+                style={[styles.termsLink, { color: theme.colors.primary }]}
+                onPress={() => Linking.openURL('https://canakboyraz.github.io/sport-buddy-app/terms-of-service-en.html')}
+              >
+                {t('auth.termsOfService') || 'Terms of Service'}
+              </Text>
+              {' '}{t('common.and') || 'and'}{' '}
+              <Text
+                style={[styles.termsLink, { color: theme.colors.primary }]}
+                onPress={() => Linking.openURL('https://canakboyraz.github.io/sport-buddy-app/privacy-policy-en.html')}
+              >
+                {t('auth.privacyPolicy') || 'Privacy Policy'}
+              </Text>
+            </Text>
+          </View>
         </Surface>
       </KeyboardAvoidingView>
     </LinearGradient>
@@ -328,5 +347,17 @@ const styles = StyleSheet.create({
   },
   registerButton: {
     marginTop: 8,
+  },
+  termsContainer: {
+    marginTop: 24,
+    alignItems: 'center',
+  },
+  termsText: {
+    fontSize: 12,
+    textAlign: 'center',
+    lineHeight: 18,
+  },
+  termsLink: {
+    fontWeight: 'bold',
   },
 });

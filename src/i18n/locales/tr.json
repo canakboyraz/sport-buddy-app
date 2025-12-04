@@ -28,20 +28,14 @@
     "refresh": "Yenile",
     "retry": "Tekrar Dene",
     "continue": "Devam Et",
-    "skip": "Geç",
-    "seeAll": "Tümünü Gör",
-    "more": "Daha Fazla",
-    "less": "Daha Az",
-    "all": "Tümü",
-    "unknown": "Bilinmeyen",
-    "report": "Şikayet Et",
-    "languageCode": "tr"
+    "logout": "Çıkış Yap",
+    "and": "ve",
+    "all": "Tümü"
   },
-
   "auth": {
     "login": "Giriş Yap",
-    "register": "Kayıt Ol",
     "logout": "Çıkış Yap",
+    "register": "Kayıt Ol",
     "email": "E-posta",
     "password": "Şifre",
     "confirmPassword": "Şifreyi Onayla",
@@ -74,9 +68,13 @@
     "welcome": "Hoşgeldiniz",
     "pleaseEnterName": "Lütfen profil ayarlarından adınızı girin",
     "googleLoginFailed": "Google ile giriş başarısız oldu",
-    "appleLoginFailed": "Apple ile giriş başarısız oldu"
+    "appleLoginFailed": "Apple ile giriş başarısız oldu",
+    "loginTermsDisclaimer": "Giriş yaparak şunları kabul etmiş olursunuz:",
+    "termsOfService": "Kullanım Koşulları",
+    "privacyPolicy": "Gizlilik Politikası",
+    "communityGuidelines": "Topluluk Kuralları",
+    "iAccept": "Kabul Ediyorum"
   },
-
   "navigation": {
     "home": "Ana Sayfa",
     "sessions": "Seanslar",
@@ -91,7 +89,6 @@
     "chat": "Sohbet",
     "search": "Ara"
   },
-
   "home": {
     "title": "Seanslar",
     "allSessions": "Tüm Seanslar",
@@ -111,7 +108,6 @@
     "resetFilters": "Filtreleri Sıfırla",
     "filterSettings": "Filtre Ayarları"
   },
-
   "session": {
     "title": "Seans",
     "detail": "Seans Detayı",
@@ -194,7 +190,6 @@
       "userNotFound": "Kullanıcı bilgileri yüklenemedi"
     }
   },
-
   "createSession": {
     "sportType": "Spor Türü",
     "selectSport": "Spor Seç",
@@ -239,7 +234,6 @@
       "createFailed": "Seans oluşturulamadı"
     }
   },
-
   "skillLevel": {
     "any": "Herkes",
     "beginner": "Başlangıç",
@@ -247,7 +241,6 @@
     "advanced": "İleri",
     "professional": "Profesyonel"
   },
-
   "profile": {
     "title": "Profil",
     "myProfile": "Profilim",
@@ -307,7 +300,6 @@
     "bioPlaceholder": "Kendiniz hakkında kısa bir bilgi yazın...",
     "bioHelper": "Maksimum 500 karakter"
   },
-
   "rating": {
     "title": "Değerlendirme",
     "rate": "Değerlendir",
@@ -345,7 +337,6 @@
     "communityTrust": "Değerlendirmeleriniz sayesinde kullanıcılar rozet kazanır ve toplulukta güven oluşturulur.",
     "viewAllRatings": "Tüm Değerlendirmeleri Gör"
   },
-
   "badge": {
     "title": "Rozetler",
     "myBadges": "Rozetlerim",
@@ -371,7 +362,6 @@
     },
     "moreNeeded": "{{count}} olumlu yorum daha gerekiyor"
   },
-
   "achievement": {
     "title": "Başarılar",
     "myAchievements": "Başarılarım",
@@ -398,7 +388,6 @@
       "activity": "Aktivite"
     }
   },
-
   "friends": {
     "title": "Arkadaşlar",
     "myFriends": "Arkadaşlarım",
@@ -445,7 +434,6 @@
     "newFriendRequest": "Yeni Arkadaşlık İsteği",
     "sentYouRequest": "size arkadaşlık isteği gönderdi"
   },
-
   "chat": {
     "title": "Sohbet",
     "typeMessage": "Mesaj yazın...",
@@ -458,18 +446,6 @@
     "editMessage": "Mesajı Düzenle",
     "replyTo": "Yanıtla",
     "online": "Çevrimiçi",
-    "offline": "Çevrimdışı",
-    "typing": "yazıyor...",
-    "seen": "Görüldü",
-    "delivered": "İletildi",
-    "uploadError": "Fotoğraf yüklenirken bir hata oluştu",
-    "uploadingImage": "Fotoğraf yükleniyor..."
-  },
-
-  "notifications": {
-    "title": "Bildirimler",
-    "settings": "Bildirim Ayarları",
-    "enable": "Bildirimleri Etkinleştir",
     "disable": "Bildirimleri Devre Dışı Bırak",
     "permissionDenied": "Bildirim izni verilmedi!",
     "permissionRequired": "Bildirimler için izin gerekli",
@@ -517,10 +493,9 @@
       "newAchievement": "🏆 Yeni Başarı: {{name}}",
       "achievementUnlocked": "{{description}} (+{{points}} puan)",
       "newRating": "⭐ Yeni Değerlendirme",
-      "ratingReceived": "{{name}} sizi değerlendirdi: {{rating}}/5"
+      "ratingReceived": "{{name}} seni değerlendirdi: {{rating}}/5"
     }
   },
-
   "weather": {
     "title": "Hava Durumu",
     "temperature": "Sıcaklık",
@@ -544,18 +519,17 @@
       "fog": "Sisli"
     },
     "warnings": {
-      "hot": "🌡️ Dikkat: Çok sıcak! Bol su için",
-      "cold": "❄️ Dikkat: Çok soğuk! Sıkı giyinin",
+      "hot": "🌡️ Uyarı: Çok sıcak! Bol su için",
+      "cold": "❄️ Uyarı: Çok soğuk! Sıkı giyinin",
       "rain": "🌧️ Yağmur bekleniyor",
       "storm": "⛈️ Fırtına uyarısı!",
-      "goodWeather": "☀️ Harika hava! İyi eğlenceler"
+      "goodWeather": "☀️ Harika bir hava! İyi eğlenceler"
     },
     "atSessionTime": "Seans saatindeki hava",
     "recommendedClothing": "Önerilen Kıyafet",
-    "bringUmbrella": "Şemsiye alın",
-    "wearSunscreen": "Güneş kremi sürün"
+    "bringUmbrella": "Şemsiye almayı unutma",
+    "wearSunscreen": "Güneş kremi sür"
   },
-
   "settings": {
     "title": "Ayarlar",
     "subtitle": "Tercihlerinizi yönetin",
@@ -570,23 +544,23 @@
     "help": "Yardım",
     "feedback": "Geri Bildirim",
     "rateApp": "Uygulamayı Değerlendir",
-    "version": "Versiyon",
-    "lightMode": "Açık Tema",
-    "darkMode": "Koyu Tema",
+    "version": "Sürüm",
+    "lightMode": "Açık Mod",
+    "darkMode": "Koyu Mod",
     "systemDefault": "Sistem Varsayılanı",
     "changeLanguage": "Dili Değiştir",
     "languageChanged": "Dil değiştirildi",
     "blockedUsers": "Engellenen Kullanıcılar",
     "reportProblem": "Sorun Bildir",
-    "termsOfService": "Kullanım Şartları",
+    "termsOfService": "Kullanım Koşulları",
     "privacyPolicy": "Gizlilik Politikası",
     "kvkk": "KVKK Aydınlatma Metni",
     "deleteAccount": "Hesabı Sil",
+    "deleteAccountSubtitle": "Hesabınızı ve tüm verilerinizi kalıcı olarak silin",
     "deleteAccountConfirm": "Hesabınızı silmek istediğinizden emin misiniz? Bu işlem geri alınamaz.",
     "openSettings": "Ayarları Aç",
     "madeWithLove": "Spor tutkunları için ❤️ ile yapıldı"
   },
-
   "language": {
     "title": "Dil Seçimi",
     "subtitle": "Tercih ettiğiniz dili seçin",
@@ -596,7 +570,6 @@
     "changeSuccess": "Dil başarıyla değiştirildi",
     "changeError": "Dil değiştirilemedi"
   },
-
   "map": {
     "title": "Harita",
     "showList": "Liste Görünümü",
@@ -604,18 +577,17 @@
     "nearMe": "Yakınımda",
     "searchLocation": "Konum Ara",
     "myLocation": "Konumum",
-    "enableLocation": "Konum İzni",
-    "locationPermissionDenied": "Konum izni verilmedi",
+    "enableLocation": "Konumu Etkinleştir",
+    "locationPermissionDenied": "Konum izni reddedildi",
     "locationPermissionRequired": "Konum İzni Gerekli",
-    "locationPermissionMessage": "Yakınınızdaki etkinlikleri görmek için konum erişimine izin verin. Ayarlar'dan izni etkinleştirebilirsiniz.",
-    "locationError": "Konum bilgisi alınamadı. Lütfen konum servislerinizin açık olduğundan emin olun.",
-    "distance": "Uzaklık",
+    "locationPermissionMessage": "Yakındaki etkinlikleri görmek için konum erişimine izin verin. Ayarlardan etkinleştirebilirsiniz.",
+    "locationError": "Konum alınamadı. Lütfen konum servislerinin açık olduğundan emin olun.",
+    "distance": "Mesafe",
     "km": "km",
     "m": "m"
   },
-
   "search": {
-    "title": "Ara",
+    "title": "Arama",
     "placeholder": "Ara...",
     "noResults": "Sonuç bulunamadı",
     "searching": "Aranıyor...",
@@ -623,7 +595,6 @@
     "clearHistory": "Geçmişi Temizle",
     "suggestions": "Öneriler"
   },
-
   "favorites": {
     "title": "Favoriler",
     "myFavorites": "Favorilerim",
@@ -638,7 +609,6 @@
     "noSavedDesc": "İlgilendiğiniz seansları kayıt edebilirsiniz",
     "note": "Not"
   },
-
   "filters": {
     "advancedFilters": "Gelişmiş Filtreler",
     "distance": "Mesafe (km)",
@@ -652,7 +622,6 @@
     "hideFullSessions": "Katılımcı kotası dolu olan etkinlikleri gizle",
     "reset": "Sıfırla"
   },
-
   "myEvents": {
     "title": "Seanslarım",
     "upcoming": "Yaklaşan",
@@ -662,7 +631,6 @@
     "noUpcomingEvents": "Yaklaşan etkinlik yok",
     "noPastEvents": "Geçmiş etkinlik yok"
   },
-
   "report": {
     "title": "Kullanıcıyı Şikayet Et",
     "reportUser": "Kullanıcıyı Şikayet Et",
@@ -672,7 +640,6 @@
     "success": "Şikayet başarıyla gönderildi",
     "error": "Şikayet gönderilemedi"
   },
-
   "errors": {
     "general": "Bir hata oluştu",
     "network": "İnternet bağlantısı yok",
@@ -685,7 +652,6 @@
     "tryAgain": "Lütfen tekrar deneyin",
     "contactSupport": "Destek ile iletişime geçin"
   },
-
   "validation": {
     "required": "Bu alan zorunludur",
     "email": "Geçerli bir e-posta adresi girin",
@@ -695,7 +661,6 @@
     "numeric": "Sadece rakam girebilirsiniz",
     "alphanumeric": "Sadece harf ve rakam girebilirsiniz"
   },
-
   "date": {
     "today": "Bugün",
     "tomorrow": "Yarın",
@@ -711,7 +676,6 @@
     "evening": "Akşam",
     "night": "Gece"
   },
-
   "time": {
     "now": "Şimdi",
     "justNow": "Az önce",
@@ -728,7 +692,6 @@
     "yearAgo": "{{count}} yıl önce",
     "yearAgo_plural": "{{count}} yıl önce"
   },
-
   "sports": {
     "football": "Futbol",
     "basketball": "Basketbol",
@@ -748,7 +711,6 @@
     "skiing": "Kayak",
     "other": "Diğer"
   },
-
   "stats": {
     "general": "Genel İstatistikler",
     "sessionsCreated": "Oluşturulan Seanslar",
@@ -769,7 +731,6 @@
     "ratingsCount": "Değerlendirme",
     "loadError": "İstatistikler yüklenemedi"
   },
-
   "privacyConsent": {
     "title": "Gizlilik ve Veri Kullanımı",
     "subtitle": "Gizliliğinize önem veriyoruz ve verilerinizi nasıl kullandığımız konusunda şeffaf olmak istiyoruz",
@@ -779,60 +740,8 @@
       "profileDesc": "İsim, e-posta, doğum tarihi ve profil fotoğrafı",
       "location": "Konum Verisi",
       "locationDesc": "Yakınınızdaki etkinlikleri göstermek ve aktivite bulmanıza yardımcı olmak için",
-      "messages": "Mesajlar ve İletişim",
-      "messagesDesc": "Uygulama içi mesajlar ve etkinlik katılım geçmişi",
-      "photos": "Fotoğraf ve Medya",
-      "photosDesc": "Yüklemeyi seçtiğiniz profil ve etkinlik fotoğrafları",
-      "notifications": "Bildirimler",
-      "notificationsDesc": "Etkinlik hatırlatmaları ve yeni mesaj bildirimleri"
-    },
-    "safetyTitle": "Güvenliğiniz Önemli",
-    "safetyDesc": "Sizi ve topluluğumuzu korumak için güvenlik özellikleri oluşturduk:",
-    "features": {
-      "report": "Uygunsuz içerik veya kullanıcıları raporlayın",
-      "block": "İstenmeyen etkileşimleri önlemek için kullanıcıları engelleyin",
-      "moderation": "Güvenlik için otomatik içerik filtreleme"
-    },
-    "yourRights": "Haklarınız",
-    "rightsDesc": "Verilerinize istediğiniz zaman erişebilir, güncelleyebilir veya silebilirsiniz. Ayrıca uygulama ayarlarından hangi verileri topladığımızı kontrol edebilirsiniz.",
-    "readPrivacyPolicy": "Tam Gizlilik Politikasını Oku",
-    "readTerms": "Hizmet Şartlarını Oku",
-    "acceptText": "Gizlilik Politikası ve Hizmet Şartlarını anladım ve kabul ediyorum",
-    "continue": "Uygulamaya Devam Et"
-  },
-
-  "chat": {
-    "typeMessage": "Mesaj yaz...",
-    "reportMessage": "Mesajı Şikayet Et",
-    "reportMessageConfirm": "Bu mesajı şikayet etmek istiyor musunuz? Bu, güvenli bir topluluk sürdürmemize yardımcı olacaktır.",
-    "rateLimitTitle": "Yavaşla",
-    "rateLimitMessage": "Çok hızlı mesaj gönderiyorsunuz. Lütfen başka bir mesaj göndermeden önce biraz bekleyin.",
-    "contentWarningTitle": "İçerik Uyarısı",
-    "contentWarningMessage": "Mesajınız uygunsuz içerik içeriyor. Lütfen mesajınızı gözden geçirin.",
-    "sendError": "Mesaj gönderilemedi",
-    "uploadError": "Resim yüklenemedi"
-  },
-
-  "guidelines": {
-    "title": "Topluluk Kuralları",
-    "subtitle": "Birlikte Güvenli ve Saygılı Bir Spor Topluluğu Oluşturuyoruz",
-    "rulesTitle": "Kurallarımız",
-    "respectTitle": "Saygılı Olun",
-    "respectDesc": "Tüm üyelere saygı ve nezaketle davranın. Taciz, ayrımcılık ve zorbalık tolere edilmeyecektir.",
-    "safetyTitle": "Güvenliği Öncelikli Tutun",
-    "safetyDesc": "Halka açık yerlerde buluşun, konumunuzu güvendiğiniz kişilerle paylaşın ve içgüdülerinize güvenin. Güvenliğiniz her şeyden önemlidir.",
-    "appropriateTitle": "İçeriği Uygun Tutun",
-    "appropriateDesc": "Yalnızca her yaş için uygun içerik paylaşın. Açık, saldırgan veya uygunsuz içeriğe izin verilmez.",
-    "noSpamTitle": "Spam veya Dolandırıcılık Yok",
-    "noSpamDesc": "Spam yapmayın, yetkisiz ticari faaliyetler tanıtmayın veya dolandırıcılık davranışlarına girmeyin.",
-    "followLawsTitle": "Yasalara Uyun",
-    "followLawsDesc": "Tüm aktiviteler yerel yasa ve düzenlemelere uygun olmalıdır. Yasadışı faaliyetler kesinlikle yasaktır.",
-    "violationTitle": "İhlaller ve Sonuçlar",
-    "violationIntro": "Bu kuralların ihlali şu sonuçlara yol açabilir:",
-    "consequences": {
-      "warning": "Uyarı bildirimi",
       "contentRemoval": "İçerik kaldırma",
-      "suspension": "Geçici hesap askıya alma",
+      "temporary": "Geçici hesap askıya alma",
       "permanentBan": "Kalıcı hesap kapatma"
     },
     "reportTitle": "İhlalleri Raporlayın",
@@ -840,19 +749,18 @@
     "acceptText": "Topluluk Kurallarını okudum ve takip etmeyi kabul ediyorum",
     "continue": "Devam Et"
   },
-
   "aiAssistant": {
     "title": "AI Asistan",
     "welcomeMessage": "Merhaba! Ben SportBot, senin AI asistanınım. Bugün sana nasıl yardımcı olabilirim?",
-    "typeMessage": "Bir şey sor...",
+    "typeMessage": "Bana bir şeyler sor...",
     "thinking": "düşünüyor...",
     "errorMessage": "Üzgünüm, bunu işleyemedim. Lütfen tekrar dene.",
     "quickActions": "Hızlı İşlemler",
     "findEvents": "Etkinlik Bul",
-    "findEventsQuery": "Yakınımda spor etkinlikleri bulmak istiyorum",
+    "findEventsQuery": "Yakınımdaki spor etkinliklerini bul",
     "sportTips": "Spor İpuçları",
     "sportTipsQuery": "Aktif kalmak için ipuçları ver",
-    "howToUse": "Uygulama Nasıl Kullanılır",
+    "howToUse": "Uygulama Kullanımı",
     "howToUseQuery": "Bu uygulamayı nasıl kullanırım?",
     "autoGenerate": "AI ile Oluştur",
     "generating": "Oluşturuluyor..."

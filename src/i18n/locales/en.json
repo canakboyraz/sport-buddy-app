@@ -28,20 +28,14 @@
     "refresh": "Refresh",
     "retry": "Retry",
     "continue": "Continue",
-    "skip": "Skip",
-    "seeAll": "See All",
-    "more": "More",
-    "less": "Less",
-    "all": "All",
-    "unknown": "Unknown",
-    "report": "Report",
-    "languageCode": "en"
+    "logout": "Logout",
+    "and": "and",
+    "all": "All"
   },
-
   "auth": {
     "login": "Login",
-    "register": "Register",
     "logout": "Logout",
+    "register": "Register",
     "email": "Email",
     "password": "Password",
     "confirmPassword": "Confirm Password",
@@ -74,9 +68,13 @@
     "welcome": "Welcome",
     "pleaseEnterName": "Please enter your name in profile settings",
     "googleLoginFailed": "Google login failed",
-    "appleLoginFailed": "Apple login failed"
+    "appleLoginFailed": "Apple login failed",
+    "loginTermsDisclaimer": "By logging in, you agree to our",
+    "termsOfService": "Terms of Service",
+    "privacyPolicy": "Privacy Policy",
+    "communityGuidelines": "Community Guidelines",
+    "iAccept": "I Accept"
   },
-
   "navigation": {
     "home": "Home",
     "sessions": "Sessions",
@@ -91,7 +89,6 @@
     "chat": "Chat",
     "search": "Search"
   },
-
   "home": {
     "title": "Sessions",
     "allSessions": "All Sessions",
@@ -111,7 +108,6 @@
     "resetFilters": "Reset Filters",
     "filterSettings": "Filter Settings"
   },
-
   "session": {
     "title": "Session",
     "detail": "Session Detail",
@@ -194,7 +190,6 @@
       "userNotFound": "Failed to load user information"
     }
   },
-
   "createSession": {
     "sportType": "Sport Type",
     "selectSport": "Select Sport",
@@ -239,7 +234,6 @@
       "createFailed": "Failed to create session"
     }
   },
-
   "skillLevel": {
     "any": "Any",
     "beginner": "Beginner",
@@ -247,7 +241,6 @@
     "advanced": "Advanced",
     "professional": "Professional"
   },
-
   "profile": {
     "title": "Profile",
     "myProfile": "My Profile",
@@ -307,7 +300,6 @@
     "bioPlaceholder": "Write a short bio about yourself...",
     "bioHelper": "Maximum 500 characters"
   },
-
   "rating": {
     "title": "Rating",
     "rate": "Rate",
@@ -345,7 +337,6 @@
     "communityTrust": "Your reviews help users earn badges and build trust in the community.",
     "viewAllRatings": "View All Ratings"
   },
-
   "badge": {
     "title": "Badges",
     "myBadges": "My Badges",
@@ -371,7 +362,6 @@
     },
     "moreNeeded": "{{count}} more positive reviews needed"
   },
-
   "achievement": {
     "title": "Achievements",
     "myAchievements": "My Achievements",
@@ -398,7 +388,6 @@
       "activity": "Activity"
     }
   },
-
   "friends": {
     "title": "Friends",
     "myFriends": "My Friends",
@@ -445,7 +434,6 @@
     "newFriendRequest": "New Friend Request",
     "sentYouRequest": "sent you a friend request"
   },
-
   "chat": {
     "title": "Chat",
     "typeMessage": "Type a message...",
@@ -458,18 +446,6 @@
     "editMessage": "Edit Message",
     "replyTo": "Reply",
     "online": "Online",
-    "offline": "Offline",
-    "typing": "typing...",
-    "seen": "Seen",
-    "delivered": "Delivered",
-    "uploadError": "An error occurred while uploading the photo",
-    "uploadingImage": "Uploading photo..."
-  },
-
-  "notifications": {
-    "title": "Notifications",
-    "settings": "Notification Settings",
-    "enable": "Enable Notifications",
     "disable": "Disable Notifications",
     "permissionDenied": "Notification permission denied!",
     "permissionRequired": "Permission required for notifications",
@@ -520,7 +496,6 @@
       "ratingReceived": "{{name}} rated you: {{rating}}/5"
     }
   },
-
   "weather": {
     "title": "Weather",
     "temperature": "Temperature",
@@ -555,7 +530,6 @@
     "bringUmbrella": "Bring an umbrella",
     "wearSunscreen": "Wear sunscreen"
   },
-
   "settings": {
     "title": "Settings",
     "subtitle": "Manage your preferences",
@@ -582,11 +556,11 @@
     "privacyPolicy": "Privacy Policy",
     "kvkk": "Data Protection (KVKK)",
     "deleteAccount": "Delete Account",
+    "deleteAccountSubtitle": "Permanently delete your account and all data",
     "deleteAccountConfirm": "Are you sure you want to delete your account? This action cannot be undone.",
     "openSettings": "Open Settings",
     "madeWithLove": "Made with ❤️ for sports enthusiasts"
   },
-
   "language": {
     "title": "Language Selection",
     "subtitle": "Choose your preferred language",
@@ -596,7 +570,6 @@
     "changeSuccess": "Language changed successfully",
     "changeError": "Could not change language"
   },
-
   "map": {
     "title": "Map",
     "showList": "List View",
@@ -613,7 +586,6 @@
     "km": "km",
     "m": "m"
   },
-
   "search": {
     "title": "Search",
     "placeholder": "Search...",
@@ -623,7 +595,6 @@
     "clearHistory": "Clear History",
     "suggestions": "Suggestions"
   },
-
   "favorites": {
     "title": "Favorites",
     "myFavorites": "My Favorites",
@@ -638,7 +609,6 @@
     "noSavedDesc": "You can save sessions you're interested in",
     "note": "Note"
   },
-
   "filters": {
     "advancedFilters": "Advanced Filters",
     "distance": "Distance (km)",
@@ -652,7 +622,6 @@
     "hideFullSessions": "Hide sessions with full participant quota",
     "reset": "Reset"
   },
-
   "myEvents": {
     "title": "My Sessions",
     "upcoming": "Upcoming",
@@ -662,7 +631,6 @@
     "noUpcomingEvents": "No upcoming events",
     "noPastEvents": "No past events"
   },
-
   "report": {
     "title": "Report User",
     "reportUser": "Report User",
@@ -672,7 +640,6 @@
     "success": "Report submitted successfully",
     "error": "Failed to submit report"
   },
-
   "errors": {
     "general": "An error occurred",
     "network": "No internet connection",
@@ -685,7 +652,6 @@
     "tryAgain": "Please try again",
     "contactSupport": "Contact support"
   },
-
   "validation": {
     "required": "This field is required",
     "email": "Enter a valid email address",
@@ -695,7 +661,6 @@
     "numeric": "Only numbers allowed",
     "alphanumeric": "Only letters and numbers allowed"
   },
-
   "date": {
     "today": "Today",
     "tomorrow": "Tomorrow",
@@ -711,7 +676,6 @@
     "evening": "Evening",
     "night": "Night"
   },
-
   "time": {
     "now": "Now",
     "justNow": "Just now",
@@ -728,7 +692,6 @@
     "yearAgo": "{{count}} year ago",
     "yearAgo_plural": "{{count}} years ago"
   },
-
   "sports": {
     "football": "Football",
     "basketball": "Basketball",
@@ -748,7 +711,6 @@
     "skiing": "Skiing",
     "other": "Other"
   },
-
   "stats": {
     "general": "General Statistics",
     "sessionsCreated": "Sessions Created",
@@ -769,7 +731,6 @@
     "ratingsCount": "Ratings",
     "loadError": "Could not load statistics"
   },
-
   "privacyConsent": {
     "title": "Privacy & Data Usage",
     "subtitle": "We care about your privacy and want to be transparent about how we use your data",
@@ -779,58 +740,6 @@
       "profileDesc": "Name, email, date of birth, and profile photo",
       "location": "Location Data",
       "locationDesc": "To show nearby events and help you find activities",
-      "messages": "Messages & Communication",
-      "messagesDesc": "In-app messages and event participation history",
-      "photos": "Photos & Media",
-      "photosDesc": "Profile and event photos you choose to upload",
-      "notifications": "Push Notifications",
-      "notificationsDesc": "Event reminders and new message alerts"
-    },
-    "safetyTitle": "Your Safety Matters",
-    "safetyDesc": "We've built safety features to protect you and our community:",
-    "features": {
-      "report": "Report inappropriate content or users",
-      "block": "Block users to prevent unwanted interactions",
-      "moderation": "Automatic content filtering for safety"
-    },
-    "yourRights": "Your Rights",
-    "rightsDesc": "You can access, update, or delete your data at any time. You can also control what data we collect through app settings.",
-    "readPrivacyPolicy": "Read Full Privacy Policy",
-    "readTerms": "Read Terms of Service",
-    "acceptText": "I understand and accept the Privacy Policy and Terms of Service",
-    "continue": "Continue to App"
-  },
-
-  "chat": {
-    "typeMessage": "Type a message...",
-    "reportMessage": "Report Message",
-    "reportMessageConfirm": "Do you want to report this message? This will help us maintain a safe community.",
-    "rateLimitTitle": "Slow Down",
-    "rateLimitMessage": "You're sending messages too quickly. Please wait a moment before sending another message.",
-    "contentWarningTitle": "Content Warning",
-    "contentWarningMessage": "Your message contains inappropriate content. Please revise your message.",
-    "sendError": "Failed to send message",
-    "uploadError": "Failed to upload image"
-  },
-
-  "guidelines": {
-    "title": "Community Guidelines",
-    "subtitle": "Building a Safe and Respectful Sports Community Together",
-    "rulesTitle": "Our Guidelines",
-    "respectTitle": "Be Respectful",
-    "respectDesc": "Treat all members with respect and kindness. Harassment, discrimination, and bullying will not be tolerated.",
-    "safetyTitle": "Prioritize Safety",
-    "safetyDesc": "Meet in public places, share your location with trusted contacts, and trust your instincts. Your safety is paramount.",
-    "appropriateTitle": "Keep Content Appropriate",
-    "appropriateDesc": "Share only content that is suitable for all ages. No explicit, offensive, or inappropriate material is allowed.",
-    "noSpamTitle": "No Spam or Scams",
-    "noSpamDesc": "Don't spam, promote unauthorized commercial activities, or engage in fraudulent behavior.",
-    "followLawsTitle": "Follow the Law",
-    "followLawsDesc": "All activities must comply with local laws and regulations. Illegal activities are strictly prohibited.",
-    "violationTitle": "Violations & Consequences",
-    "violationIntro": "Violations of these guidelines may result in:",
-    "consequences": {
-      "warning": "Warning notification",
       "contentRemoval": "Content removal",
       "temporary": "Temporary account suspension",
       "permanentBan": "Permanent account termination"
@@ -840,7 +749,6 @@
     "acceptText": "I have read and agree to follow the Community Guidelines",
     "continue": "Continue"
   },
-
   "aiAssistant": {
     "title": "AI Assistant",
     "welcomeMessage": "Hi! I'm SportBot, your AI assistant. How can I help you today?",

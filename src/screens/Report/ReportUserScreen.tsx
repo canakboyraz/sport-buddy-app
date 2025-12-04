@@ -30,7 +30,7 @@ const REPORT_TYPES = [
 ];
 
 export default function ReportUserScreen({ navigation, route }: Props) {
-  const { userId, userName } = route.params;
+  const { userId, userName, contentId, contentType } = route.params as any; // Type assertion for new params
   const { user } = useAuth();
   const [reportType, setReportType] = useState<string>('');
   const [description, setDescription] = useState('');
@@ -62,7 +62,7 @@ export default function ReportUserScreen({ navigation, route }: Props) {
         p_reporter_id: user.id,
         p_reported_user_id: userId,
         p_report_type: reportType,
-        p_description: description.trim(),
+        p_description: `${description.trim()}${contentId ? `\n\n[Reported Content: ${contentType} #${contentId}]` : ''}`,
       });
 
       if (error) {
