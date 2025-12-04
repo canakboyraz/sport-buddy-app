@@ -75,9 +75,13 @@ export default function RegisterScreen({ navigation }: Props) {
       if (profileError) {
         Alert.alert(t('auth.profileError'), profileError.message);
       } else {
-        Alert.alert(t('common.success'), t('auth.accountCreated'), [
-          { text: t('common.ok'), onPress: () => navigation.navigate('Login') },
-        ]);
+        // If session exists, the app will automatically redirect to Home via App.tsx
+        // We only need to redirect to Login if there's no session (e.g. email verification required)
+        if (!authData.session) {
+          Alert.alert(t('common.success'), t('auth.accountCreated'), [
+            { text: t('common.ok'), onPress: () => navigation.navigate('Login') },
+          ]);
+        }
       }
     }
   };
