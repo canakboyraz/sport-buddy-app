@@ -64,7 +64,7 @@ export default function RegisterScreen({ navigation }: Props) {
     }
 
     if (authData.user) {
-      const { error: profileError } = await supabase.from('profiles').insert({
+      const { error: profileError } = await supabase.from('profiles').upsert({
         id: authData.user.id,
         email,
         full_name: fullName.trim() || null,
